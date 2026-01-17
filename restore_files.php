@@ -1,12 +1,12 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos v6 (Phase 2 UI Split)
+// restore_files.php - Restauración de Archivos Críticos v7 (Centralized Sidebar)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
-echo "<h1>Restaurador de Archivos Críticos v6 (UI Split)</h1>";
+echo "<h1>Restaurador de Archivos Críticos v7 (Sidebar Centralizado)</h1>";
 
 function writeFile($path, $content)
 {
@@ -27,17 +27,37 @@ function writeFile($path, $content)
     }
 }
 
-// 1. configuration.php
-writeFile(__DIR__ . '/configuration.php', file_get_contents('https://github.com/vs-systems/ERP2/raw/main/configuration.php')); // We will push to git first? 
-// WAIT. If I use this script I usually Embed the content. 
-// Since I have the content in "memory" (my previous tool calls), I should embed it here OR 
-// relying on Git pull is safer if I commit. 
-// The user has been doing "Update from Remote" + restore_files.php. 
-// "Update from Remote" (cPanel/Git) UPDATES the files on disk. 
-// restore_files.php is mainly for DB migrations or forcing overwrites if permissiosn fail. 
-// Since these are NEW files or modified existing ones, Git Pull should handle them if permissions coincide. 
-// However, to be 100% sure, I will EMBED them again as I did before. This is the robust method I used in v4/v5.
+// ---------------------------------------------------------
+// 1. Create Smart Sidebar
+// ---------------------------------------------------------
+$sidebarContent = <<<'PHP'
+<?php
+$cur = basename($_SERVER['PHP_SELF']);
+?>
+<nav class="sidebar">
+    <a href="index.php" class="nav-link <?php echo $cur == 'index.php' ? 'active' : ''; ?>"><i class="fas fa-home"></i> DASHBOARD</a>
+    <a href="analisis.php" class="nav-link <?php echo $cur == 'analisis.php' ? 'active' : ''; ?>"><i class="fas fa-chart-line"></i> AN&Aacute;LISIS OP.</a>
+    <a href="productos.php" class="nav-link <?php echo $cur == 'productos.php' ? 'active' : ''; ?>"><i class="fas fa-box-open"></i> PRODUCTOS</a>
+    <a href="presupuestos.php" class="nav-link <?php echo $cur == 'presupuestos.php' ? 'active' : ''; ?>"><i class="fas fa-history"></i> PRESUPUESTOS</a>
+    <a href="clientes.php" class="nav-link <?php echo $cur == 'clientes.php' ? 'active' : ''; ?>"><i class="fas fa-users"></i> CLIENTES</a>
+    <a href="proveedores.php" class="nav-link <?php echo $cur == 'proveedores.php' ? 'active' : ''; ?>"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
+    <a href="compras.php" class="nav-link <?php echo $cur == 'compras.php' ? 'active' : ''; ?>"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
+    <a href="crm.php" class="nav-link <?php echo $cur == 'crm.php' ? 'active' : ''; ?>"><i class="fas fa-handshake"></i> CRM</a>
+    <a href="cotizador.php" class="nav-link <?php echo $cur == 'cotizador.php' ? 'active' : ''; ?>"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
+    <a href="configuration.php" class="nav-link <?php echo ($cur == 'configuration.php' || $cur == 'config_precios.php' || $cur == 'config_productos_add.php' || $cur == 'importar.php') ? 'active' : ''; ?>"><i class="fas fa-cogs"></i> CONFIGURACIÓN</a>
+    <a href="catalogo.php" class="nav-link" target="_blank" style="color: #25d366; font-weight: 700;"><i class="fas fa-external-link-alt"></i> VER CAT&Aacute;LOGO</a>
+</nav>
+PHP;
+writeFile(__DIR__ . '/src/includes/sidebar.php', $sidebarContent);
 
+
+// ---------------------------------------------------------
+// 2. Rewrite Config & Product Files with Include
+// ---------------------------------------------------------
+// We use a helper to wrap content with standard header/include sidebar/footer(optional)
+// But since we have full content strings, we just inject the include line.
+
+// MODULE: configuration.php
 $contentConfiguration = <<<'PHP'
 <?php
 require_once 'auth_check.php';
@@ -98,17 +118,7 @@ require_once 'auth_check.php';
     </header>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="productos.php" class="nav-link"><i class="fas fa-box-open"></i> PRODUCTOS</a>
-            <a href="presupuestos.php" class="nav-link"><i class="fas fa-history"></i> PRESUPUESTOS</a>
-            <a href="clientes.php" class="nav-link"><i class="fas fa-users"></i> CLIENTES</a>
-            <a href="proveedores.php" class="nav-link"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
-            <a href="compras.php" class="nav-link"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
-            <a href="crm.php" class="nav-link"><i class="fas fa-handshake"></i> CRM</a>
-            <!-- New Config Link Active -->
-            <a href="configuration.php" class="nav-link active"><i class="fas fa-cogs"></i> CONFIGURACIÓN</a>
-        </nav>
+        <?php include 'src/includes/sidebar.php'; ?>
 
         <main class="content">
             <div class="card">
@@ -116,34 +126,27 @@ require_once 'auth_check.php';
                 <p style="color: #94a3b8;">Administre los datos maestros, precios y parámetros del sistema desde aquí.</p>
 
                 <div class="config-grid">
-                    <!-- Config 1: Price Lists -->
                     <a href="config_precios.php" class="config-card">
                         <i class="fas fa-tags config-icon"></i>
                         <h3>Listas de Precios</h3>
                         <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 10px;">
-                            Defina márgenes de ganancia para Gremio, Web y MercadoLibre.
+                            Defina márgenes de ganancia.
                         </p>
                     </a>
-
-                    <!-- Config 2: Add Product -->
                     <a href="config_productos_add.php" class="config-card">
                         <i class="fas fa-plus-circle config-icon" style="color: #10b981;"></i>
                         <h3>Carga Manual</h3>
                         <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 10px;">
-                            Añada nuevos productos individualmente al catálogo.
+                            Añada nuevos productos.
                         </p>
                     </a>
-
-                    <!-- Config 3: Import -->
                     <a href="importar.php" class="config-card">
                         <i class="fas fa-file-csv config-icon" style="color: #f59e0b;"></i>
                         <h3>Importar Datos</h3>
                         <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 10px;">
-                            Carga masiva de Productos, Clientes o Proveedores desde CSV.
+                            Carga masiva desde CSV.
                         </p>
                     </a>
-
-                     <!-- Config 4: Database Actions -->
                      <a href="update_images_bigdipper.php" class="config-card">
                         <i class="fas fa-images config-icon" style="color: #3b82f6;"></i>
                         <h3>Imágenes</h3>
@@ -161,13 +164,10 @@ PHP;
 writeFile(__DIR__ . '/configuration.php', $contentConfiguration);
 
 
-// 2. config_productos_add.php
+// MODULE: config_productos_add.php
 $contentConfigAdd = <<<'PHP'
 <?php
 require_once 'auth_check.php';
-/**
- * VS System ERP - Add Product Manually
- */
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/catalogo/Catalog.php';
@@ -178,7 +178,6 @@ $catalog = new Catalog();
 $message = '';
 $status = '';
 
-// Handle save
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_product'])) {
     $data = [
         'sku' => $_POST['sku'],
@@ -247,10 +246,7 @@ $suppliers = $catalog->getProviders();
     </header>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="configuration.php" class="nav-link active"><i class="fas fa-arrow-left"></i> VOLVER</a>
-        </nav>
+        <?php include 'src/includes/sidebar.php'; ?>
 
         <main class="content">
             <?php if ($message): ?>
@@ -260,7 +256,7 @@ $suppliers = $catalog->getProviders();
             <?php endif; ?>
 
             <div class="card">
-                <h3><i class="fas fa-plus-circle"></i> Nueva Carga / Editar Producto</h3>
+                <h3><i class="fas fa-plus-circle"></i> Nuevo / Editar Producto</h3>
                 <form method="POST" id="product-form">
                     <input type="hidden" name="save_product" value="1">
                     <div class="form-grid">
@@ -291,9 +287,8 @@ $suppliers = $catalog->getProviders();
                             <input type="text" name="brand" id="brand" placeholder="MARCA">
                         </div>
                         <div class="form-group">
-                            <label>URL de Imagen</label>
-                            <input type="text" name="image_url" id="image_url"
-                                placeholder="https://ejemplo.com/foto.jpg">
+                            <label>URL de Imagen (BigDipper Auto: Dejar vacío si existe)</label>
+                            <input type="text" name="image_url" id="image_url" placeholder="https://ejemplo.com/foto.jpg">
                         </div>
                         <div class="form-group">
                             <label>Categor&iacute;a</label>
@@ -305,13 +300,11 @@ $suppliers = $catalog->getProviders();
                         </div>
                         <div class="form-group">
                             <label>Costo USD</label>
-                            <input type="number" step="0.01" name="unit_cost_usd" id="unit_cost_usd" required
-                                placeholder="0.00">
+                            <input type="number" step="0.01" name="unit_cost_usd" id="unit_cost_usd" required placeholder="0.00">
                         </div>
                         <div class="form-group">
-                            <label>Precio Venta Base USD (Opcional)</label>
-                            <input type="number" step="0.01" name="unit_price_usd" id="unit_price_usd"
-                                placeholder="0.00">
+                            <label>Precio Base USD (Opc)</label>
+                            <input type="number" step="0.01" name="unit_price_usd" id="unit_price_usd" placeholder="0.00">
                         </div>
                         <div class="form-group">
                             <label>IVA %</label>
@@ -352,8 +345,8 @@ $suppliers = $catalog->getProviders();
                         });
                         <?php endif; ?>
                     </script>
-                    <button type="submit" class="btn-primary"><i class="fas fa-save"></i> GUARDAR PRODUCTO</button>
-                    <a href="configuration.php" class="btn" style="background:#475569; margin-left: 10px;">Cancelar</a>
+                    <button type="submit" class="btn-primary"><i class="fas fa-save"></i> GUARDAR</button>
+                    <a href="configuration.php" class="btn" style="background:#475569; margin-left:10px;">Cancelar</a>
                 </form>
             </div>
         </main>
@@ -364,13 +357,10 @@ PHP;
 writeFile(__DIR__ . '/config_productos_add.php', $contentConfigAdd);
 
 
-// 3. productos.php
+// MODULE: productos.php
 $contentProducts = <<<'PHP'
 <?php
 require_once 'auth_check.php';
-/**
- * VS System ERP - Listado de Productos
- */
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/catalogo/Catalog.php';
@@ -393,7 +383,6 @@ foreach ($lists as $l) {
 $gremioMargin = $listsByName['Gremio'] ?? 30;
 $webMargin = $listsByName['Web'] ?? 40;
 $mlMargin = $listsByName['MercadoLibre'] ?? 50;
-
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -417,19 +406,7 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
     </header>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="analisis.php" class="nav-link"><i class="fas fa-chart-line"></i> AN&Aacute;LISIS OP.</a>
-            <a href="productos.php" class="nav-link active"><i class="fas fa-box-open"></i> PRODUCTOS</a>
-            <a href="presupuestos.php" class="nav-link"><i class="fas fa-history"></i> PRESUPUESTOS</a>
-            <a href="clientes.php" class="nav-link"><i class="fas fa-users"></i> CLIENTES</a>
-            <a href="proveedores.php" class="nav-link"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
-            <a href="compras.php" class="nav-link"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
-            <a href="crm.php" class="nav-link"><i class="fas fa-handshake"></i> CRM</a>
-            <a href="cotizador.php" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
-             <!-- Link to Config -->
-             <a href="configuration.php" class="nav-link"><i class="fas fa-cogs"></i> CONFIGURACIÓN</a>
-        </nav>
+        <?php include 'src/includes/sidebar.php'; ?>
 
         <main class="content">
             <div class="card">
@@ -478,19 +455,15 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                             <?php echo $p['subcategory'] ?? ''; ?>
                                         </div>
                                     </td>
-                                    
                                     <td style="text-align: right; color: var(--accent-violet); font-weight: 700; background: rgba(139, 92, 246, 0.05);">
                                         $ <?php echo number_format($cost, 2); ?>
                                     </td>
-                                    
                                     <td style="text-align: right; color: #cbd5e1;">$ <?php echo number_format($priceGremio, 2); ?></td>
                                     <td style="text-align: right; color: #cbd5e1;">$ <?php echo number_format($priceWeb, 2); ?></td>
                                     <td style="text-align: right; color: #cbd5e1;">$ <?php echo number_format($priceML, 2); ?></td>
-                                    
                                     <td style="text-align: center;">
                                         <span class="badge badge-info"><?php echo $p['iva_rate']; ?>%</span>
                                     </td>
-                                    
                                     <td style="text-align: center;">
                                         <a href="config_productos_add.php?sku=<?php echo urlencode($p['sku']); ?>" class="btn-edit" title="Editar">
                                             <i class="fas fa-edit"></i>
@@ -504,7 +477,6 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
             </div>
         </main>
     </div>
-
     <script>
         document.getElementById('tableSearch').addEventListener('input', function (e) {
             const q = e.target.value.toLowerCase();
@@ -525,5 +497,48 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
 PHP;
 writeFile(__DIR__ . '/productos.php', $contentProducts);
 
-echo "<hr><p>¡Actualización v6 Completa! UI Reestructurada.</p>";
+// ---------------------------------------------------------
+// 3. Regex Patch for Remaining Files
+// ---------------------------------------------------------
+echo "<h3>Parcheado de Navegación en Archivos Legados</h3>";
+
+$filesToPatch = [
+    'index.php',
+    'analisis.php',
+    'presupuestos.php',
+    'clientes.php',
+    'proveedores.php',
+    'compras.php',
+    'crm.php',
+    'cotizador.php',
+    'importar.php', // Also patching importar.php to use include, since we didn't rewrite it fully above (only config/products) - Wait, we should rewrite it or patch it. Let's patch it.
+    'config_precios.php'
+];
+
+foreach ($filesToPatch as $file) {
+    if (file_exists(__DIR__ . '/' . $file)) {
+        $content = file_get_contents(__DIR__ . '/' . $file);
+
+        // Regex to find <nav class="sidebar">...</nav>
+        // We use dotall s modifier
+        $pattern = '/<nav class="sidebar">.*?<\/nav>/s';
+        $replacement = '<?php include \'src/includes/sidebar.php\'; ?>';
+
+        $newContent = preg_replace($pattern, $replacement, $content);
+
+        if ($newContent !== null && $newContent !== $content) {
+            if (file_put_contents(__DIR__ . '/' . $file, $newContent)) {
+                echo "<p>Parcheado: $file ... <span style='color:green'>[OK]</span></p>";
+            } else {
+                echo "<p>Parcheado: $file ... <span style='color:red'>[ERROR WRITE]</span></p>";
+            }
+        } else {
+            echo "<p>Saltado (Sin cambios o no encontrado): $file</p>";
+        }
+    } else {
+        echo "<p>Saltado (No existe): $file</p>";
+    }
+}
+
+echo "<hr><p>¡Actualización v7 Completa! Navegación Centralizada.</p>";
 ?>
