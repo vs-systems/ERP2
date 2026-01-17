@@ -1,12 +1,12 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos v9 (Fix CRM & Checkout)
+// restore_files.php - Restauración de Archivos Críticos v10 (Fix Paths to Root)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
-echo "<h1>Restaurador de Archivos Críticos v9 (Fix CRM & Checkout)</h1>";
+echo "<h1>Restaurador de Archivos Críticos v10 (Fix Paths to Root)</h1>";
 
 function writeFile($path, $content)
 {
@@ -27,9 +27,7 @@ function writeFile($path, $content)
     }
 }
 
-// 0. DB MIGRATION: Ensure crm_leads has 'source' and 'contact_details' is handled ?? 
-// Actually we should match the Code schema: name, contact_person, email, phone, status, notes
-// We will add 'source' column if missing.
+// 0. DB MIGRATION: Ensure crm_leads - source
 try {
     $db = Vsys\Lib\Database::getInstance();
     $db->exec("ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'Manually'");
@@ -38,7 +36,7 @@ try {
     echo "<p style='color:orange'>[DB Warning] " . $e->getMessage() . "</p>";
 }
 
-// 1. src/sync_bcra.php (Use DolarAPI for BNA/Oficial rate)
+// 1. src/sync_bcra.php
 $contentSync = <<<'PHP'
 <?php
 /**
@@ -76,7 +74,7 @@ PHP;
 writeFile(__DIR__ . '/src/sync_bcra.php', $contentSync);
 
 
-// 2. src/modules/catalogo/PublicCatalog.php (Ensure it gets latest rate)
+// 2. src/modules/catalogo/PublicCatalog.php
 $contentPublicCat = <<<'PHP'
 <?php
 namespace Vsys\Modules\Catalogo;
@@ -101,7 +99,6 @@ class PublicCatalog
         $stmt = $this->db->prepare("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1");
         $stmt->execute();
         $rate = $stmt->fetchColumn();
-        // Fallback if DB empty
         return $rate ? (float)$rate : 1455.00; 
     }
 
@@ -151,7 +148,7 @@ PHP;
 writeFile(__DIR__ . '/src/modules/catalogo/PublicCatalog.php', $contentPublicCat);
 
 
-// 3. ajax_checkout.php (Fix Schema Mismatch & Add Logging)
+// 3. ajax_checkout.php
 $contentAjax = <<<'PHP'
 <?php
 header('Content-Type: application/json');
@@ -193,10 +190,6 @@ try {
     $orderDetails .= "-------------------------------------\n";
     $orderDetails .= "TOTAL ESTIMADO: $ " . number_format($total, 0, ',', '.') . "\n";
 
-    // Insert using correct columns: name, contact_person, email, phone, status, notes, source
-    // We map 'dni' to contact_person or notes? Let's put DNI in notes/summary, or contact_person if usable.
-    // Source requires the ALTER TABLE we did above.
-    
     $stmt = $db->prepare("INSERT INTO crm_leads (name, email, phone, status, notes, source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
     $stmt->execute([
         $customer['name'],
@@ -218,27 +211,26 @@ PHP;
 writeFile(__DIR__ . '/ajax_checkout.php', $contentAjax);
 
 
-// 4. public/crm.php (The Pipeline UI)
+// 4. crm.php (MOVED TO ROOT - Fixed Paths)
 $contentCRM = <<<'PHP'
 <?php
 /**
  * CRM Dashboard - Pipeline View
  */
-require_once __DIR__ . '/../src/config/config.php';
-require_once __DIR__ . '/../src/lib/Database.php';
-require_once __DIR__ . '/../src/modules/crm/CRM.php';
+require_once __DIR__ . '/src/config/config.php';
+require_once __DIR__ . '/src/lib/Database.php';
+require_once __DIR__ . '/src/modules/crm/CRM.php';
 
 use Vsys\Modules\CRM\CRM;
 
 $crm = new CRM();
 $stats = $crm->getStats();
 
-// Fetch leads for columns
+// Fetch leads
 $leadsNuevo = $crm->getLeadsByStatus('Nuevo');
 $leadsContactado = $crm->getLeadsByStatus('Contactado');
 $leadsPresupuesto = $crm->getLeadsByStatus('Presupuestado');
 $leadsGanado = $crm->getLeadsByStatus('Ganado');
-
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -332,64 +324,37 @@ $leadsGanado = $crm->getLeadsByStatus('Ganado');
     </div>
 
     <div class="pipeline">
-        <!-- Nuevos -->
         <div class="column nuevo">
-            <div class="col-header">
-                <span>NUEVO</span>
-                <span class="count"><?php echo count($leadsNuevo); ?></span>
-            </div>
+            <div class="col-header"><span>NUEVO</span><span class="count"><?php echo count($leadsNuevo); ?></span></div>
             <div class="cards-container">
-                <?php foreach ($leadsNuevo as $l): ?>
-                    <?php renderCard($l); ?>
-                <?php endforeach; ?>
+                <?php foreach ($leadsNuevo as $l): renderCard($l); endforeach; ?>
             </div>
         </div>
-
-        <!-- Contactados -->
         <div class="column contactado">
-            <div class="col-header">
-                <span>CONTACTADO</span>
-                <span class="count"><?php echo count($leadsContactado); ?></span>
-            </div>
+            <div class="col-header"><span>CONTACTADO</span><span class="count"><?php echo count($leadsContactado); ?></span></div>
             <div class="cards-container">
-                <?php foreach ($leadsContactado as $l): ?>
-                    <?php renderCard($l); ?>
-                <?php endforeach; ?>
+                <?php foreach ($leadsContactado as $l): renderCard($l); endforeach; ?>
             </div>
         </div>
-
-        <!-- Presupuestados -->
         <div class="column presupuesto">
-            <div class="col-header">
-                <span>PRESUPUESTADO</span>
-                <span class="count"><?php echo count($leadsPresupuesto); ?></span>
-            </div>
+            <div class="col-header"><span>PRESUPUESTADO</span><span class="count"><?php echo count($leadsPresupuesto); ?></span></div>
             <div class="cards-container">
-                <?php foreach ($leadsPresupuesto as $l): ?>
-                    <?php renderCard($l); ?>
-                <?php endforeach; ?>
+                <?php foreach ($leadsPresupuesto as $l): renderCard($l); endforeach; ?>
             </div>
         </div>
-
-        <!-- Ganados -->
         <div class="column ganado">
-            <div class="col-header">
-                <span>GANADO</span>
-                <span class="count"><?php echo count($leadsGanado); ?></span>
-            </div>
+            <div class="col-header"><span>GANADO</span><span class="count"><?php echo count($leadsGanado); ?></span></div>
             <div class="cards-container">
-                <?php foreach ($leadsGanado as $l): ?>
-                    <?php renderCard($l); ?>
-                <?php endforeach; ?>
+                <?php foreach ($leadsGanado as $l): renderCard($l); endforeach; ?>
             </div>
         </div>
     </div>
 
 </body>
 </html>
-
 <?php
 function renderCard($lead) {
+    if (!isset($lead['id'])) return;
     $date = date('d/m', strtotime($lead['created_at']));
     $source = isset($lead['source']) ? $lead['source'] : 'Manual';
     $notes = substr($lead['notes'] ?? '', 0, 80) . '...';
@@ -398,8 +363,8 @@ function renderCard($lead) {
         <div class='lead-date'>$date</div>
         <div class='lead-name'>{$lead['name']}</div>
         <div class='lead-contact'>
-            <i class='fas fa-envelope'></i> {$lead['email']}<br>
-            <i class='fas fa-phone'></i> {$lead['phone']}
+            <i class='fas fa-envelope'></i> ".($lead['email']??'')."<br>
+            <i class='fas fa-phone'></i> ".($lead['phone']??'')."
         </div>
         <div class='lead-source'>$source</div>
         <div class='actions'>
@@ -411,14 +376,12 @@ function renderCard($lead) {
 ?>
 <script>
 function moveLead(id, direction) {
-    // Implement AJAX move (Not implemented in this view yet, just mock)
-    // alert('Mover lead ' + id);
-    // Ideally we call an endpoint to update status
+    alert('Funcionalidad de mover en proceso...');
 }
 </script>
 PHP;
-writeFile(__DIR__ . '/public/crm.php', $contentCRM);
+writeFile(__DIR__ . '/crm.php', $contentCRM);
 
-echo "<hr><p>¡Restauración Completa v9! CRM Pipeline + Checkout Fix + DolarAPI.</p>";
-echo "<p>Por favor ejecute <a href='public/crm.php'>CRM Update</a> para verificar.</p>";
+echo "<hr><p>¡Restauración Completa v10! CRM Pipeline (Root) + Fixes.</p>";
+echo "<p>Por favor ejecute <a href='crm.php'>CRM Pipeline</a>.</p>";
 ?>
