@@ -1,12 +1,12 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos v16 (Full Logistics MySQL)
+// restore_files.php - Restauración de Archivos Críticos v17 (Logística Fix Table Name)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
-echo "<h1>Restaurador de Archivos Críticos v16 (Logística Completa)</h1>";
+echo "<h1>Restaurador de Archivos Críticos v17 (Logística Fix)</h1>";
 
 function writeFile($path, $content)
 {
@@ -27,10 +27,10 @@ function writeFile($path, $content)
     }
 }
 
-// 1. MySQL Database Migrations (Phase 4)
+// 1. MySQL Database Migrations (Fix: Rename quotes to quotations)
 try {
     $db = \Vsys\Lib\Database::getInstance();
-    echo "<h3>Ejecutando Migraciones MySQL...</h3>";
+    echo "<h3>Ejecutando Migraciones MySQL (v17)...</h3>";
 
     $queries = [
         "CREATE TABLE IF NOT EXISTS transports (
@@ -68,8 +68,9 @@ try {
             uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
 
-        "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS authorized_dispatch TINYINT(1) DEFAULT 0;",
-        "ALTER TABLE quotes ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'Pending';"
+        // CORRECCIÓN: La tabla se llama 'quotations', no 'quotes'
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS authorized_dispatch TINYINT(1) DEFAULT 0;",
+        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'Pending';"
     ];
 
     foreach ($queries as $q) {
@@ -85,9 +86,7 @@ try {
     echo "<p style='color:red'>Error en BD: " . $e->getMessage() . "</p>";
 }
 
-// --- FILE CONTENTS ---
-
-// 2. Logistics Backend
+// 2. Logistics Backend Fix
 $contentLogisticsClass = <<<'PHP'
 <?php
 namespace Vsys\Modules\Logistica;
@@ -96,7 +95,8 @@ class Logistics {
     private $db;
     public function __construct() { $this->db = Database::getInstance(); }
     public function getOrdersForPreparation() {
-        return $this->db->query("SELECT q.*, c.name as client_name FROM quotes q LEFT JOIN clients c ON q.client_id = c.id WHERE q.payment_status = 'Paid' OR q.authorized_dispatch = 1 ORDER BY q.created_at DESC")->fetchAll();
+        // Fix: Usar 'quotations' en lugar de 'quotes'
+        return $this->db->query("SELECT q.*, c.name as client_name FROM quotations q LEFT JOIN clients c ON q.client_id = c.id WHERE q.payment_status = 'Paid' OR q.authorized_dispatch = 1 ORDER BY q.created_at DESC")->fetchAll();
     }
     public function getTransports($onlyActive = true) {
         $sql = "SELECT * FROM transports" . ($onlyActive ? " WHERE is_active = 1" : "") . " ORDER BY name";
@@ -120,65 +120,5 @@ class Logistics {
 PHP;
 writeFile(__DIR__ . '/src/modules/logistica/Logistics.php', $contentLogisticsClass);
 
-// 3. AJAX Backend
-$contentAjax = <<<'PHP'
-<?php
-header('Content-Type: application/json');
-require_once 'auth_check.php';
-require_once __DIR__ . '/src/config/config.php';
-require_once __DIR__ . '/src/lib/Database.php';
-require_once __DIR__ . '/src/modules/logistica/Logistics.php';
-use Vsys\Modules\Logistica\Logistics;
-$logistics = new Logistics();
-$action = $_POST['action'] ?? '';
-try {
-    if ($action === 'create_remito') {
-        $q = $_POST['quote_number'] ?? '';
-        $t = $_POST['transport_id'] ?? '';
-        if (!$q || !$t) throw new Exception("Faltan datos.");
-        $remito = $logistics->createRemito($q, $t);
-        echo json_encode(['success' => true, 'remito_number' => $remito, 'message' => "Remito $remito generado."]);
-    } else { throw new Exception("Acción inválida."); }
-} catch (Exception $e) { echo json_encode(['success' => false, 'error' => $e->getMessage()]); }
-PHP;
-writeFile(__DIR__ . '/ajax_logistics.php', $contentAjax);
-
-// 4. Transport ABM UI
-$contentConfigTrans = <<<'PHP'
-<?php
-require_once 'auth_check.php';
-require_once __DIR__ . '/src/config/config.php';
-require_once __DIR__ . '/src/lib/Database.php';
-require_once __DIR__ . '/src/modules/logistica/Logistics.php';
-use Vsys\Modules\Logistica\Logistics;
-$logistics = new Logistics();
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $data = ['id' => $_POST['id'] ?? null, 'name' => $_POST['name'], 'contact_person' => $_POST['contact_person'], 'phone' => $_POST['phone'], 'email' => $_POST['email'], 'is_active' => isset($_POST['is_active']) ? 1 : 0];
-    $logistics->saveTransport($data);
-    header("Location: config_transports.php?success=1"); exit;
-}
-$transports = $logistics->getTransports(false);
-?>
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Transportes - VS System</title><link rel="stylesheet" href="css/style_premium.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></head>
-<body>
-    <header style="background:#020617; border-bottom:2px solid var(--accent-violet); text-align:center; padding:15px;"><div style="color:white; font-weight:700;">GESTIÓN DE <span>TRANSPORTES</span></div></header>
-    <div class="dashboard-container">
-        <nav class="sidebar"><a href="configuration.php" class="nav-link active"><i class="fas fa-arrow-left"></i> VOLVER</a></nav>
-        <main class="content"><div class="card">
-            <form action="config_transports.php" method="POST" style="background:rgba(255,255,255,0.05); padding:20px; border-radius:10px; margin-bottom:20px;">
-                <input type="hidden" name="id" value="<?php echo $_GET['edit'] ?? ''; ?>">
-                <input type="text" name="name" placeholder="Nombre Empresa" required style="padding:10px; margin-right:10px; background:#0f172a; color:white; border:1px solid #334155;">
-                <button type="submit" class="btn-primary">Guardar Transportista</button>
-            </form>
-            <table>
-                <thead><tr><th>Nombre</th><th>Estado</th><th>Acciones</th></tr></thead>
-                <tbody><?php foreach($transports as $t): ?><tr><td><?php echo $t['name']; ?></td><td><?php echo $t['is_active']?'ACTIVO':'INACTIVO'; ?></td><td><a href="?edit=<?php echo $t['id']; ?>">Editar</a></td></tr><?php endforeach; ?></tbody>
-            </table>
-        </div></main>
-    </div>
-</body></html>
-PHP;
-writeFile(__DIR__ . '/config_transports.php', $contentConfigTrans);
-
-echo "<hr><p>¡Actualización v16 Completada! Logística activa y MySQL configurado.</p>";
+echo "<hr><p>¡Actualización v17 Completada! Error de tabla 'quotes' -> 'quotations' corregido.</p>";
 ?>

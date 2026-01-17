@@ -18,7 +18,7 @@ class Logistics
     public function getOrdersForPreparation()
     {
         $sql = "SELECT q.*, c.name as client_name 
-                FROM quotes q
+                FROM quotations q
                 LEFT JOIN clients c ON q.client_id = c.id
                 WHERE q.payment_status = 'Paid' OR q.authorized_dispatch = TRUE
                 ORDER BY q.created_at DESC";
