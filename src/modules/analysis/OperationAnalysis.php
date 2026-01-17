@@ -35,7 +35,12 @@ class OperationAnalysis
         if (!$header)
             return null;
 
-        $sqlItems = "SELECT qi.*, p.description, p.unit_cost_usd as catalog_cost 
+        $sqlItems = "SELECT qi.*, 
+                            qi.quantity as qty,
+                            qi.unit_price as unit_price,
+                            p.sku,
+                            p.description, 
+                            p.unit_cost_usd as unit_cost 
                      FROM quotation_items qi 
                      LEFT JOIN products p ON qi.product_id = p.id 
                      WHERE qi.quotation_id = :id";

@@ -24,30 +24,36 @@ class CRM
     /**
      * Get General CRM Stats for Dashboard
      */
-    public function getStats()
+    /**
+     * Get General CRM Stats for Dashboard
+     */
+    public function getStats($date = null)
     {
         try {
-            // Count Leads
-            $totalLeads = $this->db->query("SELECT COUNT(*) FROM crm_leads")->fetchColumn();
+            // Active Quotes (Presupuestado)
+            $activeQuotes = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status = 'Presupuestado'")->fetchColumn();
 
-            // Count Converted (Ganado)
-            $wonLeads = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado'")->fetchColumn();
+            // Orders Today (Ganado today) - Use provided date or CURDATE()
+            $dateFilter = $date ? $date : date('Y-m-d');
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado' AND DATE(updated_at) = ?");
+            $stmt->execute([$dateFilter]);
+            $ordersToday = $stmt->fetchColumn();
 
-            // Count Active (Nuevo, Contactado, Presupuestado)
-            $activeLeads = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status IN ('Nuevo', 'Contactado', 'Presupuestado')")->fetchColumn();
+            // Efficiency (Won / Total)
+            $total = $this->db->query("SELECT COUNT(*) FROM crm_leads")->fetchColumn();
+            $won = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado'")->fetchColumn();
+            $efficiency = $total > 0 ? round(($won / $total) * 100, 1) : 0;
 
             return [
-                'total_leads' => $totalLeads ?: 0,
-                'won_leads' => $wonLeads ?: 0,
-                'active_leads' => $activeLeads ?: 0,
-                'conversion_rate' => $totalLeads > 0 ? round(($wonLeads / $totalLeads) * 100, 1) : 0
+                'active_quotes' => $activeQuotes ?: 0,
+                'orders_today' => $ordersToday ?: 0,
+                'efficiency' => $efficiency
             ];
         } catch (\Exception $e) {
             return [
-                'total_leads' => 0,
-                'won_leads' => 0,
-                'active_leads' => 0,
-                'conversion_rate' => 0
+                'active_quotes' => 0,
+                'orders_today' => 0,
+                'efficiency' => 0
             ];
         }
     }
@@ -171,6 +177,12 @@ class CRM
     {
         try {
             $sql = "SELECT i.*, 
+                           i.type as interaction_type,
+                           i.interaction_date as created_at,
+                           CASE 
+                            WHEN i.entity_type = 'entity' THEN (SELECT name FROM entities WHERE id = i.entity_id LIMIT 1)
+                            WHEN i.entity_type = 'lead' THEN (SELECT name FROM crm_leads WHERE id = i.entity_id LIMIT 1)
+                           END as client_name,
                            CASE 
                             WHEN i.entity_type = 'entity' THEN (SELECT name FROM entities WHERE id = i.entity_id LIMIT 1)
                             WHEN i.entity_type = 'lead' THEN (SELECT name FROM crm_leads WHERE id = i.entity_id LIMIT 1)
