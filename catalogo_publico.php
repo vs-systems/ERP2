@@ -1,106 +1,4 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos v8 (Public Catalog)
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-require_once __DIR__ . '/src/config/config.php';
-require_once __DIR__ . '/src/lib/Database.php';
-
-echo "<h1>Restaurador de Archivos Críticos v8 (Catálogo Público)</h1>";
-
-function writeFile($path, $content)
-{
-    echo "<p>Escribiendo: $path ... ";
-    $dir = dirname($path);
-    if (!is_dir($dir))
-        mkdir($dir, 0755, true);
-    if (file_exists($path))
-        unlink($path);
-    if (file_put_contents($path, $content) !== false) {
-        echo "<span style='color:green'> [OK] </span></p>";
-        if (function_exists('opcache_invalidate'))
-            opcache_invalidate($path, true);
-        return true;
-    } else {
-        echo "<span style='color:red'> [ERROR] </span></p>";
-        return false;
-    }
-}
-
-// 1. src/modules/catalogo/PublicCatalog.php
-$contentPublicCat = <<<'PHP'
-<?php
-namespace Vsys\Modules\Catalogo;
-
-use Vsys\Lib\Database;
-use Vsys\Modules\Config\PriceList;
-
-class PublicCatalog
-{
-    private $db;
-    private $priceListModule;
-
-    public function __construct()
-    {
-        $this->db = Database::getInstance();
-        $this->priceListModule = new PriceList();
-    }
-
-    public function getExchangeRate()
-    {
-        $stmt = $this->db->prepare("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1");
-        $stmt->execute();
-        $rate = $stmt->fetchColumn();
-        return $rate ? (float)$rate : 1200.00; 
-    }
-
-    public function getProductsForWeb()
-    {
-        $rate = $this->getExchangeRate();
-        
-        $lists = $this->priceListModule->getAll();
-        $webMargin = 40; 
-        foreach ($lists as $l) {
-            if ($l['name'] === 'Web') {
-                $webMargin = (float)$l['margin_percent'];
-                break;
-            }
-        }
-
-        $stmt = $this->db->prepare("SELECT * FROM products ORDER BY brand, description");
-        $stmt->execute();
-        $products = $stmt->fetchAll();
-
-        $webProducts = [];
-        foreach ($products as $p) {
-            $cost = (float)$p['unit_cost_usd'];
-            $iva = (float)$p['iva_rate'];
-            
-            $priceUsd = $cost * (1 + ($webMargin / 100));
-            $priceUsdWithIva = $priceUsd * (1 + ($iva / 100));
-            $priceArs = $priceUsdWithIva * $rate;
-
-            if ($priceArs > 0) {
-                $p['price_final_ars'] = round($priceArs, 0); 
-                $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.');
-                $p['image_url'] = !empty($p['image_url']) ? $p['image_url'] : 'https://placehold.co/300x300?text=No+Image';
-                $webProducts[] = $p;
-            }
-        }
-
-        return [
-            'rate' => $rate,
-            'products' => $webProducts
-        ];
-    }
-}
-PHP;
-writeFile(__DIR__ . '/src/modules/catalogo/PublicCatalog.php', $contentPublicCat);
-
-
-// 2. catalogo_publico.php
-$contentFrontend = <<<'PHP'
-<?php
 /**
  * Catálogo Público - VS System
  * No Authentication Required
@@ -119,6 +17,7 @@ $exchangeRate = $data['rate'];
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -137,16 +36,22 @@ $exchangeRate = $data['rate'];
             --text-muted: #94a3b8;
             --accent: #d946ef;
         }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg);
             color: var(--text);
-            padding-bottom: 80px; 
+            padding-bottom: 80px;
+            /* Space for mobile cart */
         }
 
+        /* Header */
         header {
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(10px);
@@ -192,11 +97,13 @@ $exchangeRate = $data['rate'];
             font-weight: bold;
         }
 
+        /* Filters */
         .search-bar {
             margin: 2rem 5%;
             display: flex;
             gap: 1rem;
         }
+
         .search-input {
             width: 100%;
             padding: 1rem;
@@ -207,6 +114,7 @@ $exchangeRate = $data['rate'];
             font-size: 1rem;
         }
 
+        /* Grid */
         .product-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -276,10 +184,12 @@ $exchangeRate = $data['rate'];
             cursor: pointer;
             transition: background 0.2s;
         }
+
         .btn-add:hover {
             background: var(--primary-dark);
         }
 
+        /* Cart Sidebar/Modal */
         .cart-modal {
             position: fixed;
             top: 0;
@@ -294,7 +204,7 @@ $exchangeRate = $data['rate'];
             padding: 2rem;
             display: flex;
             flex-direction: column;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
         }
 
         .cart-modal.open {
@@ -322,11 +232,18 @@ $exchangeRate = $data['rate'];
             align-items: center;
             margin-bottom: 1rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
-        
-        .cart-item-info h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
-        .cart-item-price { color: var(--text-muted); font-size: 0.85rem; }
+
+        .cart-item-info h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .cart-item-price {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
 
         .cart-actions button {
             background: #334155;
@@ -352,32 +269,38 @@ $exchangeRate = $data['rate'];
         }
 
         .checkout-form {
-            display: none; 
+            display: none;
+            /* Hidden until checkout click */
         }
-        
+
         .checkout-form input {
             width: 100%;
             padding: 10px;
             margin-bottom: 10px;
             border-radius: 6px;
             border: 1px solid #334155;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             color: white;
         }
 
         .overlay {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(2px);
             z-index: 900;
             display: none;
         }
-        .overlay.active { display: block; }
 
+        .overlay.active {
+            display: block;
+        }
     </style>
 </head>
+
 <body>
 
     <header>
@@ -394,12 +317,20 @@ $exchangeRate = $data['rate'];
 
     <div class="product-grid" id="productGrid">
         <?php foreach ($products as $p): ?>
-            <div class="product-card" data-title="<?php echo strtolower($p['description']); ?>" data-sku="<?php echo strtolower($p['sku']); ?>" data-brand="<?php echo strtolower($p['brand']); ?>">
-                <img src="<?php echo $p['image_url']; ?>" alt="<?php echo $p['description']; ?>" class="product-img" loading="lazy">
+            <div class="product-card" data-title="<?php echo strtolower($p['description']); ?>"
+                data-sku="<?php echo strtolower($p['sku']); ?>" data-brand="<?php echo strtolower($p['brand']); ?>">
+                <img src="<?php echo $p['image_url']; ?>" alt="<?php echo $p['description']; ?>" class="product-img"
+                    loading="lazy">
                 <div class="product-info">
-                    <div class="product-brand"><?php echo $p['brand']; ?></div>
-                    <h3 class="product-title"><?php echo $p['description']; ?></h3>
-                    <div class="product-price">$ <?php echo $p['price_final_formatted']; ?></div>
+                    <div class="product-brand">
+                        <?php echo $p['brand']; ?>
+                    </div>
+                    <h3 class="product-title">
+                        <?php echo $p['description']; ?>
+                    </h3>
+                    <div class="product-price">$
+                        <?php echo $p['price_final_formatted']; ?>
+                    </div>
                     <button class="btn-add" onclick='addToCart(<?php echo json_encode($p); ?>)'>
                         AGREGAR AL CARRITO
                     </button>
@@ -408,22 +339,27 @@ $exchangeRate = $data['rate'];
         <?php endforeach; ?>
     </div>
 
+    <!-- Overlay -->
     <div class="overlay" id="overlay" onclick="toggleCart()"></div>
 
+    <!-- Cart Modal -->
     <div class="cart-modal" id="cartModal">
         <div class="cart-header">
             <h3>Tu Carrito</h3>
-            <button onclick="toggleCart()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem;">&times;</button>
+            <button onclick="toggleCart()"
+                style="background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem;">&times;</button>
         </div>
 
-        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-items" id="cartItems">
+            <!-- Items injected here -->
+        </div>
 
         <div class="cart-summary">
             <div class="total-row">
                 <span>Total:</span>
                 <span id="cartTotal">$ 0</span>
             </div>
-            
+
             <div id="checkoutActions">
                 <button class="btn-add" style="background: var(--accent);" onclick="showCheckoutForm()">
                     INICIAR COMPRA
@@ -437,21 +373,26 @@ $exchangeRate = $data['rate'];
                 <input type="tel" id="custPhone" placeholder="WhatsApp (con código de área)" required>
                 <input type="email" id="custEmail" placeholder="Email" required>
                 <button class="btn-add" onclick="submitOrder()">CONFIRMAR PEDIDO</button>
-                <button onclick="hideCheckoutForm()" style="width: 100%; margin-top: 5px; padding: 5px; background: none; border: 1px solid #334155; color: #94a3b8; border-radius: 8px; cursor: pointer;">Volver</button>
+                <button onclick="hideCheckoutForm()"
+                    style="width: 100%; margin-top: 5px; padding: 5px; background: none; border: 1px solid #334155; color: #94a3b8; border-radius: 8px; cursor: pointer;">Volver</button>
             </div>
 
             <div id="orderSuccess" style="display: none; text-align: center; color: #4ade80;">
                 <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                 <p>¡Pedido enviado con éxito!</p>
                 <p style="font-size: 0.9rem; color: #94a3b8; margin-top: 5px;">Te contactaremos a la brevedad.</p>
-                <button onclick="clearCartAndClose()" style="margin-top: 15px; padding: 10px; background: #334155; border: none; color: white; border-radius: 8px; cursor: pointer;">Cerrar</button>
+                <button onclick="clearCartAndClose()"
+                    style="margin-top: 15px; padding: 10px; background: #334155; border: none; color: white; border-radius: 8px; cursor: pointer;">Cerrar</button>
             </div>
         </div>
     </div>
 
     <script>
+        // State
         let cart = JSON.parse(localStorage.getItem('vsys_cart')) || [];
-        
+
+        // --- Functions ---
+
         function saveCart() {
             localStorage.setItem('vsys_cart', JSON.stringify(cart));
             renderCart();
@@ -472,7 +413,7 @@ $exchangeRate = $data['rate'];
                 });
             }
             saveCart();
-            toggleCart(true); 
+            toggleCart(true); // Open cart on add
         }
 
         function removeFromCart(sku) {
@@ -505,7 +446,7 @@ $exchangeRate = $data['rate'];
                 cart.forEach(item => {
                     const itemTotal = item.price * item.quantity;
                     total += itemTotal;
-                    
+
                     const div = document.createElement('div');
                     div.className = 'cart-item';
                     div.innerHTML = `
@@ -575,6 +516,7 @@ $exchangeRate = $data['rate'];
                 total: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
             };
 
+            // Loading state
             const btn = document.querySelector('#checkoutForm button');
             const originalText = btn.innerText;
             btn.innerText = 'Enviando...';
@@ -585,34 +527,36 @@ $exchangeRate = $data['rate'];
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    cart = [];
-                    saveCart();
-                    document.getElementById('checkoutForm').style.display = 'none';
-                    document.getElementById('orderSuccess').style.display = 'block';
-                } else {
-                    alert('Error al enviar pedido: ' + data.message);
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Success
+                        cart = [];
+                        saveCart();
+                        document.getElementById('checkoutForm').style.display = 'none';
+                        document.getElementById('orderSuccess').style.display = 'block';
+                    } else {
+                        alert('Error al enviar pedido: ' + data.message);
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Error de conexión.');
                     btn.innerText = originalText;
                     btn.disabled = false;
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error de conexión.');
-                btn.innerText = originalText;
-                btn.disabled = false;
-            });
+                });
         }
 
         function clearCartAndClose() {
             document.getElementById('orderSuccess').style.display = 'none';
-            toggleCart(); 
-            document.getElementById('checkoutActions').style.display = 'block'; 
+            toggleCart(); // Close
+            document.getElementById('checkoutActions').style.display = 'block'; // Reset for next time
         }
 
-        document.getElementById('searchInput').addEventListener('input', function(e) {
+        // Search Filter
+        document.getElementById('searchInput').addEventListener('input', function (e) {
             const q = e.target.value.toLowerCase();
             const cards = document.querySelectorAll('.product-card');
             cards.forEach(card => {
@@ -625,78 +569,11 @@ $exchangeRate = $data['rate'];
             });
         });
 
+        // Initialize
         renderCart();
         updateBadge();
+
     </script>
 </body>
+
 </html>
-PHP;
-writeFile(__DIR__ . '/catalogo_publico.php', $contentFrontend);
-
-
-// 3. ajax_checkout.php
-$contentAjax = <<<'PHP'
-<?php
-header('Content-Type: application/json');
-require_once __DIR__ . '/src/config/config.php';
-require_once __DIR__ . '/src/lib/Database.php';
-
-use Vsys\Lib\Database;
-
-$input = json_decode(file_get_contents('php://input'), true);
-
-if (!$input) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid data']);
-    exit;
-}
-
-$customer = $input['customer'];
-$cart = $input['cart'];
-$total = $input['total'];
-
-if (empty($cart) || empty($customer['name'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Missing fields']);
-    exit;
-}
-
-try {
-    $db = Database::getInstance();
-
-    $orderDetails = "PEDIDO WEB\n";
-    $orderDetails .= "Fecha: " . date('d/m/Y H:i') . "\n";
-    $orderDetails .= "Cliente: " . $customer['name'] . "\n";
-    $orderDetails .= "DNI/CUIT: " . $customer['dni'] . "\n";
-    $orderDetails .= "------------- PRODUCTOS -------------\n";
-    
-    foreach ($cart as $item) {
-        $orderDetails .= "- {$item['quantity']}x [{$item['sku']}] {$item['title']} ($ " . number_format($item['price'], 0, ',', '.') . ")\n";
-    }
-    
-    $orderDetails .= "-------------------------------------\n";
-    $orderDetails .= "TOTAL ESTIMADO: $ " . number_format($total, 0, ',', '.') . "\n";
-
-    $contactJson = json_encode([
-        'phone' => $customer['phone'],
-        'email' => $customer['email'],
-        'dni' => $customer['dni']
-    ]);
-    
-    $stmt = $db->prepare("INSERT INTO crm_leads (name, contact_details, source, status, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
-    $stmt->execute([
-        $customer['name'],
-        $contactJson,
-        'Web',
-        'Nuevo', 
-        $orderDetails
-    ]);
-
-    echo json_encode(['status' => 'success']);
-
-} catch (Exception $e) {
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
-}
-PHP;
-writeFile(__DIR__ . '/ajax_checkout.php', $contentAjax);
-
-echo "<hr><p>¡Actualización v8 Completa! Catálogo Público y Checkout.</p>";
-?>
