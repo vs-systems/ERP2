@@ -1,12 +1,12 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos v8 (Public Catalog)
+// restore_files.php - Restauración de Archivos Críticos v9 (Fix CRM & Checkout)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
-echo "<h1>Restaurador de Archivos Críticos v8 (Catálogo Público)</h1>";
+echo "<h1>Restaurador de Archivos Críticos v9 (Fix CRM & Checkout)</h1>";
 
 function writeFile($path, $content)
 {
@@ -27,7 +27,56 @@ function writeFile($path, $content)
     }
 }
 
-// 1. src/modules/catalogo/PublicCatalog.php
+// 0. DB MIGRATION: Ensure crm_leads has 'source' and 'contact_details' is handled ?? 
+// Actually we should match the Code schema: name, contact_person, email, phone, status, notes
+// We will add 'source' column if missing.
+try {
+    $db = Vsys\Lib\Database::getInstance();
+    $db->exec("ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'Manually'");
+    echo "<p style='color:blue'>[DB] crm_leads schema updated (source column).</p>";
+} catch (Exception $e) {
+    echo "<p style='color:orange'>[DB Warning] " . $e->getMessage() . "</p>";
+}
+
+// 1. src/sync_bcra.php (Use DolarAPI for BNA/Oficial rate)
+$contentSync = <<<'PHP'
+<?php
+/**
+ * VS System ERP - Exchange Rate Sync
+ * Uses DolarAPI (https://dolarapi.com) to get the "Oficial" Venta rate (Approx BNA Retail)
+ */
+
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../lib/Database.php';
+
+use Vsys\Lib\Database;
+
+try {
+    // Fetch Oficial Rate (Standard Retail)
+    $json = file_get_contents('https://dolarapi.com/v1/dolares/oficial');
+    $data = json_decode($json, true);
+
+    if ($data && isset($data['venta'])) {
+        $rate = (float)$data['venta']; // e.g. 1455
+        
+        $db = Database::getInstance();
+        $stmt = $db->prepare("INSERT INTO exchange_rates (rate, source, created_at) VALUES (?, 'DolarAPI_Oficial', NOW())");
+        $stmt->execute([$rate]);
+        
+        echo "Successfully updated Rate: ARS " . $rate . " (Source: DolarAPI Oficial)\n";
+    } else {
+        echo "Error: Invalid response from DolarAPI.\n";
+    }
+
+} catch (Exception $e) {
+    echo "Error syncing rate: " . $e->getMessage() . "\n";
+}
+?>
+PHP;
+writeFile(__DIR__ . '/src/sync_bcra.php', $contentSync);
+
+
+// 2. src/modules/catalogo/PublicCatalog.php (Ensure it gets latest rate)
 $contentPublicCat = <<<'PHP'
 <?php
 namespace Vsys\Modules\Catalogo;
@@ -48,10 +97,12 @@ class PublicCatalog
 
     public function getExchangeRate()
     {
+        // Get the latest rate from DB
         $stmt = $this->db->prepare("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1");
         $stmt->execute();
         $rate = $stmt->fetchColumn();
-        return $rate ? (float)$rate : 1200.00; 
+        // Fallback if DB empty
+        return $rate ? (float)$rate : 1455.00; 
     }
 
     public function getProductsForWeb()
@@ -81,6 +132,7 @@ class PublicCatalog
             $priceArs = $priceUsdWithIva * $rate;
 
             if ($priceArs > 0) {
+                // Rounding
                 $p['price_final_ars'] = round($priceArs, 0); 
                 $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.');
                 $p['image_url'] = !empty($p['image_url']) ? $p['image_url'] : 'https://placehold.co/300x300?text=No+Image';
@@ -94,609 +146,279 @@ class PublicCatalog
         ];
     }
 }
+?>
 PHP;
 writeFile(__DIR__ . '/src/modules/catalogo/PublicCatalog.php', $contentPublicCat);
 
 
-// 2. catalogo_publico.php
-$contentFrontend = <<<'PHP'
-<?php
-/**
- * Catálogo Público - VS System
- * No Authentication Required
- */
-require_once __DIR__ . '/src/config/config.php';
-require_once __DIR__ . '/src/lib/Database.php';
-require_once __DIR__ . '/src/modules/config/PriceList.php';
-require_once __DIR__ . '/src/modules/catalogo/PublicCatalog.php';
-
-use Vsys\Modules\Catalogo\PublicCatalog;
-
-$publicCatalog = new PublicCatalog();
-$data = $publicCatalog->getProductsForWeb();
-$products = $data['products'];
-$exchangeRate = $data['rate'];
-?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo Online - Vecino Seguro Sistemas</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root {
-            --primary: #8b5cf6;
-            --primary-dark: #7c3aed;
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #d946ef;
-        }
-        
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            padding-bottom: 80px; 
-        }
-
-        header {
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(10px);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            border-bottom: 1px solid #334155;
-            padding: 1rem 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(to right, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
-        }
-
-        .cart-icon-header {
-            position: relative;
-            cursor: pointer;
-            font-size: 1.2rem;
-            color: white;
-        }
-
-        .cart-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: var(--accent);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        .search-bar {
-            margin: 2rem 5%;
-            display: flex;
-            gap: 1rem;
-        }
-        .search-input {
-            width: 100%;
-            padding: 1rem;
-            border-radius: 12px;
-            border: 1px solid #334155;
-            background: var(--card-bg);
-            color: white;
-            font-size: 1rem;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 2rem;
-            padding: 0 5%;
-        }
-
-        .product-card {
-            background: var(--card-bg);
-            border: 1px solid #334155;
-            border-radius: 16px;
-            overflow: hidden;
-            transition: transform 0.2s;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .product-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--primary);
-        }
-
-        .product-img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            background: #020617;
-        }
-
-        .product-info {
-            padding: 1.5rem;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .product-brand {
-            color: var(--accent);
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-        }
-
-        .product-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: auto;
-            line-height: 1.4;
-        }
-
-        .product-price {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #fff;
-            margin: 1rem 0;
-        }
-
-        .btn-add {
-            width: 100%;
-            padding: 0.8rem;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-add:hover {
-            background: var(--primary-dark);
-        }
-
-        .cart-modal {
-            position: fixed;
-            top: 0;
-            right: -400px;
-            width: 100%;
-            max-width: 400px;
-            height: 100vh;
-            background: #0f172a;
-            border-left: 1px solid #334155;
-            z-index: 1000;
-            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-        }
-
-        .cart-modal.open {
-            right: 0;
-        }
-
-        .cart-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 1rem;
-        }
-
-        .cart-items {
-            flex-grow: 1;
-            overflow-y: auto;
-            margin-bottom: 1rem;
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        .cart-item-info h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
-        .cart-item-price { color: var(--text-muted); font-size: 0.85rem; }
-
-        .cart-actions button {
-            background: #334155;
-            border: none;
-            color: white;
-            width: 25px;
-            height: 25px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .cart-summary {
-            border-top: 1px solid #334155;
-            padding-top: 1rem;
-        }
-
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 1.2rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-        }
-
-        .checkout-form {
-            display: none; 
-        }
-        
-        .checkout-form input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            border: 1px solid #334155;
-            background: rgba(255,255,255,0.05);
-            color: white;
-        }
-
-        .overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            backdrop-filter: blur(2px);
-            z-index: 900;
-            display: none;
-        }
-        .overlay.active { display: block; }
-
-    </style>
-</head>
-<body>
-
-    <header>
-        <div class="logo">VS SYSTEMS <span style="font-weight:400; font-size: 1rem;">| SHOP</span></div>
-        <div class="cart-icon-header" onclick="toggleCart()">
-            <i class="fas fa-shopping-cart"></i>
-            <span class="cart-badge" id="cartBadge">0</span>
-        </div>
-    </header>
-
-    <div class="search-bar">
-        <input type="text" class="search-input" placeholder="Buscar productos..." id="searchInput">
-    </div>
-
-    <div class="product-grid" id="productGrid">
-        <?php foreach ($products as $p): ?>
-            <div class="product-card" data-title="<?php echo strtolower($p['description']); ?>" data-sku="<?php echo strtolower($p['sku']); ?>" data-brand="<?php echo strtolower($p['brand']); ?>">
-                <img src="<?php echo $p['image_url']; ?>" alt="<?php echo $p['description']; ?>" class="product-img" loading="lazy">
-                <div class="product-info">
-                    <div class="product-brand"><?php echo $p['brand']; ?></div>
-                    <h3 class="product-title"><?php echo $p['description']; ?></h3>
-                    <div class="product-price">$ <?php echo $p['price_final_formatted']; ?></div>
-                    <button class="btn-add" onclick='addToCart(<?php echo json_encode($p); ?>)'>
-                        AGREGAR AL CARRITO
-                    </button>
-                </div>
-            </div>
-        <?php endforeach; ?>
-    </div>
-
-    <div class="overlay" id="overlay" onclick="toggleCart()"></div>
-
-    <div class="cart-modal" id="cartModal">
-        <div class="cart-header">
-            <h3>Tu Carrito</h3>
-            <button onclick="toggleCart()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.5rem;">&times;</button>
-        </div>
-
-        <div class="cart-items" id="cartItems"></div>
-
-        <div class="cart-summary">
-            <div class="total-row">
-                <span>Total:</span>
-                <span id="cartTotal">$ 0</span>
-            </div>
-            
-            <div id="checkoutActions">
-                <button class="btn-add" style="background: var(--accent);" onclick="showCheckoutForm()">
-                    INICIAR COMPRA
-                </button>
-            </div>
-
-            <div class="checkout-form" id="checkoutForm">
-                <h4 style="margin-bottom: 10px; color: var(--primary);">Datos de Contacto</h4>
-                <input type="text" id="custName" placeholder="Nombre completo" required>
-                <input type="text" id="custDni" placeholder="DNI / CUIT" required>
-                <input type="tel" id="custPhone" placeholder="WhatsApp (con código de área)" required>
-                <input type="email" id="custEmail" placeholder="Email" required>
-                <button class="btn-add" onclick="submitOrder()">CONFIRMAR PEDIDO</button>
-                <button onclick="hideCheckoutForm()" style="width: 100%; margin-top: 5px; padding: 5px; background: none; border: 1px solid #334155; color: #94a3b8; border-radius: 8px; cursor: pointer;">Volver</button>
-            </div>
-
-            <div id="orderSuccess" style="display: none; text-align: center; color: #4ade80;">
-                <i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                <p>¡Pedido enviado con éxito!</p>
-                <p style="font-size: 0.9rem; color: #94a3b8; margin-top: 5px;">Te contactaremos a la brevedad.</p>
-                <button onclick="clearCartAndClose()" style="margin-top: 15px; padding: 10px; background: #334155; border: none; color: white; border-radius: 8px; cursor: pointer;">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        let cart = JSON.parse(localStorage.getItem('vsys_cart')) || [];
-        
-        function saveCart() {
-            localStorage.setItem('vsys_cart', JSON.stringify(cart));
-            renderCart();
-            updateBadge();
-        }
-
-        function addToCart(product) {
-            const existing = cart.find(item => item.sku === product.sku);
-            if (existing) {
-                existing.quantity++;
-            } else {
-                cart.push({
-                    sku: product.sku,
-                    title: product.description,
-                    price: product.price_final_ars,
-                    priceFormatted: product.price_final_formatted,
-                    quantity: 1
-                });
-            }
-            saveCart();
-            toggleCart(true); 
-        }
-
-        function removeFromCart(sku) {
-            cart = cart.filter(item => item.sku !== sku);
-            saveCart();
-        }
-
-        function updateQuantity(sku, change) {
-            const item = cart.find(i => i.sku === sku);
-            if (item) {
-                item.quantity += change;
-                if (item.quantity <= 0) {
-                    removeFromCart(sku);
-                } else {
-                    saveCart();
-                }
-            }
-        }
-
-        function renderCart() {
-            const container = document.getElementById('cartItems');
-            container.innerHTML = '';
-            let total = 0;
-
-            if (cart.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color: #64748b; margin-top: 2rem;">El carrito está vacío.</p>';
-                document.getElementById('checkoutActions').style.display = 'none';
-            } else {
-                document.getElementById('checkoutActions').style.display = 'block';
-                cart.forEach(item => {
-                    const itemTotal = item.price * item.quantity;
-                    total += itemTotal;
-                    
-                    const div = document.createElement('div');
-                    div.className = 'cart-item';
-                    div.innerHTML = `
-                        <div class="cart-item-info">
-                            <h4>${item.title}</h4>
-                            <div class="cart-item-price">$ ${new Intl.NumberFormat('es-AR').format(item.price)} x ${item.quantity}</div>
-                        </div>
-                        <div class="cart-actions" style="display:flex; gap: 5px; align-items: center;">
-                            <button onclick="updateQuantity('${item.sku}', -1)">-</button>
-                            <span style="font-size: 0.9rem; min-width: 20px; text-align: center;">${item.quantity}</span>
-                            <button onclick="updateQuantity('${item.sku}', 1)">+</button>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                });
-            }
-
-            document.getElementById('cartTotal').innerText = '$ ' + new Intl.NumberFormat('es-AR').format(total);
-        }
-
-        function updateBadge() {
-            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-            document.getElementById('cartBadge').innerText = count;
-        }
-
-        function toggleCart(forceOpen = false) {
-            const modal = document.getElementById('cartModal');
-            const overlay = document.getElementById('overlay');
-            if (forceOpen || !modal.classList.contains('open')) {
-                modal.classList.add('open');
-                overlay.classList.add('active');
-            } else {
-                modal.classList.remove('open');
-                overlay.classList.remove('active');
-            }
-        }
-
-        function showCheckoutForm() {
-            document.getElementById('checkoutActions').style.display = 'none';
-            document.getElementById('checkoutForm').style.display = 'block';
-        }
-
-        function hideCheckoutForm() {
-            document.getElementById('checkoutActions').style.display = 'block';
-            document.getElementById('checkoutForm').style.display = 'none';
-        }
-
-        function submitOrder() {
-            const name = document.getElementById('custName').value.trim();
-            const dni = document.getElementById('custDni').value.trim();
-            const phone = document.getElementById('custPhone').value.trim();
-            const email = document.getElementById('custEmail').value.trim();
-
-            if (!name || !dni || !phone || !email) {
-                alert('Por favor complete todos los datos de contacto.');
-                return;
-            }
-
-            if (cart.length === 0) {
-                alert('El carrito está vacío.');
-                return;
-            }
-
-            const payload = {
-                customer: { name, dni, phone, email },
-                cart: cart,
-                total: cart.reduce((acc, item) => acc + (item.price * item.quantity), 0)
-            };
-
-            const btn = document.querySelector('#checkoutForm button');
-            const originalText = btn.innerText;
-            btn.innerText = 'Enviando...';
-            btn.disabled = true;
-
-            fetch('ajax_checkout.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    cart = [];
-                    saveCart();
-                    document.getElementById('checkoutForm').style.display = 'none';
-                    document.getElementById('orderSuccess').style.display = 'block';
-                } else {
-                    alert('Error al enviar pedido: ' + data.message);
-                    btn.innerText = originalText;
-                    btn.disabled = false;
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error de conexión.');
-                btn.innerText = originalText;
-                btn.disabled = false;
-            });
-        }
-
-        function clearCartAndClose() {
-            document.getElementById('orderSuccess').style.display = 'none';
-            toggleCart(); 
-            document.getElementById('checkoutActions').style.display = 'block'; 
-        }
-
-        document.getElementById('searchInput').addEventListener('input', function(e) {
-            const q = e.target.value.toLowerCase();
-            const cards = document.querySelectorAll('.product-card');
-            cards.forEach(card => {
-                const text = card.getAttribute('data-title') + ' ' + card.getAttribute('data-sku') + ' ' + card.getAttribute('data-brand');
-                if (text.includes(q)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        });
-
-        renderCart();
-        updateBadge();
-    </script>
-</body>
-</html>
-PHP;
-writeFile(__DIR__ . '/catalogo_publico.php', $contentFrontend);
-
-
-// 3. ajax_checkout.php
+// 3. ajax_checkout.php (Fix Schema Mismatch & Add Logging)
 $contentAjax = <<<'PHP'
 <?php
 header('Content-Type: application/json');
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/checkout_errors.log');
+
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
 use Vsys\Lib\Database;
 
-$input = json_decode(file_get_contents('php://input'), true);
-
-if (!$input) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid data']);
-    exit;
-}
-
-$customer = $input['customer'];
-$cart = $input['cart'];
-$total = $input['total'];
-
-if (empty($cart) || empty($customer['name'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Missing fields']);
-    exit;
-}
-
 try {
+    $input = json_decode(file_get_contents('php://input'), true);
+
+    if (!$input) {
+        throw new Exception('Invalid JSON Input');
+    }
+
+    $customer = $input['customer'] ?? [];
+    $cart = $input['cart'] ?? [];
+    $total = $input['total'] ?? 0;
+
+    if (empty($cart) || empty($customer['name'])) {
+        throw new Exception('Missing cart or customer name');
+    }
+
     $db = Database::getInstance();
 
     $orderDetails = "PEDIDO WEB\n";
     $orderDetails .= "Fecha: " . date('d/m/Y H:i') . "\n";
     $orderDetails .= "Cliente: " . $customer['name'] . "\n";
-    $orderDetails .= "DNI/CUIT: " . $customer['dni'] . "\n";
+    $orderDetails .= "DNI/CUIT: " . ($customer['dni'] ?? '-') . "\n";
     $orderDetails .= "------------- PRODUCTOS -------------\n";
     
     foreach ($cart as $item) {
-        $orderDetails .= "- {$item['quantity']}x [{$item['sku']}] {$item['title']} ($ " . number_format($item['price'], 0, ',', '.') . ")\n";
+        $orderDetails .= "- " . ($item['quantity']??1) . "x [{$item['sku']}] {$item['title']} ($ " . number_format($item['price'], 0, ',', '.') . ")\n";
     }
     
     $orderDetails .= "-------------------------------------\n";
     $orderDetails .= "TOTAL ESTIMADO: $ " . number_format($total, 0, ',', '.') . "\n";
 
-    $contactJson = json_encode([
-        'phone' => $customer['phone'],
-        'email' => $customer['email'],
-        'dni' => $customer['dni']
-    ]);
+    // Insert using correct columns: name, contact_person, email, phone, status, notes, source
+    // We map 'dni' to contact_person or notes? Let's put DNI in notes/summary, or contact_person if usable.
+    // Source requires the ALTER TABLE we did above.
     
-    $stmt = $db->prepare("INSERT INTO crm_leads (name, contact_details, source, status, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())");
+    $stmt = $db->prepare("INSERT INTO crm_leads (name, email, phone, status, notes, source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
     $stmt->execute([
         $customer['name'],
-        $contactJson,
-        'Web',
+        $customer['email'] ?? '',
+        $customer['phone'] ?? '',
         'Nuevo', 
-        $orderDetails
+        $orderDetails,
+        'Web'
     ]);
 
     echo json_encode(['status' => 'success']);
 
 } catch (Exception $e) {
+    error_log("Checkout Error: " . $e->getMessage());
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
+?>
 PHP;
 writeFile(__DIR__ . '/ajax_checkout.php', $contentAjax);
 
-echo "<hr><p>¡Actualización v8 Completa! Catálogo Público y Checkout.</p>";
+
+// 4. public/crm.php (The Pipeline UI)
+$contentCRM = <<<'PHP'
+<?php
+/**
+ * CRM Dashboard - Pipeline View
+ */
+require_once __DIR__ . '/../src/config/config.php';
+require_once __DIR__ . '/../src/lib/Database.php';
+require_once __DIR__ . '/../src/modules/crm/CRM.php';
+
+use Vsys\Modules\CRM\CRM;
+
+$crm = new CRM();
+$stats = $crm->getStats();
+
+// Fetch leads for columns
+$leadsNuevo = $crm->getLeadsByStatus('Nuevo');
+$leadsContactado = $crm->getLeadsByStatus('Contactado');
+$leadsPresupuesto = $crm->getLeadsByStatus('Presupuestado');
+$leadsGanado = $crm->getLeadsByStatus('Ganado');
+
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>CRM Pipeline - VS System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --primary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        
+        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 20px; }
+        .stat-card { background: var(--card); padding: 15px; border-radius: 8px; border: 1px solid #334155; }
+        .stat-val { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+        .stat-label { font-size: 0.9rem; color: #94a3b8; }
+
+        .pipeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; height: calc(100vh - 150px); }
+        .column { background: rgba(30, 41, 59, 0.5); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; }
+        .col-header { 
+            padding: 10px; font-weight: bold; border-bottom: 2px solid #334155; margin-bottom: 10px; 
+            display: flex; justify-content: space-between;
+        }
+        .col-header .count { background: #334155; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+        
+        .column.nuevo .col-header { border-color: var(--primary); }
+        .column.contactado .col-header { border-color: var(--warning); }
+        .column.presupuesto .col-header { border-color: #3b82f6; }
+        .column.ganado .col-header { border-color: var(--success); }
+
+        .cards-container { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
+
+        .lead-card {
+            background: var(--card);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+        .lead-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+        
+        .lead-name { font-weight: 600; margin-bottom: 5px; }
+        .lead-contact { font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px; }
+        .lead-source { font-size: 0.75rem; background: #334155; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .lead-date { position: absolute; top: 10px; right: 10px; font-size: 0.7rem; color: #64748b; }
+        
+        .actions { margin-top: 10px; display: flex; gap: 5px; justify-content: flex-end; }
+        .btn-sm { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8rem; }
+        .btn-move { background: #334155; color: white; }
+        .btn-move:hover { background: var(--primary); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-funnel-dollar"></i> CRM Pipeline</h1>
+        <a href="index.php" style="color: #94a3b8; text-decoration: none;"><i class="fas fa-home"></i> Volver</a>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-card">
+            <div class="stat-val"><?php echo $stats['active_quotes']; ?></div>
+            <div class="stat-label">Presupuestos Activos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val"><?php echo $stats['orders_today']; ?></div>
+            <div class="stat-label">Pedidos Hoy</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val"><?php echo $stats['efficiency']; ?>%</div>
+            <div class="stat-label">Eficiencia de Cierre</div>
+        </div>
+    </div>
+
+    <div class="pipeline">
+        <!-- Nuevos -->
+        <div class="column nuevo">
+            <div class="col-header">
+                <span>NUEVO</span>
+                <span class="count"><?php echo count($leadsNuevo); ?></span>
+            </div>
+            <div class="cards-container">
+                <?php foreach ($leadsNuevo as $l): ?>
+                    <?php renderCard($l); ?>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- Contactados -->
+        <div class="column contactado">
+            <div class="col-header">
+                <span>CONTACTADO</span>
+                <span class="count"><?php echo count($leadsContactado); ?></span>
+            </div>
+            <div class="cards-container">
+                <?php foreach ($leadsContactado as $l): ?>
+                    <?php renderCard($l); ?>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- Presupuestados -->
+        <div class="column presupuesto">
+            <div class="col-header">
+                <span>PRESUPUESTADO</span>
+                <span class="count"><?php echo count($leadsPresupuesto); ?></span>
+            </div>
+            <div class="cards-container">
+                <?php foreach ($leadsPresupuesto as $l): ?>
+                    <?php renderCard($l); ?>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- Ganados -->
+        <div class="column ganado">
+            <div class="col-header">
+                <span>GANADO</span>
+                <span class="count"><?php echo count($leadsGanado); ?></span>
+            </div>
+            <div class="cards-container">
+                <?php foreach ($leadsGanado as $l): ?>
+                    <?php renderCard($l); ?>
+                <?php endforeach; ?>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
+<?php
+function renderCard($lead) {
+    $date = date('d/m', strtotime($lead['created_at']));
+    $source = isset($lead['source']) ? $lead['source'] : 'Manual';
+    $notes = substr($lead['notes'] ?? '', 0, 80) . '...';
+    echo "
+    <div class='lead-card' onclick='alert(\"Detalles: " . htmlspecialchars($notes) . "\")'>
+        <div class='lead-date'>$date</div>
+        <div class='lead-name'>{$lead['name']}</div>
+        <div class='lead-contact'>
+            <i class='fas fa-envelope'></i> {$lead['email']}<br>
+            <i class='fas fa-phone'></i> {$lead['phone']}
+        </div>
+        <div class='lead-source'>$source</div>
+        <div class='actions'>
+            <button class='btn-sm btn-move' onclick='event.stopPropagation(); moveLead({$lead['id']}, \"next\")'>></button>
+        </div>
+    </div>
+    ";
+}
+?>
+<script>
+function moveLead(id, direction) {
+    // Implement AJAX move (Not implemented in this view yet, just mock)
+    // alert('Mover lead ' + id);
+    // Ideally we call an endpoint to update status
+}
+</script>
+PHP;
+writeFile(__DIR__ . '/public/crm.php', $contentCRM);
+
+echo "<hr><p>¡Restauración Completa v9! CRM Pipeline + Checkout Fix + DolarAPI.</p>";
+echo "<p>Por favor ejecute <a href='public/crm.php'>CRM Update</a> para verificar.</p>";
 ?>
