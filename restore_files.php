@@ -1,12 +1,12 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos v17 (Logística Fix Table Name)
+// restore_files.php - Restauración de Archivos Críticos v18 (Unified Sidebar)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
-echo "<h1>Restaurador de Archivos Críticos v17 (Logística Fix)</h1>";
+echo "<h1>Restaurador de Archivos Críticos v18 (Unified Sidebar)</h1>";
 
 function writeFile($path, $content)
 {
@@ -27,66 +27,53 @@ function writeFile($path, $content)
     }
 }
 
-// 1. MySQL Database Migrations (Fix: Rename quotes to quotations)
-try {
-    $db = \Vsys\Lib\Database::getInstance();
-    echo "<h3>Ejecutando Migraciones MySQL (v17)...</h3>";
+// 1. Sidebar Component
+$contentSidebar = <<<'PHP'
+<?php
+$currentPage = basename($_SERVER['PHP_SELF'], '.php');
+$navItems = [
+    ['id' => 'index', 'href' => 'index.php', 'icon' => 'fas fa-home', 'label' => 'DASHBOARD'],
+    ['id' => 'analisis', 'href' => 'analisis.php', 'icon' => 'fas fa-chart-line', 'label' => 'ANÁLISIS OP.'],
+    ['id' => 'productos', 'href' => 'productos.php', 'icon' => 'fas fa-box-open', 'label' => 'PRODUCTOS'],
+    ['id' => 'presupuestos', 'href' => 'presupuestos.php', 'icon' => 'fas fa-history', 'label' => 'PRESUPUESTOS'],
+    ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'fas fa-users', 'label' => 'CLIENTES'],
+    ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'fas fa-truck-loading', 'label' => 'PROVEEDORES'],
+    ['id' => 'compras', 'href' => 'compras.php', 'icon' => 'fas fa-cart-arrow-down', 'label' => 'COMPRAS'],
+    ['id' => 'crm', 'href' => 'crm.php', 'icon' => 'fas fa-handshake', 'label' => 'CRM'],
+    ['id' => 'cotizador', 'href' => 'cotizador.php', 'icon' => 'fas fa-file-invoice-dollar', 'label' => 'COTIZADOR'],
+    ['id' => 'logistica', 'href' => 'logistica.php', 'icon' => 'fas fa-truck', 'label' => 'LOGÍSTICA'],
+    ['id' => 'facturacion', 'href' => 'facturacion.php', 'icon' => 'fas fa-file-invoice', 'label' => 'FACTURACIÓN'],
+    ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'fas fa-cogs', 'label' => 'CONFIGURACIÓN'],
+];
+?>
+<nav class="sidebar">
+    <?php foreach ($navItems as $item): ?>
+        <a href="<?php echo $item['href']; ?>" class="nav-link <?php echo ($currentPage === $item['id']) ? 'active' : ''; ?>">
+            <i class="<?php echo $item['icon']; ?>"></i> <?php echo $item['label']; ?>
+        </a>
+    <?php endforeach; ?>
+    <a href="catalogo_publico.php" class="nav-link" target="_blank" style="color: #25d366; font-weight: 700; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px; padding-top: 15px;">
+        <i class="fas fa-external-link-alt"></i> VER CATÁLOGO
+    </a>
+</nav>
+PHP;
+writeFile(__DIR__ . '/sidebar.php', $contentSidebar);
 
-    $queries = [
-        "CREATE TABLE IF NOT EXISTS transports (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            contact_person VARCHAR(255),
-            phone VARCHAR(100),
-            email VARCHAR(255),
-            is_active TINYINT(1) DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+// 2. Refreshing main files to use include 'sidebar.php'
+$filesToUpdateSidebar = ['index.php', 'configuration.php', 'logistica.php', 'productos.php', 'presupuestos.php', 'clientes.php', 'proveedores.php', 'compras.php', 'crm.php', 'cotizador.php', 'analisis.php'];
 
-        "CREATE TABLE IF NOT EXISTS logistics_remitos (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            quote_number VARCHAR(100),
-            transport_id INT,
-            remito_number VARCHAR(100) UNIQUE,
-            status VARCHAR(50) DEFAULT 'Pending',
-            tracking_url TEXT,
-            signed_remito_path TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            dispatched_at TIMESTAMP NULL,
-            delivered_at TIMESTAMP NULL,
-            INDEX(quote_number),
-            INDEX(transport_id)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
-
-        "CREATE TABLE IF NOT EXISTS operation_documents (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            entity_id VARCHAR(100) NOT NULL,
-            entity_type VARCHAR(50) NOT NULL,
-            doc_type VARCHAR(50) NOT NULL,
-            file_path VARCHAR(255) NOT NULL,
-            notes TEXT,
-            uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
-
-        // CORRECCIÓN: La tabla se llama 'quotations', no 'quotes'
-        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS authorized_dispatch TINYINT(1) DEFAULT 0;",
-        "ALTER TABLE quotations ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'Pending';"
-    ];
-
-    foreach ($queries as $q) {
-        try {
-            $db->exec($q);
-            echo "<p style='color:blue'>SQL OK: " . substr($q, 0, 50) . "...</p>";
-        } catch (Exception $ex) {
-            echo "<p style='color:orange'>SQL Info: " . $ex->getMessage() . "</p>";
+foreach ($filesToUpdateSidebar as $file) {
+    if (file_exists(__DIR__ . '/' . $file)) {
+        $content = file_get_contents(__DIR__ . '/' . $file);
+        // Regex to replace <nav class="sidebar">...</nav> with include 'sidebar.php'
+        $newContent = preg_replace('/<nav class="sidebar">.*?<\/nav>/s', '<?php include "sidebar.php"; ?>', $content);
+        if ($newContent !== $content) {
+            writeFile(__DIR__ . '/' . $file, $newContent);
         }
     }
-    echo "<p style='color:green'><b>Migraciones completadas.</b></p>";
-} catch (Exception $e) {
-    echo "<p style='color:red'>Error en BD: " . $e->getMessage() . "</p>";
 }
 
-// 2. Logistics Backend Fix
+// 3. Re-assert Logistics Classes
 $contentLogisticsClass = <<<'PHP'
 <?php
 namespace Vsys\Modules\Logistica;
@@ -95,7 +82,6 @@ class Logistics {
     private $db;
     public function __construct() { $this->db = Database::getInstance(); }
     public function getOrdersForPreparation() {
-        // Fix: Usar 'quotations' en lugar de 'quotes'
         return $this->db->query("SELECT q.*, c.name as client_name FROM quotations q LEFT JOIN clients c ON q.client_id = c.id WHERE q.payment_status = 'Paid' OR q.authorized_dispatch = 1 ORDER BY q.created_at DESC")->fetchAll();
     }
     public function getTransports($onlyActive = true) {
@@ -120,5 +106,5 @@ class Logistics {
 PHP;
 writeFile(__DIR__ . '/src/modules/logistica/Logistics.php', $contentLogisticsClass);
 
-echo "<hr><p>¡Actualización v17 Completada! Error de tabla 'quotes' -> 'quotations' corregido.</p>";
+echo "<hr><p>¡Actualización v18 Completa! Sidebar centralizado y navegación corregida.</p>";
 ?>

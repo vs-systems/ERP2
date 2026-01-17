@@ -63,22 +63,7 @@ require_once 'auth_check.php';
     </header>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="analisis.php" class="nav-link"><i class="fas fa-chart-line"></i> ANÁLISIS OP.</a>
-            <a href="productos.php" class="nav-link"><i class="fas fa-box-open"></i> PRODUCTOS</a>
-            <a href="presupuestos.php" class="nav-link"><i class="fas fa-history"></i> PRESUPUESTOS</a>
-            <a href="clientes.php" class="nav-link"><i class="fas fa-users"></i> CLIENTES</a>
-            <a href="proveedores.php" class="nav-link"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
-            <a href="compras.php" class="nav-link"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
-            <a href="crm.php" class="nav-link"><i class="fas fa-handshake"></i> CRM</a>
-            <a href="cotizador.php" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
-            <a href="logistica.php" class="nav-link"><i class="fas fa-truck"></i> LOGÍSTICA</a>
-            <a href="facturacion.php" class="nav-link"><i class="fas fa-file-invoice"></i> FACTURACIÓN</a>
-            <a href="configuration.php" class="nav-link active"><i class="fas fa-cogs"></i> CONFIGURACIÓN</a>
-            <a href="catalogo_publico.php" class="nav-link" target="_blank" style="color: #25d366; font-weight: 700;"><i
-                    class="fas fa-external-link-alt"></i> VER CATÁLOGO</a>
-        </nav>
+        <?php include 'sidebar.php'; ?>
 
         <main class="content">
             <div class="card">
