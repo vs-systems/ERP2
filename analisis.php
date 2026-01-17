@@ -14,7 +14,7 @@ $quotationId = $_GET['id'] ?? null;
 $analysis = null;
 if ($quotationId) {
     try {
-        $analysis = $analyzer->analyzeQuotation($quotationId);
+        $analysis = $analyzer->getQuotationAnalysis($quotationId);
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
@@ -105,11 +105,52 @@ if ($quotationId) {
                 <div class="card" style="text-align: center; padding: 50px;">
                     <h3><i class="fas fa-search-dollar"></i> Seleccione una Cotización</h3>
                     <p>Ingrese el ID de la cotización para ver su análisis de rentabilidad.</p>
-                    <form action="analisis.php" method="GET" style="margin-top: 20px;">
-                        <input type="number" name="id" placeholder="ID Cotización (Ej: 15)"
-                            style="padding: 10px; width: 200px; border-radius: 6px; border: 1px solid var(--accent-violet); background: #1e293b; color: white;">
-                        <button type="submit" class="btn-primary">ANALIZAR</button>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" name="id" placeholder="ID Cotización"
+                            style="padding: 10px; width: 150px; border-radius: 6px; border: 1px solid var(--accent-violet); background: #1e293b; color: white;">
+                        <button type="submit" class="btn-primary">BUSCAR</button>
+                    </div>
                     </form>
+                </div>
+
+                <div class="card" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-history"></i> &Uacute;ltimas Operaciones Disponibles</h3>
+                    <div class="table-responsive">
+                        <table class="table-compact">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Monto (USD)</th>
+                                    <th style="text-align: center;">Acci&oacute;n</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $db = Vsys\Lib\Database::getInstance();
+                                $recentOps = $db->query("SELECT q.id, q.quote_number, q.created_at, q.subtotal_usd, e.name as client_name 
+                                                         FROM quotations q 
+                                                         JOIN entities e ON q.client_id = e.id 
+                                                         ORDER BY q.id DESC LIMIT 10")->fetchAll();
+                                foreach ($recentOps as $op):
+                                    ?>
+                                    <tr>
+                                        <td>#<?php echo $op['quote_number']; ?></td>
+                                        <td><?php echo $op['client_name']; ?></td>
+                                        <td><?php echo date('d/m/Y', strtotime($op['created_at'])); ?></td>
+                                        <td>$ <?php echo number_format($op['subtotal_usd'], 2); ?></td>
+                                        <td style="text-align: center;">
+                                            <a href="analisis.php?id=<?php echo $op['id']; ?>" class="btn-primary"
+                                                style="padding: 5px 10px; font-size: 0.8rem;">
+                                                ANALIZAR <i class="fas fa-arrow-right"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             <?php elseif (isset($error)): ?>
                 <div class="alert alert-error"><?php echo $error; ?></div>
@@ -184,7 +225,8 @@ if ($quotationId) {
                                             <td><strong><?php echo $item['sku']; ?></strong><br><small><?php echo $item['description']; ?></small>
                                             </td>
                                             <td style="text-align: right;">$
-                                                <?php echo number_format($item['unit_price'], 2); ?></td>
+                                                <?php echo number_format($item['unit_price'], 2); ?>
+                                            </td>
                                             <td style="text-align: right;">$ <?php echo number_format($item['unit_cost'], 2); ?>
                                             </td>
                                             <td style="text-align: right; color: #10b981;">$

@@ -21,6 +21,37 @@ class CRM
     /**
      * Get Leads count by status
      */
+    /**
+     * Get General CRM Stats for Dashboard
+     */
+    public function getStats()
+    {
+        try {
+            // Count Leads
+            $totalLeads = $this->db->query("SELECT COUNT(*) FROM crm_leads")->fetchColumn();
+
+            // Count Converted (Ganado)
+            $wonLeads = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado'")->fetchColumn();
+
+            // Count Active (Nuevo, Contactado, Presupuestado)
+            $activeLeads = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status IN ('Nuevo', 'Contactado', 'Presupuestado')")->fetchColumn();
+
+            return [
+                'total_leads' => $totalLeads ?: 0,
+                'won_leads' => $wonLeads ?: 0,
+                'active_leads' => $activeLeads ?: 0,
+                'conversion_rate' => $totalLeads > 0 ? round(($wonLeads / $totalLeads) * 100, 1) : 0
+            ];
+        } catch (\Exception $e) {
+            return [
+                'total_leads' => 0,
+                'won_leads' => 0,
+                'active_leads' => 0,
+                'conversion_rate' => 0
+            ];
+        }
+    }
+
     public function getLeadsStats()
     {
         try {
