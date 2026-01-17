@@ -97,55 +97,77 @@ class Catalog
 
         $imported = 0;
         $categories = [];
+        $subcategories = [];
+        $suppliers = [];
 
+        // Transaction for better performance? optional.
         while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
-            if (count($data) < 7)
+            // New Format: SKU; DESCRIPCION; MARCA; COSTO; IVA %; CATEGORIA; SUBCATEGORIA; PROVEEDOR
+            if (count($data) < 8)
                 continue;
 
             $sku = trim($data[0]);
             $description = trim($data[1]);
             $brand = trim($data[2]);
             $cost = floatval(str_replace(',', '.', $data[3]));
-            $price = floatval(str_replace(',', '.', $data[4]));
-            $iva = floatval($data[5]);
-            $catName = trim($data[6]);
+            $iva = floatval(str_replace(',', '.', $data[4]));
+            $catName = trim($data[5]);
+            $subcatName = trim($data[6]);
+            $providerName = trim($data[7]);
 
+            // 1. Resolve Category
             if (!isset($categories[$catName])) {
-                $stmt = $this->db->prepare("INSERT IGNORE INTO categories (name) VALUES (?)");
-                $stmt->execute([$catName]);
                 $stmt = $this->db->prepare("SELECT id FROM categories WHERE name = ?");
                 $stmt->execute([$catName]);
-                $categories[$catName] = $stmt->fetchColumn();
+                $id = $stmt->fetchColumn();
+                if (!$id && $catName) {
+                    $this->db->prepare("INSERT INTO categories (name) VALUES (?)")->execute([$catName]);
+                    $id = $this->db->lastInsertId();
+                }
+                $categories[$catName] = $id;
             }
-            $catId = $categories[$catName];
+            $catId = $categories[$catName] ?? null;
 
+            // 2. Resolve Subcategory (We assume simple text field in products or specific table? 
+            // For now, let's store it as text in 'subcategory' column as current addProduct supports it)
+            // If we had a table, we'd do similar logic.
+
+            // 3. Resolve Supplier/Provider
+            $supplierId = null;
+            if ($providerName) {
+                if (!isset($suppliers[$providerName])) {
+                    $stmt = $this->db->prepare("SELECT id FROM entities WHERE name = ? AND (type = 'provider' OR type = 'supplier')");
+                    $stmt->execute([$providerName]);
+                    $id = $stmt->fetchColumn();
+                    if (!$id) {
+                        // Create basic supplier
+                        $sqlProv = "INSERT INTO entities (type, name, is_enabled) VALUES ('provider', ?, 1)";
+                        $this->db->prepare($sqlProv)->execute([$providerName]);
+                        $id = $this->db->lastInsertId();
+                    }
+                    $suppliers[$providerName] = $id;
+                }
+                $supplierId = $suppliers[$providerName];
+            }
+
+            // 4. Update/Insert Product
             $this->addProduct([
                 'sku' => $sku,
                 'barcode' => null,
                 'provider_code' => null,
                 'description' => $description,
-                'category_id' => $catId,
+                'category' => $catName, // Keep storing name if schema uses text
+                'category_id' => $catId, // Also store ID if we have the col
+                'subcategory' => $subcatName,
                 'unit_cost_usd' => $cost,
-                'unit_price_usd' => $price,
+                'unit_price_usd' => $cost * 1.4, // Default markup 40% if not set? Or 0. (User wants lists)
                 'iva_rate' => $iva,
                 'brand' => $brand,
+                'supplier_id' => $supplierId,
                 'has_serial_number' => 0,
                 'stock_current' => 0
             ]);
 
-            if ($providerId) {
-                $stmt = $this->db->prepare("SELECT id FROM products WHERE sku = ?");
-                $stmt->execute([$sku]);
-                $productId = $stmt->fetchColumn();
-
-                if ($productId) {
-                    $sqlPrice = "INSERT INTO supplier_prices (product_id, supplier_id, cost_usd) 
-                                 VALUES (:pid, :sid, :cost) 
-                                 ON DUPLICATE KEY UPDATE cost_usd = VALUES(cost_usd)";
-                    $stmtPrice = $this->db->prepare($sqlPrice);
-                    $stmtPrice->execute(['pid' => $productId, 'sid' => $providerId, 'cost' => $cost]);
-                }
-            }
             $imported++;
         }
         fclose($handle);

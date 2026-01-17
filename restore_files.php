@@ -1,9 +1,9 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos (Versión 3.0 - SQL Fix)
+// restore_files.php - Restauración de Archivos Críticos v4 (Price Lists & Import Fix)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-echo "<h1>Restaurador de Archivos Críticos v3 (SQL Fix)</h1>";
+echo "<h1>Restaurador de Archivos Críticos v4 (Price List Update)</h1>";
 
 /**
  * Helper to write file safely
@@ -28,7 +28,6 @@ function writeFile($path, $content)
 
     if (file_put_contents($path, $content) !== false) {
         echo "<span style='color:green'> [OK] </span> (" . strlen($content) . " bytes)</p>";
-        // Invalidate OPcache
         if (function_exists('opcache_invalidate')) {
             opcache_invalidate($path, true);
         }
@@ -40,21 +39,75 @@ function writeFile($path, $content)
 }
 
 // ---------------------------------------------------------
-// 1. OperationAnalysis.php
+// 0. SQL Migration: price_lists table
 // ---------------------------------------------------------
-$contentAnalysis = <<<'PHP'
+require_once __DIR__ . '/src/lib/Database.php';
+use Vsys\Lib\Database;
+
+try {
+    $db = Database::getInstance();
+    echo "<h3>Migración de Base de Datos</h3>";
+
+    // 1. Create Table
+    $sql = "CREATE TABLE IF NOT EXISTS price_lists (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50) NOT NULL UNIQUE,
+        margin_percent DECIMAL(5,2) DEFAULT 0.00,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+    $db->query($sql);
+    echo "<p>Tabla <code>price_lists</code> verificada/creada.</p>";
+
+    // 2. Insert Defaults
+    $defaults = [
+        ['name' => 'Gremio', 'margin' => 30.00],
+        ['name' => 'Web', 'margin' => 40.00],
+        ['name' => 'MercadoLibre', 'margin' => 50.00]
+    ];
+    $stmt = $db->prepare("INSERT IGNORE INTO price_lists (name, margin_percent) VALUES (:name, :margin)");
+    foreach ($defaults as $def) {
+        $stmt->execute([':name' => $def['name'], ':margin' => $def['margin']]);
+    }
+    echo "<p>Listas de precios por defecto insertadas.</p>";
+
+    // 3. Ensure products table has correct columns (subcategory, brand, supplier_id)
+    // We try to add them; if they exist, it might fail or we can use generic ALTER IGNORE logic or check via DESCRIBE.
+    // Simple approach: Try adding one by one and catch exception if duplicate column.
+    $alters = [
+        "ALTER TABLE products ADD COLUMN subcategory VARCHAR(100) NULL AFTER category",
+        "ALTER TABLE products ADD COLUMN brand VARCHAR(100) NULL AFTER description",
+        "ALTER TABLE products ADD COLUMN supplier_id INT NULL AFTER subcategory"
+    ];
+
+    foreach ($alters as $alter) {
+        try {
+            $db->query($alter);
+            echo "<p>Columna agregada: $alter</p>";
+        } catch (Exception $e) {
+            // Likely column exists
+        }
+    }
+
+} catch (Exception $e) {
+    echo "<p style='color:red'>Error SQL: " . $e->getMessage() . "</p>";
+}
+
+// ---------------------------------------------------------
+// 1. src/modules/config/PriceList.php
+// ---------------------------------------------------------
+$contentPriceList = <<<'PHP'
 <?php
 /**
- * VS System ERP - Operations Analysis Module
+ * VS System ERP - Price List Module
  */
 
-namespace Vsys\Modules\Analysis;
+namespace Vsys\Modules\Config;
 
 require_once __DIR__ . '/../../lib/Database.php';
 
 use Vsys\Lib\Database;
 
-class OperationAnalysis
+class PriceList
 {
     private $db;
 
@@ -64,137 +117,168 @@ class OperationAnalysis
     }
 
     /**
-     * Get detailed data for a quotation and its potential/actual purchase costs
+     * Get all price lists
      */
-    public function getQuotationAnalysis($quoteId)
+    public function getAll()
     {
-        // 1. Get Quotation Header and Items
-        $sqlQuote = "SELECT q.*, e.name as client_name, e.tax_category, e.is_retention_agent 
-                     FROM quotations q 
-                     JOIN entities e ON q.client_id = e.id 
-                     WHERE q.id = :id";
-        $quote = $this->db->prepare($sqlQuote);
-        $quote->execute([':id' => $quoteId]);
-        $header = $quote->fetch();
-
-        if (!$header)
-            return null;
-
-        // Alias fields to match View expectations explicitly
-        // Fixed: unit_price_usd instead of unit_price
-        $sqlItems = "SELECT qi.*, 
-                            qi.quantity as qty,
-                            qi.unit_price_usd as unit_price,
-                            p.sku,
-                            p.description, 
-                            p.unit_cost_usd as unit_cost 
-                     FROM quotation_items qi 
-                     LEFT JOIN products p ON qi.product_id = p.id 
-                     WHERE qi.quotation_id = :id";
-        $itemsStmt = $this->db->prepare($sqlItems);
-        $itemsStmt->execute([':id' => $quoteId]);
-        $items = $itemsStmt->fetchAll();
-
-        // MERGE header fields into the top level array so $analysis['quote_number'] works
-        $result = $header;
-        $result['items'] = $items;
-        
-        // Calculate dynamic totals for the view
-        $totalCost = 0;
-        foreach ($items as $item) {
-            $totalCost += (($item['unit_cost'] ?? 0) * ($item['qty'] ?? 0));
-        }
-        $result['total_revenue'] = $header['subtotal_usd']; // Assuming subtotal is net
-        $result['total_cost'] = $totalCost;
-        $result['profit'] = $result['total_revenue'] - $totalCost;
-        $result['margin_percent'] = $result['total_revenue'] > 0 ? ($result['profit'] / $result['total_revenue']) * 100 : 0;
-        $result['taxes'] = $result['total_revenue'] * 0.035; // Est. 3.5% IIBB
-        $result['date'] = date('d/m/Y', strtotime($header['created_at']));
-
-        return $result;
+        $stmt = $this->db->query("SELECT * FROM price_lists ORDER BY id ASC");
+        return $stmt->fetchAll();
     }
 
     /**
-     * Calculate Summary for Dashboard
-     * Returns: Total Sales (Net), Total Purchases (Net), Total Expenses, Total Profit
+     * Update margin for a specific list
      */
-    public function getDashboardSummary()
+    public function updateMargin($id, $percent)
     {
-        // Check for columns to avoid Fatal error if migration hasn't run
-        $quoteCols = $this->db->query("DESCRIBE quotations")->fetchAll(\PDO::FETCH_COLUMN);
-        $purchaseCols = $this->db->query("DESCRIBE purchases")->fetchAll(\PDO::FETCH_COLUMN);
+        $stmt = $this->db->prepare("UPDATE price_lists SET margin_percent = ?, updated_at = NOW() WHERE id = ?");
+        return $stmt->execute([(float)$percent, $id]);
+    }
 
-        $hasQuoteConfirmed = in_array('is_confirmed', $quoteCols);
-        $hasPurchaseConfirmed = in_array('is_confirmed', $purchaseCols);
-        $hasQuotePaymentStatus = in_array('payment_status', $quoteCols);
-        $hasPurchasePaymentStatus = in_array('payment_status', $purchaseCols);
+    /**
+     * Calculate price based on cost and target list
+     */
+    public function calculatePrice($cost, $listId)
+    {
+        $stmt = $this->db->prepare("SELECT margin_percent FROM price_lists WHERE id = ?");
+        $stmt->execute([$listId]);
+        $margin = $stmt->fetchColumn();
 
-        // Net Sales (USD)
-        $salesSql = $hasQuoteConfirmed
-            ? "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1"
-            : "SELECT SUM(subtotal_usd) FROM quotations WHERE status = 'Aceptado'";
-        $totalSales = $this->db->query($salesSql)->fetchColumn() ?: 0;
+        if ($margin === false) return $cost;
 
-        // Net Purchases (USD)
-        $purchasesSql = $hasPurchasePaymentStatus
-            ? "SELECT SUM(subtotal_usd) FROM purchases WHERE payment_status = 'Pagado'"
-            : "SELECT SUM(subtotal_usd) FROM purchases WHERE status = 'Pagado'";
-        $totalPurchases = $this->db->query($purchasesSql)->fetchColumn() ?: 0;
-
-        // Effectiveness
-        $totalQuotes = $this->db->query("SELECT COUNT(*) FROM quotations")->fetchColumn() ?: 0;
-        $acceptedQuotesSql = $hasQuoteConfirmed
-            ? "SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1"
-            : "SELECT COUNT(*) FROM quotations WHERE status = 'Aceptado'";
-        $acceptedQuotes = $this->db->query($acceptedQuotesSql)->fetchColumn() ?: 0;
-        $effectiveness = $totalQuotes > 0 ? ($acceptedQuotes / $totalQuotes) * 100 : 0;
-
-        // Commercial Status Summaries
-        $pendingCollections = 0;
-        if ($hasQuoteConfirmed && $hasQuotePaymentStatus) {
-            $pendingCollSql = "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1 AND payment_status = 'Pendiente'";
-            $pendingCollections = $this->db->query($pendingCollSql)->fetchColumn() ?: 0;
-        }
-
-        $pendingPayments = 0;
-        if ($hasPurchaseConfirmed && $hasPurchasePaymentStatus) {
-            $pendingPaySql = "SELECT SUM(subtotal_usd) FROM purchases WHERE is_confirmed = 1 AND payment_status = 'Pendiente'";
-            $pendingPayments = $this->db->query($pendingPaySql)->fetchColumn() ?: 0;
-        }
-
-        return [
-            'total_sales' => $totalSales,
-            'total_purchases' => $totalPurchases,
-            'total_profit' => $totalSales - $totalPurchases,
-            'pending_collections' => $pendingCollections,
-            'pending_payments' => $pendingPayments,
-            'quotations_total' => $totalQuotes,
-            'orders_total' => $acceptedQuotes,
-            'effectiveness' => round($effectiveness, 2)
-        ];
+        return $cost * (1 + ($margin / 100));
     }
 }
 PHP;
-
-$pathAnalysis = __DIR__ . '/src/modules/analysis/OperationAnalysis.php';
-writeFile($pathAnalysis, $contentAnalysis);
+writeFile(__DIR__ . '/src/modules/config/PriceList.php', $contentPriceList);
 
 // ---------------------------------------------------------
-// 2. CRM.php (Keep checking just in case)
+// 2. config_precios.php
 // ---------------------------------------------------------
-$contentCRM = <<<'PHP'
+$contentConfigUi = <<<'PHP'
+<?php
+require_once 'auth_check.php';
+/**
+ * Configuración de Precios y Márgenes - VS System ERP
+ */
+require_once __DIR__ . '/src/config/config.php';
+require_once __DIR__ . '/src/lib/Database.php';
+require_once __DIR__ . '/src/modules/config/PriceList.php';
+
+use Vsys\Modules\Config\PriceList;
+
+$priceListModule = new PriceList();
+$message = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        if (isset($_POST['update_margins'])) {
+            foreach ($_POST['margins'] as $id => $margin) {
+                $priceListModule->updateMargin($id, $margin);
+            }
+            $message = "Márgenes actualizados correctamente.";
+        }
+    } catch (Exception $e) {
+        $message = "Error: " . $e->getMessage();
+    }
+}
+
+$lists = $priceListModule->getAll();
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuración de Precios - VS System</title>
+    <link rel="stylesheet" href="css/style_premium.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+            <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem;">
+                Configuración <span style="color: var(--accent-violet);">Precios</span>
+            </div>
+        </div>
+        <div class="header-right" style="color: #cbd5e1;">
+            <span class="user-badge"><i class="fas fa-user-circle"></i> Admin</span>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <nav class="sidebar">
+            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
+            <a href="productos.php" class="nav-link"><i class="fas fa-box-open"></i> PRODUCTOS</a>
+            <a href="importar.php" class="nav-link"><i class="fas fa-upload"></i> IMPORTAR</a>
+            <a href="config_precios.php" class="nav-link active"><i class="fas fa-tags"></i> LISTAS DE PRECIOS</a>
+        </nav>
+
+        <main class="content">
+            <div class="card">
+                <h2><i class="fas fa-percentage"></i> Gestión de Márgenes por Lista</h2>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Defina el porcentaje de ganancia sobre el costo (USD) para cada lista de precios.</p>
+
+                <?php if ($message): ?>
+                    <div class="alert alert-success"><?php echo $message; ?></div>
+                <?php endif; ?>
+
+                <form method="POST">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Lista de Precios</th>
+                                    <th>Margen (%)</th>
+                                    <th>Ejemplo (Costo $100)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($lists as $list): ?>
+                                    <tr>
+                                        <td><strong><?php echo $list['name']; ?></strong></td>
+                                        <td>
+                                            <input type="number" step="0.01" name="margins[<?php echo $list['id']; ?>]" 
+                                                   value="<?php echo $list['margin_percent']; ?>" 
+                                                   class="form-control" style="width: 100px; display: inline-block;"> %
+                                        </td>
+                                        <td style="color: #10b981;">
+                                            $ <?php echo number_format(100 * (1 + $list['margin_percent']/100), 2); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 2rem; text-align: right;">
+                        <button type="submit" name="update_margins" class="btn-primary">
+                            <i class="fas fa-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
+PHP;
+writeFile(__DIR__ . '/config_precios.php', $contentConfigUi);
+
+// ---------------------------------------------------------
+// 3. src/modules/catalogo/Catalog.php
+// ---------------------------------------------------------
+// Simplified update - REPLACES entire file content logic here to ensure it sticks
+$contentCatalog = <<<'PHP'
 <?php
 /**
- * VS System ERP - CRM Module Logic
+ * VS System ERP - Catalog Module
  */
 
-namespace Vsys\Modules\CRM;
-
-require_once __DIR__ . '/../../lib/Database.php';
+namespace Vsys\Modules\Catalogo;
 
 use Vsys\Lib\Database;
 
-class CRM
+class Catalog
 {
     private $db;
 
@@ -203,245 +287,210 @@ class CRM
         $this->db = Database::getInstance();
     }
 
-    /**
-     * Get General CRM Stats for Dashboard
-     */
-    public function getStats($date = null)
+    public function getAllProducts()
     {
-        try {
-            // Active Quotes (Presupuestado)
-            $activeQuotes = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status = 'Presupuestado'")->fetchColumn();
-
-            // Orders Today (Ganado today) - Use provided date or CURDATE()
-            $dateFilter = $date ? $date : date('Y-m-d');
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado' AND DATE(updated_at) = ?");
-            $stmt->execute([$dateFilter]);
-            $ordersToday = $stmt->fetchColumn();
-
-            // Efficiency (Won / Total)
-            $total = $this->db->query("SELECT COUNT(*) FROM crm_leads")->fetchColumn();
-            $won = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado'")->fetchColumn();
-            $efficiency = $total > 0 ? round(($won / $total) * 100, 1) : 0;
-
-            return [
-                'active_quotes' => $activeQuotes ?: 0,
-                'orders_today' => $ordersToday ?: 0,
-                'efficiency' => $efficiency
-            ];
-        } catch (\Exception $e) {
-            return [
-                'active_quotes' => 0,
-                'orders_today' => 0,
-                'efficiency' => 0
-            ];
-        }
+        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.description ASC");
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
-    public function getLeadsStats()
+    public function getProviders()
     {
-        try {
-            $sql = "SELECT status, COUNT(*) as total FROM crm_leads GROUP BY status";
-            return $this->db->query($sql)->fetchAll(\PDO::FETCH_KEY_PAIR);
-        } catch (\Exception $e) {
-            return [];
-        }
+        $stmt = $this->db->prepare("SELECT id, name FROM entities WHERE type = 'provider' OR type = 'supplier' ORDER BY name ASC");
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
-    /**
-     * Get specific Leads by status for the pipeline
-     */
-    public function getLeadsByStatus($status)
+    public function searchProducts($query)
     {
-        try {
-            $sql = "SELECT * FROM crm_leads WHERE status = :status ORDER BY updated_at DESC";
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([':status' => $status]);
-            return $stmt->fetchAll();
-        } catch (\Exception $e) {
-            return [];
-        }
-    }
-
-    /**
-     * Save/Create a new lead
-     */
-    public function saveLead($data)
-    {
-        if (isset($data['id']) && $data['id'] > 0) {
-            $sql = "UPDATE crm_leads SET 
-                    name = :name, contact_person = :contact, email = :email, 
-                    phone = :phone, status = :status, notes = :notes 
-                    WHERE id = :id";
-            $params = [
-                ':name' => $data['name'],
-                ':contact' => $data['contact_person'] ?? '',
-                ':email' => $data['email'] ?? '',
-                ':phone' => $data['phone'] ?? '',
-                ':status' => $data['status'] ?? 'Nuevo',
-                ':notes' => $data['notes'] ?? '',
-                ':id' => $data['id']
-            ];
-        } else {
-            $sql = "INSERT INTO crm_leads (name, contact_person, email, phone, status, notes) 
-                    VALUES (:name, :contact, :email, :phone, :status, :notes)";
-            $params = [
-                ':name' => $data['name'],
-                ':contact' => $data['contact_person'] ?? '',
-                ':email' => $data['email'] ?? '',
-                ':phone' => $data['phone'] ?? '',
-                ':status' => $data['status'] ?? 'Nuevo',
-                ':notes' => $data['notes'] ?? ''
-            ];
-        }
-
+        $sql = "SELECT * FROM products WHERE 
+                sku LIKE ? OR 
+                barcode LIKE ? OR 
+                provider_code LIKE ? OR 
+                description LIKE ? 
+                LIMIT 20";
+        $searchTerm = "%$query%";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute($params);
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        return $stmt->fetchAll();
     }
 
-    /**
-     * Log a new interaction and optionally sync with Lead Pipeline
-     */
-    public function logInteraction($entityId, $type, $description, $userId, $entityType = 'entity')
+    public function addProduct($data)
     {
-        // 1. If it's an 'entity' (Client), check if we should create/link a Lead
-        if ($entityType === 'entity') {
-            $stmt = $this->db->prepare("SELECT name, contact_person, email, phone FROM entities WHERE id = ?");
-            $stmt->execute([$entityId]);
-            $ent = $stmt->fetch();
-
-            if ($ent) {
-                // Check if lead already exists based on name
-                $stmtLead = $this->db->prepare("SELECT id FROM crm_leads WHERE name = ? LIMIT 1");
-                $stmtLead->execute([$ent['name']]);
-                $leadId = $stmtLead->fetchColumn();
-
-                if (!$leadId) {
-                    // Create Lead
-                    $this->saveLead([
-                        'name' => $ent['name'],
-                        'contact_person' => $ent['contact_person'],
-                        'email' => $ent['email'],
-                        'phone' => $ent['phone'],
-                        'status' => ($type === 'Presupuesto' || $type === 'Envío Presupuesto') ? 'Presupuestado' : 'Contactado',
-                        'notes' => 'Auto-generado desde interacción con Cliente'
-                    ]);
-                } else {
-                    // Update existing lead status
-                    $newStatus = ($type === 'Presupuesto' || $type === 'Envío Presupuesto') ? 'Presupuestado' : 'Contactado';
-                    $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ?")->execute([$newStatus, $leadId]);
-                }
-            }
-        } elseif ($entityType === 'lead') {
-            // Update existing lead status
-            $newStatus = ($type === 'Presupuesto' || $type === 'Envío Presupuesto') ? 'Presupuestado' : 'Contactado';
-            $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ? AND status IN ('Nuevo', 'Contactado')")->execute([$newStatus, $entityId]);
-        }
-
-        $sql = "INSERT INTO crm_interactions (entity_id, entity_type, user_id, type, description, interaction_date) 
-                VALUES (:eid, :etype, :uid, :type, :desc, NOW())";
+        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, iva_rate, brand, has_serial_number, stock_current) 
+                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :iva_rate, :brand, :has_serial_number, :stock_current)
+                ON DUPLICATE KEY UPDATE 
+                barcode = VALUES(barcode),
+                image_url = VALUES(image_url),
+                description = VALUES(description),
+                category = VALUES(category),
+                subcategory = VALUES(subcategory),
+                supplier_id = VALUES(supplier_id),
+                brand = VALUES(brand),
+                unit_cost_usd = VALUES(unit_cost_usd),
+                unit_price_usd = VALUES(unit_price_usd),
+                iva_rate = VALUES(iva_rate),
+                has_serial_number = VALUES(has_serial_number)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
-            ':eid' => $entityId,
-            ':etype' => $entityType,
-            ':uid' => $userId,
-            ':type' => $type,
-            ':desc' => $description
+            ':sku' => $data['sku'],
+            ':barcode' => $data['barcode'] ?? null,
+            ':image_url' => $data['image_url'] ?? null,
+            ':provider_code' => $data['provider_code'] ?? null,
+            ':description' => $data['description'],
+            ':category' => $data['category'] ?? '',
+            ':subcategory' => $data['subcategory'] ?? '',
+            ':supplier_id' => $data['supplier_id'] ?? null,
+            ':unit_cost_usd' => $data['unit_cost_usd'],
+            ':unit_price_usd' => $data['unit_price_usd'],
+            ':iva_rate' => $data['iva_rate'],
+            ':brand' => $data['brand'] ?? '',
+            ':has_serial_number' => $data['has_serial_number'] ?? 0,
+            ':stock_current' => $data['stock_current'] ?? 0
         ]);
     }
 
-    /**
-     * Get recent interactions
-     */
-    public function getRecentInteractions($limit = 10)
+    public function getCategories()
     {
-        try {
-            $sql = "SELECT i.*, 
-                           i.type as interaction_type,
-                           i.interaction_date as created_at,
-                           CASE 
-                            WHEN i.entity_type = 'entity' THEN (SELECT name FROM entities WHERE id = i.entity_id LIMIT 1)
-                            WHEN i.entity_type = 'lead' THEN (SELECT name FROM crm_leads WHERE id = i.entity_id LIMIT 1)
-                           END as client_name,
-                           CASE 
-                            WHEN i.entity_type = 'entity' THEN (SELECT name FROM entities WHERE id = i.entity_id LIMIT 1)
-                            WHEN i.entity_type = 'lead' THEN (SELECT name FROM crm_leads WHERE id = i.entity_id LIMIT 1)
-                           END as entity_name,
-                           u.full_name as user_name 
-                    FROM crm_interactions i 
-                    LEFT JOIN users u ON i.user_id = u.id 
-                    ORDER BY i.interaction_date DESC LIMIT :limit";
-            $stmt = $this->db->prepare($sql);
-            $stmt->bindValue(':limit', (int) $limit, \PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchAll();
-        } catch (\Exception $e) {
-            return [];
-        }
+        $stmt = $this->db->prepare("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category ASC");
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
 
-    /**
-     * Move lead to next/prev stage
-     */
-    public function moveLead($id, $direction)
+    public function importProductsFromCsv($filePath, $providerId = null)
     {
-        $statuses = ['Nuevo', 'Contactado', 'Presupuestado', 'Ganado', 'Perdido'];
-
-        $stmt = $this->db->prepare("SELECT status FROM crm_leads WHERE id = ?");
-        $stmt->execute([$id]);
-        $current = $stmt->fetchColumn();
-
-        if (!$current)
+        $handle = fopen($filePath, "r");
+        if (!$handle)
             return false;
 
-        $idx = array_search($current, $statuses);
-        if ($direction === 'next' && $idx < count($statuses) - 1)
-            $idx++;
-        elseif ($direction === 'prev' && $idx > 0)
-            $idx--;
-        else
-            return true; // No movement possible but ok
+        // Skip header
+        fgetcsv($handle, 1000, ";");
 
-        $stmt = $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ?");
-        return $stmt->execute([$statuses[$idx], $id]);
-    }
-    /**
-     * Get Sales Funnel Stats (30 Days)
-     */
-    public function getFunnelStats()
-    {
-        try {
-            // 1. Clicks (Interactions of type 'Consulta Web' or public logs)
-            $clicks = $this->db->query("SELECT COUNT(*) FROM crm_interactions 
-                                        WHERE type = 'Consulta Web' 
-                                        AND interaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetchColumn();
+        $imported = 0;
+        $categories = [];
+        $subcategories = [];
+        $suppliers = [];
 
-            // 2. Quoted (Quotations created)
-            $quoted = $this->db->query("SELECT COUNT(*) FROM quotations 
-                                        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetchColumn();
+        while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
+            if (count($data) < 8)
+                continue;
 
-            // 3. Sold (Confirmed Sales)
-            // Check if is_confirmed exists, otherwise fallback to status
-            $cols = $this->db->query("DESCRIBE quotations")->fetchAll(\PDO::FETCH_COLUMN);
-            $soldSql = in_array('is_confirmed', $cols)
-                ? "SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1 AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
-                : "SELECT COUNT(*) FROM quotations WHERE status = 'Aceptado' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
-            
-            $sold = $this->db->query($soldSql)->fetchColumn();
+            $sku = trim($data[0]);
+            $description = trim($data[1]);
+            $brand = trim($data[2]);
+            $cost = floatval(str_replace(',', '.', $data[3]));
+            $iva = floatval(str_replace(',', '.', $data[4]));
+            $catName = trim($data[5]);
+            $subcatName = trim($data[6]);
+            $providerName = trim($data[7]);
 
-            return [
-                'clicks' => $clicks ?: 0,
-                'quoted' => $quoted ?: 0,
-                'sold' => $sold ?: 0
-            ];
-        } catch (\Exception $e) {
-            return ['clicks' => 0, 'quoted' => 0, 'sold' => 0];
+            // 1. Resolve Category
+            if (!isset($categories[$catName])) {
+                $stmt = $this->db->prepare("SELECT id FROM categories WHERE name = ?");
+                $stmt->execute([$catName]);
+                $id = $stmt->fetchColumn();
+                if (!$id && $catName) {
+                    $this->db->prepare("INSERT INTO categories (name) VALUES (?)")->execute([$catName]);
+                    $id = $this->db->lastInsertId();
+                }
+                $categories[$catName] = $id;
+            }
+            $catId = $categories[$catName] ?? null;
+
+            // 3. Resolve Supplier/Provider
+            $supplierId = null;
+            if ($providerName) {
+                if (!isset($suppliers[$providerName])) {
+                    $stmt = $this->db->prepare("SELECT id FROM entities WHERE name = ? AND (type = 'provider' OR type = 'supplier')");
+                    $stmt->execute([$providerName]);
+                    $id = $stmt->fetchColumn();
+                    if (!$id) {
+                         $sqlProv = "INSERT INTO entities (type, name, is_enabled) VALUES ('provider', ?, 1)";
+                         $this->db->prepare($sqlProv)->execute([$providerName]);
+                         $id = $this->db->lastInsertId();
+                    }
+                    $suppliers[$providerName] = $id;
+                }
+                $supplierId = $suppliers[$providerName];
+            }
+
+            // 4. Update/Insert Product
+            $this->addProduct([
+                'sku' => $sku,
+                'barcode' => null,
+                'provider_code' => null,
+                'description' => $description,
+                'category' => $catName, 
+                'category_id' => $catId,
+                'subcategory' => $subcatName,
+                'unit_cost_usd' => $cost,
+                'unit_price_usd' => $cost * 1.4, 
+                'iva_rate' => $iva,
+                'brand' => $brand,
+                'supplier_id' => $supplierId,
+                'has_serial_number' => 0,
+                'stock_current' => 0
+            ]);
+
+            $imported++;
         }
+        fclose($handle);
+        return $imported;
+    }
+
+    public function importEntitiesFromCsv($filePath, $type = 'client')
+    {
+        $handle = fopen($filePath, "r");
+        if (!$handle)
+            return false;
+
+        fgetcsv($handle, 1000, ";");
+
+        $imported = 0;
+        while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
+            if (count($data) < 1)
+                continue;
+
+            $sql = "INSERT INTO entities (
+                        type, tax_id, document_number, name, fantasy_name, 
+                        contact_person, email, phone, mobile, address, 
+                        delivery_address, is_enabled
+                    ) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+                    ON DUPLICATE KEY UPDATE 
+                    document_number = VALUES(document_number),
+                    name = VALUES(name),
+                    fantasy_name = VALUES(fantasy_name),
+                    contact_person = VALUES(contact_person),
+                    email = VALUES(email),
+                    phone = VALUES(phone),
+                    mobile = VALUES(mobile),
+                    address = VALUES(address),
+                    delivery_address = VALUES(delivery_address)";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                $type,
+                $data[2] ?? null, 
+                $data[3] ?? null, 
+                $data[0] ?? 'SIN NOMBRE',
+                $data[1] ?? '',
+                $data[7] ?? '',
+                $data[4] ?? '',
+                $data[5] ?? '',
+                $data[6] ?? '',
+                $data[8] ?? '',
+                $data[9] ?? ''
+            ]);
+            $imported++;
+        }
+        fclose($handle);
+        return $imported;
     }
 }
 PHP;
+writeFile(__DIR__ . '/src/modules/catalogo/Catalog.php', $contentCatalog);
 
-$pathCRM = __DIR__ . '/src/modules/crm/CRM.php';
-writeFile($pathCRM, $contentCRM);
-
-echo "<hr><p>Proceso de corrección SQL Completado. <a href='analisis.php'>Ver Análisis</a></p>";
+echo "<hr><p>¡Actualización Completa! Listas de precios creadas, Módulo actualizado y UI desplegada.</p>";
+echo "<p><a href='config_precios.php' class='btn'>Ir a Configuración de Precios</a></p>";
 ?>

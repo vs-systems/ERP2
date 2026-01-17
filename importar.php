@@ -152,7 +152,8 @@ $providers = $catalog->getProviders();
                 </form>
 
                 <div id="product-hint" class="format-hint">
-                    <strong>Formato Productos:</strong> SKU; DESCRIPCION; MARCA; COSTO; VENTA; IVA %; CATEGORIA
+                    <strong>Formato Productos:</strong> SKU; DESCRIPCION; MARCA; COSTO; IVA %; CATEGORIA; SUBCATEGORIA;
+                    PROVEEDOR
                 </div>
                 <div id="entity-hint" class="format-hint" style="display: none;">
                     <strong>Formato Clientes/Proveedores:</strong> RAZON SOCIAL; NOMBRE FANTASIA; CUIT; DNI; EMAIL;
