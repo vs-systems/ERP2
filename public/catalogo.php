@@ -1,0 +1,344 @@
+<?php
+/**
+ * VS System ERP - Public Catalog
+ */
+require_once __DIR__ . '/../src/config/config.php';
+require_once __DIR__ . '/../src/lib/Database.php';
+require_once __DIR__ . '/../src/modules/catalogo/Catalog.php';
+
+use Vsys\Modules\Catalogo\Catalog;
+
+$catalog = new Catalog();
+$allProducts = $catalog->getAllProducts();
+$categories = $catalog->getCategories();
+
+// Fetch unique brands for filtering
+$brands = array_unique(array_filter(array_column($allProducts, 'brand')));
+sort($brands);
+
+// Optional: Filter products if it grows too large, but for now we'll do it via JS for speed
+?>
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo - Vecino Seguro</title>
+    <link rel="stylesheet" href="css/style_premium.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --card-hover: rgba(30, 41, 59, 0.8);
+        }
+
+        .catalog-header {
+            text-align: center;
+            padding: 4rem 1rem;
+            background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+        }
+
+        .catalog-header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #f8fafc, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 2rem;
+            justify-content: center;
+            position: sticky;
+            top: 80px;
+            z-index: 900;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-item {
+            min-width: 150px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 1rem;
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            background: var(--card-hover);
+            border-color: var(--accent-violet);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .product-image i {
+            font-size: 4rem;
+            color: var(--accent-violet);
+            opacity: 0.3;
+        }
+
+        .product-brand {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-blue);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+        }
+
+        .product-sku {
+            font-family: 'Courier New', Courier, monospace;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            align-self: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .product-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .product-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #10b981;
+        }
+
+        .btn-whatsapp {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-whatsapp:hover {
+            background: #128c7e;
+            transform: scale(1.05);
+        }
+
+        #no-results {
+            text-align: center;
+            padding: 5rem;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .catalog-header h1 {
+                font-size: 2rem;
+            }
+
+            .filter-container {
+                top: 70px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <img src="logo_display.php" alt="VS System" class="logo-large" style="height: 45px;">
+            <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.2rem;">
+                Vecino Seguro <span
+                    style="background: var(--gradient-premium); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Catálogo</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="cotizador.php" class="btn-primary"
+                style="padding: 8px 15px; font-size: 0.8rem; text-decoration: none;">
+                <i class="fas fa-sign-in-alt"></i> ACCESO ERP
+            </a>
+        </div>
+    </header>
+
+    <div class="catalog-header">
+        <h1>Explora nuestra Tecnología</h1>
+        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Equipamiento de seguridad electrónica de
+            alta gama. Cámaras, NVRs y soluciones de videovigilancia profesional.</p>
+    </div>
+
+    <main class="content" style="max-width: 1400px; margin: 0 auto; padding-top: 0;">
+        <div class="filter-container">
+            <div class="filter-item">
+                <input type="text" id="search-text" placeholder="Buscar producto..." style="margin-top:0;">
+            </div>
+            <div class="filter-item">
+                <select id="filter-category" style="margin-top:0;">
+                    <option value="">Todas las Categorías</option>
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?php echo htmlspecialchars($cat); ?>">
+                            <?php echo htmlspecialchars($cat); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="filter-item">
+                <select id="filter-brand" style="margin-top:0;">
+                    <option value="">Todas las Marcas</option>
+                    <?php foreach ($brands as $brand): ?>
+                        <option value="<?php echo htmlspecialchars($brand); ?>">
+                            <?php echo htmlspecialchars($brand); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
+        <div id="no-results">
+            <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); opacity: 0.3;"></i>
+            <h3>No encontramos productos que coincidan</h3>
+            <p style="color: var(--text-muted);">Prueba con otros filtros o términos de búsqueda.</p>
+        </div>
+
+        <div class="product-grid" id="product-grid">
+            <?php foreach ($allProducts as $p): ?>
+                <div class="product-card" data-category="<?php echo htmlspecialchars($p['category']); ?>"
+                    data-brand="<?php echo htmlspecialchars($p['brand']); ?>"
+                    data-search="<?php echo htmlspecialchars(strtolower($p['sku'] . ' ' . $p['description'] . ' ' . $p['brand'])); ?>">
+
+                    <div class="product-image">
+                        <?php if (!empty($p['image_url'])): ?>
+                            <img src="<?php echo htmlspecialchars($p['image_url']); ?>"
+                                alt="<?php echo htmlspecialchars($p['description']); ?>"
+                                style="max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain;">
+                        <?php else: ?>
+                            <i
+                                class="fas <?php echo strpos(strtolower($p['category'] ?? ''), 'camara') !== false ? 'fa-video' : 'fa-box'; ?>"></i>
+                        <?php endif; ?>
+                    </div>
+
+                    <span class="product-brand">
+                        <?php echo htmlspecialchars($p['brand']); ?>
+                    </span>
+                    <h3 class="product-title">
+                        <?php echo htmlspecialchars($p['description']); ?>
+                    </h3>
+                    <span class="product-sku">
+                        <?php echo htmlspecialchars($p['sku']); ?>
+                    </span>
+
+                    <div class="product-footer">
+                        <div class="product-price">
+                            USD
+                            <?php echo number_format($p['unit_price_usd'], 2); ?>
+                        </div>
+                        <a href="https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=<?php echo urlencode("Hola! Me interesa este producto: " . $p['sku'] . " - " . $p['description']); ?>"
+                            target="_blank" class="btn-whatsapp"
+                            onclick="logClick('<?php echo addslashes($p['sku']); ?>', '<?php echo addslashes($p['description']); ?>')">
+                            <i class="fab fa-whatsapp"></i> Consultar
+                        </a>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </main>
+
+    <footer
+        style="text-align: center; padding: 4rem 1rem; color: var(--text-muted); border-top: 1px solid var(--border-color); margin-top: 4rem;">
+        <p>&copy; 2026 Vecino Seguro - Seguridad Electrónica by Javier Gozzi</p>
+        <p style="font-size: 0.8rem; margin-top: 10px;">Los precios están sujetos a cambios sin previo aviso.</p>
+    </footer>
+
+    <script>
+        const searchInput = document.getElementById('search-text');
+        const categorySelect = document.getElementById('filter-category');
+        const brandSelect = document.getElementById('filter-brand');
+        const grid = document.getElementById('product-grid');
+        const cards = Array.from(document.getElementsByClassName('product-card'));
+        const noResults = document.getElementById('no-results');
+
+        function filter() {
+            const query = searchInput.value.toLowerCase();
+            const category = categorySelect.value;
+            const brand = brandSelect.value;
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const matchesSearch = card.dataset.search.includes(query);
+                const matchesCategory = !category || card.dataset.category === category;
+                const matchesBrand = !brand || card.dataset.brand === brand;
+
+                if (matchesSearch && matchesCategory && matchesBrand) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        function logClick(sku, desc) {
+            fetch('ajax_log_catalog_click.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sku: sku, desc: desc })
+            });
+        }
+
+        searchInput.addEventListener('input', filter);
+        categorySelect.addEventListener('change', filter);
+        brandSelect.addEventListener('change', filter);
+    </script>
+</body>
+
+</html>

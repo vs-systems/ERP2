@@ -1,0 +1,18 @@
+<?php
+/**
+ * VS System ERP - Cloud Configuration (WNPower)
+ */
+
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'gozziar_vsys');
+define('DB_USER', 'gozziar_vsys_user');
+define('DB_PASS', 'v5yS_2024_P@ss!#');
+
+define('BASE_URL', 'https://vsys.vecinoseguro.com.ar/'); // Ajustar según el dominio real
+define('UPLOAD_DIR', __DIR__ . '/../public/uploads/');
+
+define('LOGO_URL_SMALL', BASE_URL . 'logo_display.php?size=small');
+define('LOGO_URL_LARGE', BASE_URL . 'logo_display.php?size=large');
+
+// WhatsApp Config
+define('WHATSAPP_PHONE', '5491136545123'); // Tu número de ventas
