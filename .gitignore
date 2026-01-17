@@ -1,5 +1,5 @@
 # VS System ERP GitIgnore
-src/config/config.php
+# src/config/config.php (Removed ignore to allow tracking)
 public/uploads/*
 public/*.sql
 *.zip
