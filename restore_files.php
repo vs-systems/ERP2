@@ -1,9 +1,9 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos (Versión 2.0)
+// restore_files.php - Restauración de Archivos Críticos (Versión 3.0 - SQL Fix)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-echo "<h1>Restaurador de Archivos Críticos v2</h1>";
+echo "<h1>Restaurador de Archivos Críticos v3 (SQL Fix)</h1>";
 
 /**
  * Helper to write file safely
@@ -21,14 +21,14 @@ function writeFile($path, $content)
         }
     }
 
-    // Force delete if exists to avoid permission issues sometimes
+    // Force delete if exists
     if (file_exists($path)) {
         unlink($path);
     }
 
     if (file_put_contents($path, $content) !== false) {
         echo "<span style='color:green'> [OK] </span> (" . strlen($content) . " bytes)</p>";
-        // Invalidate OPcache for this file
+        // Invalidate OPcache
         if (function_exists('opcache_invalidate')) {
             opcache_invalidate($path, true);
         }
@@ -81,9 +81,10 @@ class OperationAnalysis
             return null;
 
         // Alias fields to match View expectations explicitly
+        // Fixed: unit_price_usd instead of unit_price
         $sqlItems = "SELECT qi.*, 
                             qi.quantity as qty,
-                            qi.unit_price as unit_price,
+                            qi.unit_price_usd as unit_price,
                             p.sku,
                             p.description, 
                             p.unit_cost_usd as unit_cost 
@@ -179,7 +180,7 @@ $pathAnalysis = __DIR__ . '/src/modules/analysis/OperationAnalysis.php';
 writeFile($pathAnalysis, $contentAnalysis);
 
 // ---------------------------------------------------------
-// 2. CRM.php
+// 2. CRM.php (Keep checking just in case)
 // ---------------------------------------------------------
 $contentCRM = <<<'PHP'
 <?php
@@ -442,5 +443,5 @@ PHP;
 $pathCRM = __DIR__ . '/src/modules/crm/CRM.php';
 writeFile($pathCRM, $contentCRM);
 
-echo "<hr><p>Proceso Completado. <a href='analisis.php'>Ver Análisis</a> | <a href='crm.php'>Ver CRM</a></p>";
+echo "<hr><p>Proceso de corrección SQL Completado. <a href='analisis.php'>Ver Análisis</a></p>";
 ?>

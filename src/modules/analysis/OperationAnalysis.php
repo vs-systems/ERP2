@@ -37,7 +37,7 @@ class OperationAnalysis
 
         $sqlItems = "SELECT qi.*, 
                             qi.quantity as qty,
-                            qi.unit_price as unit_price,
+                            qi.unit_price_usd as unit_price,
                             p.sku,
                             p.description, 
                             p.unit_cost_usd as unit_cost 
