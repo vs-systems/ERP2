@@ -1,12 +1,12 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos v10 (Fix Paths to Root)
+// restore_files.php - Restauración de Archivos Críticos v11 (Fix CRM Layout)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
-echo "<h1>Restaurador de Archivos Críticos v10 (Fix Paths to Root)</h1>";
+echo "<h1>Restaurador de Archivos Críticos v11 (Fix CRM Layout)</h1>";
 
 function writeFile($path, $content)
 {
@@ -27,196 +27,13 @@ function writeFile($path, $content)
     }
 }
 
-// 0. DB MIGRATION: Ensure crm_leads - source
-try {
-    $db = Vsys\Lib\Database::getInstance();
-    $db->exec("ALTER TABLE crm_leads ADD COLUMN IF NOT EXISTS source VARCHAR(50) DEFAULT 'Manually'");
-    echo "<p style='color:blue'>[DB] crm_leads schema updated (source column).</p>";
-} catch (Exception $e) {
-    echo "<p style='color:orange'>[DB Warning] " . $e->getMessage() . "</p>";
-}
-
-// 1. src/sync_bcra.php
-$contentSync = <<<'PHP'
-<?php
-/**
- * VS System ERP - Exchange Rate Sync
- * Uses DolarAPI (https://dolarapi.com) to get the "Oficial" Venta rate (Approx BNA Retail)
- */
-
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../lib/Database.php';
-
-use Vsys\Lib\Database;
-
-try {
-    // Fetch Oficial Rate (Standard Retail)
-    $json = file_get_contents('https://dolarapi.com/v1/dolares/oficial');
-    $data = json_decode($json, true);
-
-    if ($data && isset($data['venta'])) {
-        $rate = (float)$data['venta']; // e.g. 1455
-        
-        $db = Database::getInstance();
-        $stmt = $db->prepare("INSERT INTO exchange_rates (rate, source, created_at) VALUES (?, 'DolarAPI_Oficial', NOW())");
-        $stmt->execute([$rate]);
-        
-        echo "Successfully updated Rate: ARS " . $rate . " (Source: DolarAPI Oficial)\n";
-    } else {
-        echo "Error: Invalid response from DolarAPI.\n";
-    }
-
-} catch (Exception $e) {
-    echo "Error syncing rate: " . $e->getMessage() . "\n";
-}
-?>
-PHP;
-writeFile(__DIR__ . '/src/sync_bcra.php', $contentSync);
-
-
-// 2. src/modules/catalogo/PublicCatalog.php
-$contentPublicCat = <<<'PHP'
-<?php
-namespace Vsys\Modules\Catalogo;
-
-use Vsys\Lib\Database;
-use Vsys\Modules\Config\PriceList;
-
-class PublicCatalog
-{
-    private $db;
-    private $priceListModule;
-
-    public function __construct()
-    {
-        $this->db = Database::getInstance();
-        $this->priceListModule = new PriceList();
-    }
-
-    public function getExchangeRate()
-    {
-        // Get the latest rate from DB
-        $stmt = $this->db->prepare("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1");
-        $stmt->execute();
-        $rate = $stmt->fetchColumn();
-        return $rate ? (float)$rate : 1455.00; 
-    }
-
-    public function getProductsForWeb()
-    {
-        $rate = $this->getExchangeRate();
-        
-        $lists = $this->priceListModule->getAll();
-        $webMargin = 40; 
-        foreach ($lists as $l) {
-            if ($l['name'] === 'Web') {
-                $webMargin = (float)$l['margin_percent'];
-                break;
-            }
-        }
-
-        $stmt = $this->db->prepare("SELECT * FROM products ORDER BY brand, description");
-        $stmt->execute();
-        $products = $stmt->fetchAll();
-
-        $webProducts = [];
-        foreach ($products as $p) {
-            $cost = (float)$p['unit_cost_usd'];
-            $iva = (float)$p['iva_rate'];
-            
-            $priceUsd = $cost * (1 + ($webMargin / 100));
-            $priceUsdWithIva = $priceUsd * (1 + ($iva / 100));
-            $priceArs = $priceUsdWithIva * $rate;
-
-            if ($priceArs > 0) {
-                // Rounding
-                $p['price_final_ars'] = round($priceArs, 0); 
-                $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.');
-                $p['image_url'] = !empty($p['image_url']) ? $p['image_url'] : 'https://placehold.co/300x300?text=No+Image';
-                $webProducts[] = $p;
-            }
-        }
-
-        return [
-            'rate' => $rate,
-            'products' => $webProducts
-        ];
-    }
-}
-?>
-PHP;
-writeFile(__DIR__ . '/src/modules/catalogo/PublicCatalog.php', $contentPublicCat);
-
-
-// 3. ajax_checkout.php
-$contentAjax = <<<'PHP'
-<?php
-header('Content-Type: application/json');
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/checkout_errors.log');
-
-require_once __DIR__ . '/src/config/config.php';
-require_once __DIR__ . '/src/lib/Database.php';
-
-use Vsys\Lib\Database;
-
-try {
-    $input = json_decode(file_get_contents('php://input'), true);
-
-    if (!$input) {
-        throw new Exception('Invalid JSON Input');
-    }
-
-    $customer = $input['customer'] ?? [];
-    $cart = $input['cart'] ?? [];
-    $total = $input['total'] ?? 0;
-
-    if (empty($cart) || empty($customer['name'])) {
-        throw new Exception('Missing cart or customer name');
-    }
-
-    $db = Database::getInstance();
-
-    $orderDetails = "PEDIDO WEB\n";
-    $orderDetails .= "Fecha: " . date('d/m/Y H:i') . "\n";
-    $orderDetails .= "Cliente: " . $customer['name'] . "\n";
-    $orderDetails .= "DNI/CUIT: " . ($customer['dni'] ?? '-') . "\n";
-    $orderDetails .= "------------- PRODUCTOS -------------\n";
-    
-    foreach ($cart as $item) {
-        $orderDetails .= "- " . ($item['quantity']??1) . "x [{$item['sku']}] {$item['title']} ($ " . number_format($item['price'], 0, ',', '.') . ")\n";
-    }
-    
-    $orderDetails .= "-------------------------------------\n";
-    $orderDetails .= "TOTAL ESTIMADO: $ " . number_format($total, 0, ',', '.') . "\n";
-
-    $stmt = $db->prepare("INSERT INTO crm_leads (name, email, phone, status, notes, source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
-    $stmt->execute([
-        $customer['name'],
-        $customer['email'] ?? '',
-        $customer['phone'] ?? '',
-        'Nuevo', 
-        $orderDetails,
-        'Web'
-    ]);
-
-    echo json_encode(['status' => 'success']);
-
-} catch (Exception $e) {
-    error_log("Checkout Error: " . $e->getMessage());
-    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
-}
-?>
-PHP;
-writeFile(__DIR__ . '/ajax_checkout.php', $contentAjax);
-
-
-// 4. crm.php (MOVED TO ROOT - Fixed Paths)
+// 4. crm.php (Rewritten with Standard Layout)
 $contentCRM = <<<'PHP'
 <?php
 /**
- * CRM Dashboard - Pipeline View
+ * CRM Dashboard - Pipeline View - Standard Layout
  */
+require_once 'auth_check.php';
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/crm/CRM.php';
@@ -236,120 +53,157 @@ $leadsGanado = $crm->getLeadsByStatus('Ganado');
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>CRM Pipeline - VS System</title>
+    <title>CRM Pipeline - <?php echo APP_NAME; ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style_premium.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --text: #f8fafc;
-            --primary: #8b5cf6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-        }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        /* CRM Specific Styles */
+        .pipeline-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; height: calc(100vh - 250px); min-height: 500px; }
+        .pipeline-col { background: rgba(30, 41, 59, 0.5); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header h1 { margin: 0; font-size: 1.5rem; }
-        
-        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 15px; border-radius: 8px; border: 1px solid #334155; }
-        .stat-val { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
-        .stat-label { font-size: 0.9rem; color: #94a3b8; }
-
-        .pipeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; height: calc(100vh - 150px); }
-        .column { background: rgba(30, 41, 59, 0.5); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; }
         .col-header { 
             padding: 10px; font-weight: bold; border-bottom: 2px solid #334155; margin-bottom: 10px; 
-            display: flex; justify-content: space-between;
+            display: flex; justify-content: space-between; align-items: center;
         }
         .col-header .count { background: #334155; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
         
-        .column.nuevo .col-header { border-color: var(--primary); }
-        .column.contactado .col-header { border-color: var(--warning); }
-        .column.presupuesto .col-header { border-color: #3b82f6; }
-        .column.ganado .col-header { border-color: var(--success); }
+        .pipeline-col.nuevo .col-header { border-color: #8b5cf6; color: #8b5cf6; }
+        .pipeline-col.contactado .col-header { border-color: #f59e0b; color: #f59e0b; }
+        .pipeline-col.presupuesto .col-header { border-color: #3b82f6; color: #3b82f6; }
+        .pipeline-col.ganado .col-header { border-color: #10b981; color: #10b981; }
 
         .cards-container { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
 
         .lead-card {
-            background: var(--card);
+            background: #1e293b;
             border: 1px solid #334155;
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 10px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
         }
-        .lead-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+        .lead-card:hover { transform: translateY(-2px); border-color: #8b5cf6; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         
-        .lead-name { font-weight: 600; margin-bottom: 5px; }
-        .lead-contact { font-size: 0.85rem; color: #94a3b8; margin-bottom: 5px; }
-        .lead-source { font-size: 0.75rem; background: #334155; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .lead-name { font-weight: 600; margin-bottom: 5px; color: #f8fafc; }
+        .lead-contact { font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px; }
+        .lead-source { font-size: 0.70rem; background: #334155; padding: 2px 6px; border-radius: 4px; display: inline-block; color: #cbd5e1; }
         .lead-date { position: absolute; top: 10px; right: 10px; font-size: 0.7rem; color: #64748b; }
         
-        .actions { margin-top: 10px; display: flex; gap: 5px; justify-content: flex-end; }
-        .btn-sm { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8rem; }
-        .btn-move { background: #334155; color: white; }
-        .btn-move:hover { background: var(--primary); }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-
+        .btn-move { padding: 4px 8px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.8rem; background: #334155; color: white; transition: background 0.2s; }
+        .btn-move:hover { background: #8b5cf6; }
+        
+        /* Stats Specific */
+        .crm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+        .crm-stat-card { background: #1e293b; padding: 1rem; border-radius: 8px; border: 1px solid #334155; display: flex; flex-direction: column; }
+        .crm-stat-val { font-size: 1.8rem; font-weight: 800; color: #f8fafc; }
+        .crm-stat-label { font-size: 0.85rem; color: #94a3b8; margin-top: 5px; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1><i class="fas fa-funnel-dollar"></i> CRM Pipeline</h1>
-        <a href="index.php" style="color: #94a3b8; text-decoration: none;"><i class="fas fa-home"></i> Volver</a>
+    <!-- HEADER -->
+    <header
+        style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+            <div
+                style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);">
+                Vecino Seguro <span
+                    style="background: linear-gradient(90deg, #8b5cf6, #d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Sistemas</span>
+            </div>
+        </div>
+        <div class="header-right" style="color: #cbd5e1;">
+            <span class="user-badge"><i class="fas fa-user-circle"></i> Admin</span>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
+            <a href="analisis.php" class="nav-link"><i class="fas fa-chart-line"></i> AN&Aacute;LISIS OP.</a>
+            <a href="productos.php" class="nav-link"><i class="fas fa-box-open"></i> PRODUCTOS</a>
+            <a href="presupuestos.php" class="nav-link"><i class="fas fa-history"></i> PRESUPUESTOS</a>
+            <a href="clientes.php" class="nav-link"><i class="fas fa-users"></i> CLIENTES</a>
+            <a href="proveedores.php" class="nav-link"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
+            <a href="compras.php" class="nav-link"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
+            <a href="importar.php" class="nav-link"><i class="fas fa-upload"></i> IMPORTAR</a>
+            <a href="crm.php" class="nav-link active"><i class="fas fa-handshake"></i> CRM</a>
+            <a href="cotizador.php" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
+            <a href="catalogo.php" class="nav-link" target="_blank" style="color: #25d366; font-weight: 700;"><i
+                    class="fas fa-external-link-alt"></i> VER CAT&Aacute;LOGO</a>
+        </nav>
+
+        <!-- CONTENT -->
+        <main class="content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h1><i class="fas fa-funnel-dollar" style="color: #8b5cf6; margin-right: 10px;"></i> CRM Pipeline</h1>
+                <button onclick="location.reload()" class="btn-primary" style="background: #334155;"><i class="fas fa-sync-alt"></i> Actualizar</button>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="crm-stats">
+                <div class="crm-stat-card">
+                    <div class="crm-stat-val" style="color: #3b82f6;"><?php echo $stats['active_quotes']; ?></div>
+                    <div class="crm-stat-label">Presupuestos Activos</div>
+                </div>
+                <div class="crm-stat-card">
+                    <div class="crm-stat-val" style="color: #10b981;"><?php echo $stats['orders_today']; ?></div>
+                    <div class="crm-stat-label">Pedidos de Hoy</div>
+                </div>
+                <div class="crm-stat-card">
+                    <div class="crm-stat-val" style="color: #8b5cf6;"><?php echo $stats['efficiency']; ?>%</div>
+                    <div class="crm-stat-label">Eficiencia de Cierre</div>
+                </div>
+            </div>
+
+            <!-- Pipeline -->
+            <div class="pipeline-container">
+                <!-- Nuevo -->
+                <div class="pipeline-col nuevo">
+                    <div class="col-header"><span>NUEVO</span> <span class="count"><?php echo count($leadsNuevo); ?></span></div>
+                    <div class="cards-container">
+                        <?php foreach ($leadsNuevo as $l) renderCard($l); ?>
+                    </div>
+                </div>
+
+                <!-- Contactado -->
+                <div class="pipeline-col contactado">
+                    <div class="col-header"><span>CONTACTADO</span> <span class="count"><?php echo count($leadsContactado); ?></span></div>
+                    <div class="cards-container">
+                        <?php foreach ($leadsContactado as $l) renderCard($l); ?>
+                    </div>
+                </div>
+
+                <!-- Presupuestado -->
+                <div class="pipeline-col presupuesto">
+                    <div class="col-header"><span>PRESUPUESTADO</span> <span class="count"><?php echo count($leadsPresupuesto); ?></span></div>
+                    <div class="cards-container">
+                        <?php foreach ($leadsPresupuesto as $l) renderCard($l); ?>
+                    </div>
+                </div>
+
+                <!-- Ganado -->
+                <div class="pipeline-col ganado">
+                    <div class="col-header"><span>GANADO</span> <span class="count"><?php echo count($leadsGanado); ?></span></div>
+                    <div class="cards-container">
+                        <?php foreach ($leadsGanado as $l) renderCard($l); ?>
+                    </div>
+                </div>
+            </div>
+
+        </main>
     </div>
 
-    <div class="stats-bar">
-        <div class="stat-card">
-            <div class="stat-val"><?php echo $stats['active_quotes']; ?></div>
-            <div class="stat-label">Presupuestos Activos</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-val"><?php echo $stats['orders_today']; ?></div>
-            <div class="stat-label">Pedidos Hoy</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-val"><?php echo $stats['efficiency']; ?>%</div>
-            <div class="stat-label">Eficiencia de Cierre</div>
-        </div>
-    </div>
-
-    <div class="pipeline">
-        <div class="column nuevo">
-            <div class="col-header"><span>NUEVO</span><span class="count"><?php echo count($leadsNuevo); ?></span></div>
-            <div class="cards-container">
-                <?php foreach ($leadsNuevo as $l): renderCard($l); endforeach; ?>
-            </div>
-        </div>
-        <div class="column contactado">
-            <div class="col-header"><span>CONTACTADO</span><span class="count"><?php echo count($leadsContactado); ?></span></div>
-            <div class="cards-container">
-                <?php foreach ($leadsContactado as $l): renderCard($l); endforeach; ?>
-            </div>
-        </div>
-        <div class="column presupuesto">
-            <div class="col-header"><span>PRESUPUESTADO</span><span class="count"><?php echo count($leadsPresupuesto); ?></span></div>
-            <div class="cards-container">
-                <?php foreach ($leadsPresupuesto as $l): renderCard($l); endforeach; ?>
-            </div>
-        </div>
-        <div class="column ganado">
-            <div class="col-header"><span>GANADO</span><span class="count"><?php echo count($leadsGanado); ?></span></div>
-            <div class="cards-container">
-                <?php foreach ($leadsGanado as $l): renderCard($l); endforeach; ?>
-            </div>
-        </div>
-    </div>
-
+    <!-- Scripts -->
+    <script>
+    function moveLead(id, direction) {
+        // Here you would implement the AJAX call to move status
+        alert('Funcionalidad de mover en desarrollo.');
+    }
+    </script>
 </body>
 </html>
 <?php
@@ -357,9 +211,10 @@ function renderCard($lead) {
     if (!isset($lead['id'])) return;
     $date = date('d/m', strtotime($lead['created_at']));
     $source = isset($lead['source']) ? $lead['source'] : 'Manual';
-    $notes = substr($lead['notes'] ?? '', 0, 80) . '...';
+    $notes = isset($lead['notes']) ? substr($lead['notes'], 0, 80) . '...' : '';
+    
     echo "
-    <div class='lead-card' onclick='alert(\"Detalles: " . htmlspecialchars($notes) . "\")'>
+    <div class='lead-card' onclick='alert(\"Detalles: " . htmlspecialchars(json_encode($lead['notes'] ?? '')) . "\")'>
         <div class='lead-date'>$date</div>
         <div class='lead-name'>{$lead['name']}</div>
         <div class='lead-contact'>
@@ -367,21 +222,17 @@ function renderCard($lead) {
             <i class='fas fa-phone'></i> ".($lead['phone']??'')."
         </div>
         <div class='lead-source'>$source</div>
-        <div class='actions'>
-            <button class='btn-sm btn-move' onclick='event.stopPropagation(); moveLead({$lead['id']}, \"next\")'>></button>
+        <div class='actions' style='margin-top:10px; text-align:right;'>
+            <button class='btn-move' onclick='event.stopPropagation(); moveLead({$lead['id']}, \"next\")'>Mover ></button>
         </div>
     </div>
     ";
 }
 ?>
-<script>
-function moveLead(id, direction) {
-    alert('Funcionalidad de mover en proceso...');
-}
-</script>
 PHP;
 writeFile(__DIR__ . '/crm.php', $contentCRM);
 
-echo "<hr><p>¡Restauración Completa v10! CRM Pipeline (Root) + Fixes.</p>";
+
+echo "<hr><p>¡Restauración Completa v11! CRM Layout Fixed (Sidebar + Header).</p>";
 echo "<p>Por favor ejecute <a href='crm.php'>CRM Pipeline</a>.</p>";
 ?>
