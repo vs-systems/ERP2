@@ -116,125 +116,18 @@ $suppliers = $db->query($sql)->fetchAll();
     </header>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="analisis.php" class="nav-link"><i class="fas fa-chart-line"></i> AN&Aacute;LISIS OP.</a>
-            <a href="productos.php" class="nav-link"><i class="fas fa-box-open"></i> PRODUCTOS</a>
-            <a href="presupuestos.php" class="nav-link"><i class="fas fa-history"></i> PRESUPUESTOS</a>
-            <a href="clientes.php" class="nav-link"><i class="fas fa-users"></i> CLIENTES</a>
-            <a href="proveedores.php" class="nav-link active"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
-            <a href="compras.php" class="nav-link"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
-            <a href="importar.php" class="nav-link"><i class="fas fa-upload"></i> IMPORTAR</a>
-            <a href="crm.php" class="nav-link"><i class="fas fa-handshake"></i> CRM</a>
-            <a href="cotizador.php" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
-        </nav>
+        <?php include 'sidebar.php'; ?>
 
         <main class="content">
 
-            <?php if ($message): ?>
-                <div class="alert alert-<?php echo $status; ?>">
-                    <?php echo $message; ?>
-                </div>
-            <?php endif; ?>
-
-            <div class="card">
-                <h3><i class="fas fa-truck-loading"></i> Nuevo / Editar Proveedor</h3>
-                <form method="POST" id="provider-form">
-                    <input type="hidden" name="save_entity" value="1">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Raz&oacute;n Social / Nombre</label>
-                            <input type="text" name="name" id="name" required placeholder="RAZON SOCIAL">
-                        </div>
-                        <div class="form-group">
-                            <label>Nombre de Fantas&iacute;a</label>
-                            <input type="text" name="fantasy_name" id="fantasy_name" placeholder="NOMBRE COMERCIAL">
-                        </div>
-                        <div class="form-group">
-                            <label>CUIT/CUIL</label>
-                            <input type="text" name="tax_id" id="tax_id" class="mask-cuit" placeholder="00-00000000-0">
-                        </div>
-                        <div class="form-group">
-                            <label>DNI / Documento</label>
-                            <input type="text" name="document_number" id="document_number" class="mask-dni"
-                                placeholder="00.000.000">
-                        </div>
-                        <div class="form-group">
-                            <label>Categor&iacute;a Fiscal</label>
-                            <select name="tax_category" id="tax_category">
-                                <option value="Responsable Inscripto">Responsable Inscripto</option>
-                                <option value="Monotributo">Monotributo</option>
-                                <option value="Exento">Exento</option>
-                                <option value="No Aplica" selected>No Aplica</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Persona de Contacto</label>
-                            <input type="text" name="contact_person" id="contact_person">
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" name="email" id="email" class="no-upper">
-                        </div>
-                        <div class="form-group">
-                            <label>Tel&eacute;fono Fijo</label>
-                            <input type="text" name="phone" id="phone">
-                        </div>
-                        <div class="form-group">
-                            <label>Celular / WhatsApp</label>
-                            <input type="text" name="mobile" id="mobile">
-                        </div>
-                        <div class="form-group">
-                            <label>Comprobante por Defecto</label>
-                            <select name="default_voucher_type" id="default_voucher_type">
-                                <option value="Factura">Factura</option>
-                                <option value="Remito">Remito</option>
-                                <option value="Ninguno">Ninguno</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Condici&oacute;n de Pago</label>
-                            <select name="payment_condition" id="payment_condition">
-                                <option value="Factura Anticipada">Factura Anticipada</option>
-                                <option value="Contado">Contado</option>
-                                <option value="2 d&iacute;as">2 d&iacute;as</option>
-                                <option value="7 d&iacute;as">7 d&iacute;as</option>
-                                <option value="15 d&iacute;as">15 d&iacute;as</option>
-                                <option value="30 d&iacute;as">30 d&iacute;as</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Forma de Pago Preferida</label>
-                            <select name="payment_method" id="payment_method">
-                                <option value="Transferencia">Transferencia</option>
-                                <option value="Mercado Pago">Mercado Pago</option>
-                                <option value="Efectivo">Efectivo</option>
-                                <option value="Efectivo USD">Efectivo USD</option>
-                                <option value="Otra">Otra</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                        <div class="form-group">
-                            <label>Domicilio Legal</label>
-                            <textarea name="address" id="address" rows="2"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Lugar de Entrega</label>
-                            <textarea name="delivery_address" id="delivery_address" rows="2"></textarea>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 1rem;">
-                        <label class="toggle"><input type="checkbox" name="is_enabled" id="is_enabled" checked>
-                            Habilitado</label>
-                    </div>
-
-                    <button type="submit" class="btn-primary"><i class="fas fa-save"></i> GUARDAR PROVEEDOR</button>
-                </form>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <h1>Directorio de Proveedores</h1>
+                <a href="config_entities.php?type=supplier" class="btn-primary"
+                    style="background:var(--accent-violet); text-decoration:none;">
+                    <i class="fas fa-plus"></i> NUEVO PROVEEDOR
+                </a>
             </div>
-
+            破
             <div class="card" style="margin-top: 2rem;">
                 <h3><i class="fas fa-industry"></i> Listado de Proveedores</h3>
                 <div class="table-responsive">
@@ -299,27 +192,6 @@ $suppliers = $db->query($sql)->fetchAll();
             </div>
     </div>
 
-    <script>
-        function editEntity(data) {
-            document.getElementById('name').value = data.name;
-            document.getElementById('fantasy_name').value = data.fantasy_name;
-            document.getElementById('tax_id').value = data.tax_id;
-            document.getElementById('document_number').value = data.document_number;
-            document.getElementById('contact_person').value = data.contact_person;
-            document.getElementById('email').value = data.email;
-            document.getElementById('phone').value = data.phone;
-            document.getElementById('mobile').value = data.mobile;
-            document.getElementById('address').value = data.address;
-            document.getElementById('delivery_address').value = data.delivery_address;
-            document.getElementById('tax_category').value = data.tax_category || 'No Aplica';
-            document.getElementById('default_voucher_type').value = data.default_voucher_type;
-            document.getElementById('is_enabled').checked = (data.is_enabled == 1);
-            document.getElementById('payment_condition').value = data.payment_condition || 'Factura Anticipada';
-            document.getElementById('payment_method').value = data.preferred_payment_method || 'Transferencia';
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    </script>
     </main>
     </div>
 </body>

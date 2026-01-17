@@ -17,10 +17,10 @@ class Logistics
      */
     public function getOrdersForPreparation()
     {
-        $sql = "SELECT q.*, c.name as client_name 
+        $sql = "SELECT q.*, e.name as client_name 
                 FROM quotations q
-                LEFT JOIN clients c ON q.client_id = c.id
-                WHERE q.payment_status = 'Paid' OR q.authorized_dispatch = TRUE
+                LEFT JOIN entities e ON q.client_id = e.id
+                WHERE q.payment_status = 'Paid' OR q.authorized_dispatch = 1
                 ORDER BY q.created_at DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
@@ -85,4 +85,3 @@ class Logistics
         return $stmt->fetchAll();
     }
 }
-PHP;

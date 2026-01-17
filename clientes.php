@@ -116,123 +116,16 @@ $clients = $db->query($sql)->fetchAll();
     </header>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="analisis.php" class="nav-link"><i class="fas fa-chart-line"></i> AN&Aacute;LISIS OP.</a>
-            <a href="productos.php" class="nav-link"><i class="fas fa-box-open"></i> PRODUCTOS</a>
-            <a href="presupuestos.php" class="nav-link"><i class="fas fa-history"></i> PRESUPUESTOS</a>
-            <a href="clientes.php" class="nav-link active"><i class="fas fa-users"></i> CLIENTES</a>
-            <a href="proveedores.php" class="nav-link"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
-            <a href="compras.php" class="nav-link"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
-            <a href="importar.php" class="nav-link"><i class="fas fa-upload"></i> IMPORTAR</a>
-            <a href="crm.php" class="nav-link"><i class="fas fa-handshake"></i> CRM</a>
-            <a href="cotizador.php" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
-        </nav>
-
+        <?php include 'sidebar.php'; ?>
+        破
         <main class="content">
 
-            <?php if ($message): ?>
-                <div class="alert alert-<?php echo $status; ?>">
-                    <?php echo $message; ?>
-                </div>
-            <?php endif; ?>
-
-            <div class="card">
-                <h3><i class="fas fa-user-friends"></i> Nuevo / Editar Cliente</h3>
-                <form method="POST" id="client-form">
-                    <input type="hidden" name="save_entity" value="1">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Raz&oacute;n Social / Nombre</label>
-                            <input type="text" name="name" id="name" required placeholder="RAZON SOCIAL">
-                        </div>
-                        <div class="form-group">
-                            <label>Nombre de Fantas&iacute;a</label>
-                            <input type="text" name="fantasy_name" id="fantasy_name" placeholder="NOMBRE COMERCIAL">
-                        </div>
-                        <div class="form-group">
-                            <label>CUIT/CUIL</label>
-                            <input type="text" name="tax_id" id="tax_id" class="mask-cuit" placeholder="00-00000000-0">
-                        </div>
-                        <div class="form-group">
-                            <label>DNI / Documento</label>
-                            <input type="text" name="document_number" id="document_number" class="mask-dni"
-                                placeholder="00.000.000">
-                        </div>
-                        <div class="form-group">
-                            <label>Categor&iacute;a Fiscal</label>
-                            <select name="tax_category" id="tax_category">
-                                <option value="Responsable Inscripto">Responsable Inscripto</option>
-                                <option value="Monotributo">Monotributo</option>
-                                <option value="Exento">Exento</option>
-                                <option value="Consumidor Final" selected>Consumidor Final</option>
-                                <option value="No Aplica">No Aplica</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Persona de Contacto</label>
-                            <input type="text" name="contact_person" id="contact_person">
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" name="email" id="email" class="no-upper">
-                        </div>
-                        <div class="form-group">
-                            <label>Tel&eacute;fono Fijo</label>
-                            <input type="text" name="phone" id="phone">
-                        </div>
-                        <div class="form-group">
-                            <label>Celular / WhatsApp</label>
-                            <input type="text" name="mobile" id="mobile">
-                        </div>
-                        <div class="form-group">
-                            <label>Comprobante por Defecto</label>
-                            <select name="default_voucher_type" id="default_voucher_type">
-                                <option value="Factura">Factura</option>
-                                <option value="Remito">Remito</option>
-                                <option value="Ninguno">Ninguno</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Condici&oacute;n de Pago</label>
-                            <select name="payment_condition" id="payment_condition">
-                                <option value="Contado">Contado</option>
-                                <option value="Cta Cte 15">Cta Cte 15 d&iacute;as</option>
-                                <option value="Cta Cte 30">Cta Cte 30 d&iacute;as</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Forma de Pago Preferida</label>
-                            <select name="payment_method" id="payment_method">
-                                <option value="Transferencia">Transferencia</option>
-                                <option value="Mercado Pago">Mercado Pago</option>
-                                <option value="Efectivo">Efectivo</option>
-                                <option value="Efectivo USD">Efectivo USD</option>
-                                <option value="Otra">Otra</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
-                        <div class="form-group">
-                            <label>Domicilio Legal</label>
-                            <textarea name="address" id="address" rows="2"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Lugar de Entrega</label>
-                            <textarea name="delivery_address" id="delivery_address" rows="2"></textarea>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 1rem;">
-                        <label class="toggle"><input type="checkbox" name="is_enabled" id="is_enabled" checked>
-                            Habilitado</label>
-                        <label class="toggle"><input type="checkbox" name="is_retention_agent" id="is_retention_agent">
-                            Agente de Retenci&oacute;n</label>
-                    </div>
-
-                    <button type="submit" class="btn-primary"><i class="fas fa-save"></i> GUARDAR CLIENTE</button>
-                </form>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <h1>Directorios de Clientes</h1>
+                <a href="config_entities.php?type=client" class="btn-primary"
+                    style="background:var(--accent-violet); text-decoration:none;">
+                    <i class="fas fa-plus"></i> NUEVO CLIENTE
+                </a>
             </div>
 
             <div class="card" style="margin-top: 2rem;">
@@ -287,9 +180,10 @@ $clients = $db->query($sql)->fetchAll();
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <button class="btn-edit" onclick='editEntity(<?php echo json_encode($c); ?>)'>
+                                        <a href="config_entities.php?type=client&edit=<?php echo $c['id']; ?>"
+                                            class="btn-edit" style="text-decoration:none;">
                                             <i class="fas fa-edit"></i>
-                                        </button>
+                                        </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -299,28 +193,6 @@ $clients = $db->query($sql)->fetchAll();
             </div>
     </div>
 
-    <script>
-        function editEntity(data) {
-            document.getElementById('name').value = data.name;
-            document.getElementById('fantasy_name').value = data.fantasy_name;
-            document.getElementById('tax_id').value = data.tax_id;
-            document.getElementById('document_number').value = data.document_number;
-            document.getElementById('contact_person').value = data.contact_person;
-            document.getElementById('email').value = data.email;
-            document.getElementById('phone').value = data.phone;
-            document.getElementById('mobile').value = data.mobile;
-            document.getElementById('address').value = data.address;
-            document.getElementById('delivery_address').value = data.delivery_address;
-            document.getElementById('tax_category').value = data.tax_category || 'Consumidor Final';
-            document.getElementById('default_voucher_type').value = data.default_voucher_type;
-            document.getElementById('is_enabled').checked = (data.is_enabled == 1);
-            document.getElementById('is_retention_agent').checked = (data.is_retention_agent == 1);
-            document.getElementById('payment_condition').value = data.payment_condition || 'Contado';
-            document.getElementById('payment_method').value = data.preferred_payment_method || 'Transferencia';
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    </script>
     </main>
     </div>
 </body>

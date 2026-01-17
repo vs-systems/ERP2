@@ -103,9 +103,24 @@ require_once 'auth_check.php';
                     <a href="config_transports.php" class="config-card">
                         <i class="fas fa-truck config-icon" style="color: #3b82f6;"></i>
                         <h3>Transportes</h3>
-                        <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 10px;">
-                            Gestione las empresas de transporte asociadas.
-                        </p>
+                        <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 10px;">Gestione las empresas de
+                            transporte asociadas.</p>
+                    </a>
+
+                    <!-- Config 5: Clientes ABM -->
+                    <a href="config_entities.php?type=client" class="config-card">
+                        <i class="fas fa-user-plus config-icon" style="color: #a855f7;"></i>
+                        <h3>Nuevo Cliente</h3>
+                        <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 10px;">Alta y edición de datos maestros
+                            de clientes.</p>
+                    </a>
+
+                    <!-- Config 6: Proveedores ABM -->
+                    <a href="config_entities.php?type=supplier" class="config-card">
+                        <i class="fas fa-truck-monster config-icon" style="color: #f43f5e;"></i>
+                        <h3>Nuevo Proveedor</h3>
+                        <p style="font-size: 0.9rem; color: #cbd5e1; margin-top: 10px;">Gestión de proveedores y
+                            condiciones de compra.</p>
                     </a>
                 </div>
             </div>
