@@ -43,10 +43,23 @@ class OperationAnalysis
         $itemsStmt->execute([':id' => $quoteId]);
         $items = $itemsStmt->fetchAll();
 
-        return [
-            'header' => $header,
-            'items' => $items
-        ];
+        // MERGE header fields into the top level array so $analysis['quote_number'] works
+        $result = $header;
+        $result['items'] = $items;
+
+        // Calculate dynamic totals for the view
+        $totalCost = 0;
+        foreach ($items as $item) {
+            $totalCost += (($item['unit_cost_usd'] ?? 0) * $item['qty']);
+        }
+        $result['total_revenue'] = $header['subtotal_usd']; // Assuming subtotal is net
+        $result['total_cost'] = $totalCost;
+        $result['profit'] = $result['total_revenue'] - $totalCost;
+        $result['margin_percent'] = $result['total_revenue'] > 0 ? ($result['profit'] / $result['total_revenue']) * 100 : 0;
+        $result['taxes'] = $result['total_revenue'] * 0.035; // Est. 3.5% IIBB
+        $result['date'] = date('d/m/Y', strtotime($header['created_at']));
+
+        return $result;
     }
 
     /**
