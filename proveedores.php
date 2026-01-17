@@ -127,7 +127,7 @@ $suppliers = $db->query($sql)->fetchAll();
                     <i class="fas fa-plus"></i> NUEVO PROVEEDOR
                 </a>
             </div>
-            破
+
             <div class="card" style="margin-top: 2rem;">
                 <h3><i class="fas fa-industry"></i> Listado de Proveedores</h3>
                 <div class="table-responsive">

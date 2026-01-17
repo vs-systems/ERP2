@@ -52,12 +52,7 @@ $lists = $priceListModule->getAll();
     </header>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="productos.php" class="nav-link"><i class="fas fa-box-open"></i> PRODUCTOS</a>
-            <a href="importar.php" class="nav-link"><i class="fas fa-upload"></i> IMPORTAR</a>
-            <a href="config_precios.php" class="nav-link active"><i class="fas fa-tags"></i> LISTAS DE PRECIOS</a>
-        </nav>
+        <?php include 'sidebar.php'; ?>
 
         <main class="content">
             <div class="card">

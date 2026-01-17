@@ -88,10 +88,7 @@ $suppliers = $catalog->getProviders();
     </header>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="configuration.php" class="nav-link active"><i class="fas fa-arrow-left"></i> VOLVER</a>
-        </nav>
+        <?php include 'sidebar.php'; ?>
 
         <main class="content">
             <?php if ($message): ?>

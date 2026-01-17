@@ -54,19 +54,7 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
     </header>
 
     <div class="dashboard-container">
-        <nav class="sidebar">
-            <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="analisis.php" class="nav-link"><i class="fas fa-chart-line"></i> AN&Aacute;LISIS OP.</a>
-            <a href="productos.php" class="nav-link active"><i class="fas fa-box-open"></i> PRODUCTOS</a>
-            <a href="presupuestos.php" class="nav-link"><i class="fas fa-history"></i> PRESUPUESTOS</a>
-            <a href="clientes.php" class="nav-link"><i class="fas fa-users"></i> CLIENTES</a>
-            <a href="proveedores.php" class="nav-link"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
-            <a href="compras.php" class="nav-link"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
-            <a href="crm.php" class="nav-link"><i class="fas fa-handshake"></i> CRM</a>
-            <a href="cotizador.php" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
-            <!-- Link to Config -->
-            <a href="configuration.php" class="nav-link"><i class="fas fa-cogs"></i> CONFIGURACIÓN</a>
-        </nav>
+        <?php include 'sidebar.php'; ?>
 
         <main class="content">
             <div class="card">
@@ -124,11 +112,14 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
 
                                     <!-- Calculated Prices -->
                                     <td style="text-align: right; color: #cbd5e1;">$
-                                        <?php echo number_format($priceGremio, 2); ?></td>
+                                        <?php echo number_format($priceGremio, 2); ?>
+                                    </td>
                                     <td style="text-align: right; color: #cbd5e1;">$
-                                        <?php echo number_format($priceWeb, 2); ?></td>
+                                        <?php echo number_format($priceWeb, 2); ?>
+                                    </td>
                                     <td style="text-align: right; color: #cbd5e1;">$
-                                        <?php echo number_format($priceML, 2); ?></td>
+                                        <?php echo number_format($priceML, 2); ?>
+                                    </td>
 
                                     <td style="text-align: center;">
                                         <span class="badge badge-info"><?php echo $p['iva_rate']; ?>%</span>

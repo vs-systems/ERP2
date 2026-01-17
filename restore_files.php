@@ -50,12 +50,6 @@ $menu = [
         'href' => 'proveedores.php'
     ],
     [
-        'id' => 'importar',
-        'label' => 'IMPORTAR',
-        'icon' => 'fas fa-upload',
-        'href' => 'importar.php'
-    ],
-    [
         'id' => 'crm',
         'label' => 'CRM',
         'icon' => 'fas fa-handshake',

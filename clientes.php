@@ -117,7 +117,7 @@ $clients = $db->query($sql)->fetchAll();
 
     <div class="dashboard-container">
         <?php include 'sidebar.php'; ?>
-        破
+
         <main class="content">
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
