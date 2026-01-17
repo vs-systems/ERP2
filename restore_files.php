@@ -1,9 +1,15 @@
 <?php
-// restore_files.php - Restauración de Archivos Críticos v4 (Price Lists & Import Fix)
+// restore_files.php - Restauración de Archivos Críticos v5 (Fix Config & Unique SKU)
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-echo "<h1>Restaurador de Archivos Críticos v4 (Price List Update)</h1>";
+// [CRITICAL FIX] Include Config BEFORE usage
+require_once __DIR__ . '/src/config/config.php';
+require_once __DIR__ . '/src/lib/Database.php';
+
+use Vsys\Lib\Database;
+
+echo "<h1>Restaurador de Archivos Críticos v5</h1>";
 
 /**
  * Helper to write file safely
@@ -39,16 +45,13 @@ function writeFile($path, $content)
 }
 
 // ---------------------------------------------------------
-// 0. SQL Migration: price_lists table
+// 0. SQL Migration: price_lists & Product Schema
 // ---------------------------------------------------------
-require_once __DIR__ . '/src/lib/Database.php';
-use Vsys\Lib\Database;
-
 try {
     $db = Database::getInstance();
     echo "<h3>Migración de Base de Datos</h3>";
 
-    // 1. Create Table
+    // 1. Create Price Lists Table
     $sql = "CREATE TABLE IF NOT EXISTS price_lists (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(50) NOT NULL UNIQUE,
@@ -56,7 +59,7 @@ try {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
     $db->query($sql);
-    echo "<p>Tabla <code>price_lists</code> verificada/creada.</p>";
+    echo "<p>Tabla <code>price_lists</code> verificada.</p>";
 
     // 2. Insert Defaults
     $defaults = [
@@ -70,9 +73,7 @@ try {
     }
     echo "<p>Listas de precios por defecto insertadas.</p>";
 
-    // 3. Ensure products table has correct columns (subcategory, brand, supplier_id)
-    // We try to add them; if they exist, it might fail or we can use generic ALTER IGNORE logic or check via DESCRIBE.
-    // Simple approach: Try adding one by one and catch exception if duplicate column.
+    // 3. Update Products Table (Columns)
     $alters = [
         "ALTER TABLE products ADD COLUMN subcategory VARCHAR(100) NULL AFTER category",
         "ALTER TABLE products ADD COLUMN brand VARCHAR(100) NULL AFTER description",
@@ -82,14 +83,32 @@ try {
     foreach ($alters as $alter) {
         try {
             $db->query($alter);
-            echo "<p>Columna agregada: $alter</p>";
+            echo "<p>SQL Ejecutado: " . htmlspecialchars($alter) . "</p>";
         } catch (Exception $e) {
-            // Likely column exists
+            // Check if error is 'Duplicate column name' (Code 1060)
+            if (strpos($e->getMessage(), 'Duplicate column') !== false) {
+                // Ignore
+            } else {
+                echo "<p style='color:orange'>Aviso SQL: " . $e->getMessage() . "</p>";
+            }
         }
     }
 
+    // 4. Ensure SKU is UNIQUE for Import Updates to work
+    try {
+        // Try adding unique index. This might fail if duplicates exist or index exists.
+        // We use a safe check procedure or just Try/Catch
+        $db->query("ALTER TABLE products ADD UNIQUE INDEX unique_sku (sku)");
+        echo "<p>Índice Único para SKU creado (necesario para actualizaciones).</p>";
+    } catch (Exception $e) {
+        // Assume it exists or duplicates prevent it.
+        // If duplicates exist, we can't create it easily without cleaning up. 
+        // For now, warning only.
+        echo "<p style='color:orange'>Aviso SQL (Index SKU): " . $e->getMessage() . "</p>";
+    }
+
 } catch (Exception $e) {
-    echo "<p style='color:red'>Error SQL: " . $e->getMessage() . "</p>";
+    echo "<p style='color:red'>Error Crítico SQL: " . $e->getMessage() . "</p>";
 }
 
 // ---------------------------------------------------------
@@ -267,7 +286,6 @@ writeFile(__DIR__ . '/config_precios.php', $contentConfigUi);
 // ---------------------------------------------------------
 // 3. src/modules/catalogo/Catalog.php
 // ---------------------------------------------------------
-// Simplified update - REPLACES entire file content logic here to ensure it sticks
 $contentCatalog = <<<'PHP'
 <?php
 /**
@@ -415,6 +433,7 @@ class Catalog
             }
 
             // 4. Update/Insert Product
+            // NOTE: Relies on SKU unique index for actual UPDATE
             $this->addProduct([
                 'sku' => $sku,
                 'barcode' => null,
@@ -491,6 +510,6 @@ class Catalog
 PHP;
 writeFile(__DIR__ . '/src/modules/catalogo/Catalog.php', $contentCatalog);
 
-echo "<hr><p>¡Actualización Completa! Listas de precios creadas, Módulo actualizado y UI desplegada.</p>";
+echo "<hr><p>¡Actualización v5 Completa!.</p>";
 echo "<p><a href='config_precios.php' class='btn'>Ir a Configuración de Precios</a></p>";
 ?>
