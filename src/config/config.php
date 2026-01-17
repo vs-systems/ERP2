@@ -4,8 +4,9 @@
  */
 
 // Error reporting (Disable in production)
-error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
-ini_set('display_errors', 0);
+// Error reporting (DEBUG MODE - REVERT BEFORE PRODUCTION)
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // Database configuration
 define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
