@@ -1,1 +1,11 @@
-# Temporarily empty to fix 500 error
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirigir la raíz del dominio a public/index.php
+    RewriteRule ^$ public/index.php [L]
+
+    # Redirigir cualquier otra solicitud a la carpeta public, 
+    # a menos que ya esté apuntando a public
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

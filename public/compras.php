@@ -1,4 +1,5 @@
 <?php
+require_once 'auth_check.php';
 /**
  * VS System ERP - Gestión de Compras
  */
@@ -23,7 +24,7 @@ $suppliers = $db->query("SELECT id, name, fantasy_name FROM entities WHERE type 
     <meta charset="UTF-8">
     <title>Gestión de Compras - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .purchase-header {
             display: grid;
@@ -102,6 +103,7 @@ $suppliers = $db->query("SELECT id, name, fantasy_name FROM entities WHERE type 
             <a href="clientes.php" class="nav-link"><i class="fas fa-users"></i> CLIENTES</a>
             <a href="proveedores.php" class="nav-link"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
             <a href="compras.php" class="nav-link active"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
+            <a href="importar.php" class="nav-link"><i class="fas fa-upload"></i> IMPORTAR</a>
             <a href="crm.php" class="nav-link"><i class="fas fa-handshake"></i> CRM</a>
             <a href="cotizador.php" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
         </nav>
@@ -483,7 +485,7 @@ $suppliers = $db->query("SELECT id, name, fantasy_name FROM entities WHERE type 
         }
 
 
-        // Save logic (Simplified for first version)
+        // Save logic
         document.getElementById('purchase-form').onsubmit = function (e) {
             e.preventDefault();
             if (items.length === 0) {

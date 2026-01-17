@@ -1,6 +1,7 @@
 <?php
+require_once 'auth_check.php';
 /**
- * VS System ERP - Gestión de Clientes (Enhanced)
+ * VS System ERP - Gestión de Clientes
  */
 require_once __DIR__ . '/../src/config/config.php';
 require_once __DIR__ . '/../src/lib/Database.php';
@@ -27,9 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_entity'])) {
         'address' => $_POST['address'],
         'delivery_address' => $_POST['delivery_address'],
         'default_voucher' => $_POST['default_voucher_type'] ?? 'Factura',
-        'tax_category' => $_POST['tax_category'] ?? 'No Aplica',
+        'tax_category' => $_POST['tax_category'] ?? 'No Aplica', // Default if empty
         'is_enabled' => isset($_POST['is_enabled']) ? 1 : 0,
-        'retention' => isset($_POST['is_retention']) ? 1 : 0,
+        'retention' => isset($_POST['is_retention_agent']) ? 1 : 0,
         'payment_condition' => $_POST['payment_condition'],
         'payment_method' => $_POST['payment_method']
     ];
@@ -55,7 +56,7 @@ $clients = $db->query($sql)->fetchAll();
     <meta charset="UTF-8">
     <title>Gestión de Clientes - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="js/entity-format.js"></script>
     <style>
         .form-grid {
@@ -131,11 +132,13 @@ $clients = $db->query($sql)->fetchAll();
         <main class="content">
 
             <?php if ($message): ?>
-                <div class="alert alert-<?php echo $status; ?>"><?php echo $message; ?></div>
+                <div class="alert alert-<?php echo $status; ?>">
+                    <?php echo $message; ?>
+                </div>
             <?php endif; ?>
 
             <div class="card">
-                <h3><i class="fas fa-user-plus"></i> Nuevo / Editar Cliente</h3>
+                <h3><i class="fas fa-user-friends"></i> Nuevo / Editar Cliente</h3>
                 <form method="POST" id="client-form">
                     <input type="hidden" name="save_entity" value="1">
                     <div class="form-grid">
@@ -162,7 +165,8 @@ $clients = $db->query($sql)->fetchAll();
                                 <option value="Responsable Inscripto">Responsable Inscripto</option>
                                 <option value="Monotributo">Monotributo</option>
                                 <option value="Exento">Exento</option>
-                                <option value="No Aplica" selected>No Aplica</option>
+                                <option value="Consumidor Final" selected>Consumidor Final</option>
+                                <option value="No Aplica">No Aplica</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -192,12 +196,9 @@ $clients = $db->query($sql)->fetchAll();
                         <div class="form-group">
                             <label>Condici&oacute;n de Pago</label>
                             <select name="payment_condition" id="payment_condition">
-                                <option value="Factura Anticipada">Factura Anticipada</option>
                                 <option value="Contado">Contado</option>
-                                <option value="2 d&iacute;as">2 d&iacute;as</option>
-                                <option value="7 d&iacute;as">7 d&iacute;as</option>
-                                <option value="15 d&iacute;as">15 d&iacute;as</option>
-                                <option value="30 d&iacute;as">30 d&iacute;as</option>
+                                <option value="Cta Cte 15">Cta Cte 15 d&iacute;as</option>
+                                <option value="Cta Cte 30">Cta Cte 30 d&iacute;as</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -224,10 +225,10 @@ $clients = $db->query($sql)->fetchAll();
                     </div>
 
                     <div style="display: flex; gap: 20px; align-items: center; margin-bottom: 1rem;">
-                        <label class="toggle"><input type="checkbox" name="is_retention" id="is_retention"> Agente
-                            Retenci&oacute;n (+7%)</label>
                         <label class="toggle"><input type="checkbox" name="is_enabled" id="is_enabled" checked>
                             Habilitado</label>
+                        <label class="toggle"><input type="checkbox" name="is_retention_agent" id="is_retention_agent">
+                            Agente de Retenci&oacute;n</label>
                     </div>
 
                     <button type="submit" class="btn-primary"><i class="fas fa-save"></i> GUARDAR CLIENTE</button>
@@ -235,7 +236,7 @@ $clients = $db->query($sql)->fetchAll();
             </div>
 
             <div class="card" style="margin-top: 2rem;">
-                <h3><i class="fas fa-users"></i> Listado de Clientes</h3>
+                <h3><i class="fas fa-list-alt"></i> Listado de Clientes</h3>
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -253,20 +254,30 @@ $clients = $db->query($sql)->fetchAll();
                             <?php foreach ($clients as $c): ?>
                                 <tr style="<?php echo !$c['is_enabled'] ? 'opacity: 0.5' : ''; ?>">
                                     <td>
-                                        <strong><?php echo $c['name']; ?></strong><br>
-                                        <small style="color: #818cf8;"><?php echo $c['fantasy_name']; ?></small>
+                                        <strong>
+                                            <?php echo $c['name']; ?>
+                                        </strong><br>
+                                        <small style="color: #818cf8;">
+                                            <?php echo $c['fantasy_name']; ?>
+                                        </small>
                                     </td>
                                     <td>
                                         <?php echo $c['tax_id']; ?><br>
-                                        <small><?php echo $c['document_number']; ?></small>
+                                        <small>
+                                            <?php echo $c['document_number']; ?>
+                                        </small>
                                     </td>
-                                    <td><?php echo $c['contact_person']; ?></td>
+                                    <td>
+                                        <?php echo $c['contact_person']; ?>
+                                    </td>
                                     <td><span class="badge"
                                             style="background: rgba(139, 92, 246, 0.2);"><?php echo $c['tax_category']; ?></span>
                                     </td>
                                     <td>
                                         <?php echo $c['email']; ?><br>
-                                        <small><?php echo $c['mobile'] ?: $c['phone']; ?></small>
+                                        <small>
+                                            <?php echo $c['mobile'] ?: $c['phone']; ?>
+                                        </small>
                                     </td>
                                     <td>
                                         <?php if ($c['is_enabled']): ?>
@@ -300,16 +311,18 @@ $clients = $db->query($sql)->fetchAll();
             document.getElementById('mobile').value = data.mobile;
             document.getElementById('address').value = data.address;
             document.getElementById('delivery_address').value = data.delivery_address;
-            document.getElementById('tax_category').value = data.tax_category || 'No Aplica';
+            document.getElementById('tax_category').value = data.tax_category || 'Consumidor Final';
             document.getElementById('default_voucher_type').value = data.default_voucher_type;
-            document.getElementById('is_retention').checked = (data.is_retention_agent == 1);
             document.getElementById('is_enabled').checked = (data.is_enabled == 1);
-            document.getElementById('payment_condition').value = data.payment_condition || 'Factura Anticipada';
+            document.getElementById('is_retention_agent').checked = (data.is_retention_agent == 1);
+            document.getElementById('payment_condition').value = data.payment_condition || 'Contado';
             document.getElementById('payment_method').value = data.preferred_payment_method || 'Transferencia';
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
+    </main>
+    </div>
 </body>
 
 </html>

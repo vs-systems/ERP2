@@ -1,4 +1,5 @@
 <?php
+require_once 'auth_check.php';
 /**
  * VS System ERP - Gestión de Productos
  */
@@ -50,7 +51,7 @@ $suppliers = $catalog->getProviders();
     <meta charset="UTF-8">
     <title>Gestión de Productos - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .form-grid {
             display: grid;
@@ -142,7 +143,8 @@ $suppliers = $catalog->getProviders();
                         </div>
                         <div class="form-group">
                             <label>URL de Imagen</label>
-                            <input type="text" name="image_url" id="image_url" placeholder="https://ejemplo.com/foto.jpg">
+                            <input type="text" name="image_url" id="image_url"
+                                placeholder="https://ejemplo.com/foto.jpg">
                         </div>
                         <div class="form-group">
                             <label>Categor&iacute;a</label>

@@ -1,4 +1,5 @@
 <?php
+require_once 'auth_check.php';
 /**
  * VS System ERP - Análisis de Operaciones
  */
@@ -8,55 +9,60 @@ require_once __DIR__ . '/../src/modules/analysis/OperationAnalysis.php';
 
 use Vsys\Modules\Analysis\OperationAnalysis;
 
-$analysisModule = new OperationAnalysis();
-$db = Vsys\Lib\Database::getInstance();
-
-$quoteId = $_GET['id'] ?? null;
-$analysisData = $quoteId ? $analysisModule->getQuotationAnalysis($quoteId) : null;
-
-// Fetch all quotes for selection
-$quotesQuery = "SELECT q.id, q.quote_number, q.total_usd, e.name as client_name 
-               FROM quotations q 
-               LEFT JOIN entities e ON q.client_id = e.id 
-               ORDER BY q.id DESC LIMIT 100";
-$quotes = $db->query($quotesQuery)->fetchAll();
+$analyzer = new OperationAnalysis();
+$quotationId = $_GET['id'] ?? null;
+$analysis = null;
+if ($quotationId) {
+    try {
+        $analysis = $analyzer->analyzeQuotation($quotationId);
+    } catch (Exception $e) {
+        $error = $e->getMessage();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <title>Análisis de Operaciones - VS System</title>
+    <title>Análisis de Operación - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .analysis-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .profit-card {
-            background: var(--gradient-premium);
-            padding: 2rem;
-            border-radius: 12px;
-            text-align: center;
-        }
-
-        .profit-value {
-            font-size: 3rem;
+        .metric-big {
+            font-size: 2.5rem;
             font-weight: 800;
-            margin: 10px 0;
-            display: block;
         }
 
-        .expense-input {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--accent-violet);
-            color: white;
-            padding: 8px;
-            border-radius: 4px;
-            width: 100%;
+        .metric-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .profit-positive {
+            color: #10b981;
+        }
+
+        .profit-negative {
+            color: #ef4444;
+        }
+
+        .profit-neutral {
+            color: #f59e0b;
+        }
+
+        .cost-breakdown {
+            margin-top: 1rem;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
@@ -65,7 +71,9 @@ $quotes = $db->query($quotesQuery)->fetchAll();
     <header
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+            <a href="index.php" style="text-decoration:none;">
+                <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+            </a>
             <div
                 style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);">
                 Vecino Seguro <span
@@ -81,156 +89,173 @@ $quotes = $db->query($quotesQuery)->fetchAll();
     <div class="dashboard-container">
         <nav class="sidebar">
             <a href="index.php" class="nav-link"><i class="fas fa-home"></i> DASHBOARD</a>
-            <a href="analizador.php" class="nav-link active"><i class="fas fa-chart-line"></i> ANALIZADOR</a>
+            <a href="analisis.php" class="nav-link active"><i class="fas fa-chart-line"></i> AN&Aacute;LISIS OP.</a>
             <a href="productos.php" class="nav-link"><i class="fas fa-box-open"></i> PRODUCTOS</a>
             <a href="presupuestos.php" class="nav-link"><i class="fas fa-history"></i> PRESUPUESTOS</a>
             <a href="clientes.php" class="nav-link"><i class="fas fa-users"></i> CLIENTES</a>
             <a href="proveedores.php" class="nav-link"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
             <a href="compras.php" class="nav-link"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
+            <a href="importar.php" class="nav-link"><i class="fas fa-upload"></i> IMPORTAR</a>
             <a href="crm.php" class="nav-link"><i class="fas fa-handshake"></i> CRM</a>
             <a href="cotizador.php" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
         </nav>
 
         <main class="content">
-            <div class="card">
-                <form method="GET" style="display: flex; gap: 1rem; align-items: center;">
-                    <div style="position: relative; flex-grow: 1;">
-                        <input type="text" id="quoteSearch" placeholder="🔍 Filtrar por Nro o Cliente..."
-                            style="width: 100%; border-radius: 4px; padding: 10px; border: 1px solid var(--accent-violet); background: rgba(255,255,255,0.05); color: white; margin-bottom: 5px;">
-                        <select name="id" id="quoteSelect" required style="width: 100%;">
-                            <option value="">Seleccione una operaci&oacute;n...</option>
-                            <?php foreach ($quotes as $q): ?>
-                                <option value="<?php echo $q['id']; ?>" <?php echo $quoteId == $q['id'] ? 'selected' : ''; ?>
-                                    data-text="<?php echo strtolower($q['quote_number'] . ' ' . ($q['client_name'] ?? '')); ?>">
-                                    <?php echo $q['quote_number']; ?> - <?php echo $q['client_name'] ?? 'S/D'; ?> (USD
-                                    <?php echo number_format($q['total_usd'], 2); ?>)
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+            <?php if (!$quotationId): ?>
+                <div class="card" style="text-align: center; padding: 50px;">
+                    <h3><i class="fas fa-search-dollar"></i> Seleccione una Cotización</h3>
+                    <p>Ingrese el ID de la cotización para ver su análisis de rentabilidad.</p>
+                    <form action="analisis.php" method="GET" style="margin-top: 20px;">
+                        <input type="number" name="id" placeholder="ID Cotización (Ej: 15)"
+                            style="padding: 10px; width: 200px; border-radius: 6px; border: 1px solid var(--accent-violet); background: #1e293b; color: white;">
+                        <button type="submit" class="btn-primary">ANALIZAR</button>
+                    </form>
+                </div>
+            <?php elseif (isset($error)): ?>
+                <div class="alert alert-error"><?php echo $error; ?></div>
+            <?php else: ?>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h1>An&aacute;lisis de Rentabilidad #<?php echo $analysis['quote_number']; ?></h1>
+                            <p style="color: #94a3b8;">Cliente: <strong><?php echo $analysis['client_name']; ?></strong> |
+                                Fecha: <?php echo $analysis['date']; ?></p>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="badge" style="font-size: 1rem; background: rgba(139, 92, 246, 0.2);">Margen:
+                                <?php echo number_format($analysis['margin_percent'], 2); ?>%</span>
+                        </div>
                     </div>
-                    <button type="submit" class="btn-primary" style="height: fit-content;">ANALIZAR</button>
-                </form>
-            </div>
+                </div>
 
-            <script>
-                document.getElementById('quoteSearch').addEventListener('input', function (e) {
-                    const q = e.target.value.toLowerCase();
-                    const options = document.getElementById('quoteSelect').options;
-                    for (let i = 1; i < options.length; i++) {
-                        const txt = options[i].getAttribute('data-text');
-                        options[i].style.display = txt.includes(q) ? '' : 'none';
-                    }
-                });
-            </script>
+                <div class="grid-3" style="margin-top: 2rem;">
+                    <!-- Revenue -->
+                    <div class="card"
+                        style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(99, 102, 241, 0.1)); border: 1px solid rgba(99, 102, 241, 0.3);">
+                        <div class="metric-label">Ingresos Totales (Neto)</div>
+                        <div class="metric-big" style="color: #a5b4fc;">$
+                            <?php echo number_format($analysis['total_revenue'], 2); ?>
+                        </div>
+                        <small>Facturación proyectada sin IVA</small>
+                    </div>
 
-            <?php if ($analysisData): ?>
-                <?php
-                $h = $analysisData['header'];
-                $tc = $h['exchange_rate_usd'];
-                ?>
-                <div class="analysis-grid" style="margin-top: 2rem;">
+                    <!-- Cost -->
+                    <div class="card"
+                        style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(239, 68, 68, 0.1)); border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <div class="metric-label">Costo Mercadería (CMV)</div>
+                        <div class="metric-big" style="color: #fca5a5;">$
+                            <?php echo number_format($analysis['total_cost'], 2); ?>
+                        </div>
+                        <small>Costo de reposición estimado</small>
+                    </div>
+
+                    <!-- Profit -->
+                    <div class="card"
+                        style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <div class="metric-label">Utilidad Bruta</div>
+                        <div
+                            class="metric-big <?php echo $analysis['profit'] >= 0 ? 'profit-positive' : 'profit-negative'; ?>">
+                            $ <?php echo number_format($analysis['profit'], 2); ?>
+                        </div>
+                        <small>Ganancia neta de la operación</small>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 2rem;">
                     <div class="card">
-                        <h3><i class="fas fa-shopping-cart"></i> Costos de Operaci&oacute;n (NETO)</h3>
-                        <table class="table-compact">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th style="text-align: right;">Costo USD</th>
-                                    <th style="text-align: right;">Costo ARS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                $totalCostUsd = 0;
-                                foreach ($analysisData['items'] as $it):
-                                    $cost = $it['catalog_cost'] ?: 0;
-                                    $qty = $it['quantity'] ?: 0;
-                                    $totalCostUsd += ($cost * $qty);
-                                    ?>
+                        <h3>Desglose de Productos</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td>
-                                            <?php echo $it['description'] ?: 'Sin descripción'; ?> (x
-                                            <?php echo $qty; ?>)
-                                        </td>
-                                        <td style="text-align: right;">$
-                                            <?php echo number_format($cost, 2); ?>
-                                        </td>
-                                        <td style="text-align: right; color: #94a3b8;">$
-                                            <?php echo number_format($cost * $tc, 2); ?>
-                                        </td>
+                                        <th>Producto</th>
+                                        <th style="text-align: right;">Venta Unit</th>
+                                        <th style="text-align: right;">Costo Unit</th>
+                                        <th style="text-align: right;">Utilidad</th>
+                                        <th style="text-align: center;">% Margen</th>
                                     </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-
-                        <h4 style="margin-top: 2rem;">Gastos Generales (Fletes, Remises, etc.)</h4>
-                        <div id="extra-expenses">
-                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <input type="text" placeholder="Descripci&oacute;n" class="expense-input"
-                                    value="Fletes / Logistic">
-                                <input type="number" id="extra-ars" placeholder="ARS" class="expense-input"
-                                    style="width: 150px;" value="0" onchange="calculateRealProfit()">
-                            </div>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($analysis['items'] as $item):
+                                        $margin = ($item['unit_price'] > 0) ? (($item['unit_price'] - $item['unit_cost']) / $item['unit_price']) * 100 : 0;
+                                        ?>
+                                        <tr>
+                                            <td><strong><?php echo $item['sku']; ?></strong><br><small><?php echo $item['description']; ?></small>
+                                            </td>
+                                            <td style="text-align: right;">$
+                                                <?php echo number_format($item['unit_price'], 2); ?></td>
+                                            <td style="text-align: right;">$ <?php echo number_format($item['unit_cost'], 2); ?>
+                                            </td>
+                                            <td style="text-align: right; color: #10b981;">$
+                                                <?php echo number_format(($item['unit_price'] - $item['unit_cost']) * $item['qty'], 2); ?>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <span class="badge"
+                                                    style="background: <?php echo $margin < 20 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'; ?>; color: <?php echo $margin < 20 ? '#ef4444' : '#10b981'; ?>;">
+                                                    <?php echo number_format($margin, 1); ?>%
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
                     <div class="card">
-                        <h3><i class="fas fa-file-invoice-dollar"></i> Venta y Margen (NETO)</h3>
-                        <div style="margin-bottom: 1rem;">
-                            <p>Total Presupuestado (Neto): <strong id="total-sale-usd">USD
-                                    <?php echo number_format($h['subtotal_usd'], 2); ?>
-                                </strong></p>
-                            <p>Total en Pesos (Neto): <strong id="total-sale-ars">ARS
-                                    <?php echo number_format($h['subtotal_usd'] * $tc, 2); ?>
-                                </strong></p>
-                        </div>
-
-                        <div class="profit-card">
-                            <span style="opacity: 0.8;">GANANCIA ESTIMADA (NETA)</span>
-                            <span class="profit-value" id="final-profit-ars">ARS 0.00</span>
-                            <span id="final-profit-usd" style="font-weight: 600; color: var(--accent-blue);">USD 0.00</span>
-                        </div>
-
-                        <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
-                            <p><i class="fas fa-info-circle"></i> Esta operaci&oacute;n se calcul&oacute; con TC: <strong>
-                                    <?php echo $tc; ?>
-                                </strong></p>
-                            <p><i class="fas fa-university"></i> Agente Retenci&oacute;n: <strong>
-                                    <?php echo $h['is_retention_agent'] ? 'SI (7%)' : 'NO'; ?>
-                                </strong></p>
+                        <h3>Estructura de Margen</h3>
+                        <canvas id="marginChart"></canvas>
+                        <div class="cost-breakdown">
+                            <div class="cost-item">
+                                <span>Costo Mercadería</span>
+                                <strong><?php echo number_format(($analysis['total_cost'] / $analysis['total_revenue']) * 100, 1); ?>%</strong>
+                            </div>
+                            <div class="cost-item">
+                                <span>Impuestos (Est. IIBB 3.5%)</span>
+                                <strong><?php echo number_format($analysis['taxes'], 2); ?> (3.5%)</strong>
+                            </div>
+                            <div class="cost-item" style="border-top: 1px solid white; margin-top: 5px; padding-top: 5px;">
+                                <span>Utilidad Neta Real</span>
+                                <strong
+                                    style="color: #10b981;"><?php echo number_format($analysis['profit'] - $analysis['taxes'], 2); ?></strong>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <script>
-                    const saleNetUsd = <?php echo $h['subtotal_usd']; ?>;
-                    const costNetUsd = <?php echo $totalCostUsd; ?>;
-                    const exchangeRate = <?php echo $tc; ?>;
-                    const isRetention = <?php echo $h['is_retention_agent'] ? 'true' : 'false'; ?>;
-
-                    function calculateRealProfit() {
-                        const extraArs = parseFloat(document.getElementById('extra-ars').value) || 0;
-
-                        const saleArs = saleNetUsd * exchangeRate;
-                        const costArs = costNetUsd * exchangeRate;
-
-                        // Calculation: Profit = (Sale Net - Cost Net - Extra Expenses)
-                        // We also need to account for retention/bank fees if those are lost money
-                        // But user said: "iva e impuestos son perdida", so we stick to net.
-
-                        const profitArs = saleArs - costArs - extraArs;
-                        const profitUsd = profitArs / exchangeRate;
-
-                        document.getElementById('final-profit-ars').innerText = 'ARS ' + profitArs.toLocaleString('es-AR', { minimumFractionDigits: 2 });
-                        document.getElementById('final-profit-usd').innerText = 'USD ' + profitUsd.toLocaleString('en-US', { minimumFractionDigits: 2 });
-
-                        const profitValue = document.getElementById('final-profit-ars');
-                        if (profitArs < 0) profitValue.style.color = '#ef4444';
-                        else profitValue.style.color = '#10b981';
-                    }
-
-                    window.onload = calculateRealProfit;
+                    const ctx = document.getElementById('marginChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Costo', 'Utilidad', 'Impuestos'],
+                            datasets: [{
+                                data: [
+                                    <?php echo $analysis['total_cost']; ?>,
+                                    <?php echo $analysis['profit'] - $analysis['taxes']; ?>,
+                                    <?php echo $analysis['taxes']; ?>
+                                ],
+                                backgroundColor: [
+                                    '#ef4444',
+                                    '#10b981',
+                                    '#f59e0b'
+                                ],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: 'white' }
+                                }
+                            }
+                        }
+                    });
                 </script>
+
             <?php endif; ?>
         </main>
     </div>

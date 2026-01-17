@@ -1,4 +1,5 @@
 <?php
+require_once 'auth_check.php';
 /**
  * VS System ERP - Quotation Management (History)
  */
@@ -19,7 +20,7 @@ $quotes = $cot->getAllQuotations(100);
     <title>Historial de Presupuestos - VS System ERP</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .status-badge {
             padding: 4px 12px;

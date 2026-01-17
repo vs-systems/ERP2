@@ -1,4 +1,5 @@
 <?php
+require_once 'auth_check.php';
 /**
  * VS System ERP - Gestión de Proveedores
  */
@@ -55,7 +56,7 @@ $suppliers = $db->query($sql)->fetchAll();
     <meta charset="UTF-8">
     <title>Gestión de Proveedores - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="js/entity-format.js"></script>
     <style>
         .form-grid {

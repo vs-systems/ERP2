@@ -1,4 +1,5 @@
 <?php
+require_once 'auth_check.php';
 require_once __DIR__ . '/../src/config/config.php';
 ?>
 <!DOCTYPE html>
@@ -10,7 +11,7 @@ require_once __DIR__ . '/../src/config/config.php';
     <title><?php echo APP_NAME; ?> - Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style_premium.css">
-    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>

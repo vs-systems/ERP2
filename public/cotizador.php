@@ -1,4 +1,5 @@
 <?php
+require_once 'auth_check.php';
 require_once __DIR__ . '/../src/config/config.php';
 require_once __DIR__ . '/../src/lib/Database.php';
 require_once __DIR__ . '/../src/modules/cotizador/Cotizador.php';
@@ -20,7 +21,7 @@ $today = date('d/m/y');
     <meta charset="UTF-8">
     <title>Nuevo Presupuesto - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .fee-toggles {
             display: flex;
@@ -180,7 +181,10 @@ $today = date('d/m/y');
                         </h3>
                     </div>
                     <div>
-                        <p>Cotización BNA: <input type="number" step="0.01" id="bcra-reference" value="<?php echo $currentRate; ?>" style="width: 100px; background: rgba(255,255,255,0.05); border: 1px solid var(--accent-violet); border-radius: 4px; color: white; padding: 2px 5px; text-align: center; font-weight: bold;"></p>
+                        <p>Cotización BNA: <input type="number" step="0.01" id="bcra-reference"
+                                value="<?php echo $currentRate; ?>"
+                                style="width: 100px; background: rgba(255,255,255,0.05); border: 1px solid var(--accent-violet); border-radius: 4px; color: white; padding: 2px 5px; text-align: center; font-weight: bold;">
+                        </p>
                         <h3 style="color: #27ae60;">Total ARS: $ <span id="total-general-ars">0.00</span></h3>
                     </div>
                     <div style="text-align: right; display: flex; flex-direction: column; gap: 10px;">
@@ -413,7 +417,7 @@ $today = date('d/m/y');
         document.getElementById('is-retention').addEventListener('change', renderTable);
         document.getElementById('is-bank').addEventListener('change', renderTable);
         document.getElementById('with-iva').addEventListener('change', renderTable);
-        document.getElementById('bcra-reference').addEventListener('change', function() {
+        document.getElementById('bcra-reference').addEventListener('change', function () {
             bnaRate = parseFloat(this.value) || 0;
             renderTable();
         });

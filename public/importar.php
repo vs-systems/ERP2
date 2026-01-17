@@ -1,4 +1,5 @@
 <?php
+require_once 'auth_check.php';
 /**
  * Importador Centralizado - VS System ERP
  */
@@ -53,7 +54,7 @@ $providers = $catalog->getProviders();
     <meta charset="UTF-8">
     <title>Importador Centralizado - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .import-box {
             border: 2px dashed var(--accent-violet);
@@ -101,6 +102,7 @@ $providers = $catalog->getProviders();
             <a href="presupuestos.php" class="nav-link"><i class="fas fa-history"></i> PRESUPUESTOS</a>
             <a href="clientes.php" class="nav-link"><i class="fas fa-users"></i> CLIENTES</a>
             <a href="proveedores.php" class="nav-link"><i class="fas fa-truck-loading"></i> PROVEEDORES</a>
+            <a href="compras.php" class="nav-link"><i class="fas fa-cart-arrow-down"></i> COMPRAS</a>
             <a href="importar.php" class="nav-link active"><i class="fas fa-upload"></i> IMPORTAR</a>
             <a href="crm.php" class="nav-link"><i class="fas fa-handshake"></i> CRM</a>
             <a href="cotizador.php" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> COTIZADOR</a>
