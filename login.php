@@ -101,6 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
     <div class="login-card">
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+            <img src="logo_display.php?v=2" alt="VS System" style="max-width: 200px; height: auto;">
+        </div>
         <h2>Acceso VS System</h2>
         <?php if ($error): ?>
             <div class="error">

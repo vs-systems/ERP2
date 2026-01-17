@@ -20,8 +20,8 @@ define('BCRA_TOKEN', 'eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3OTg3MjIwM
 
 // System Settings
 define('APP_NAME', 'VS System ERP');
-define('LOGO_URL_LARGE', 'src/img/VSLogo.png');
-define('LOGO_URL_SMALL', 'src/img/logo_short.png');
+define('LOGO_URL_LARGE', 'src/img/VSLogo_v2.jpg');
+define('LOGO_URL_SMALL', 'src/img/VSLogo_v2.jpg');
 define('CURRENCY_DEFAULT', 'USD');
 define('CURRENCY_SECONDARY', 'ARS');
 

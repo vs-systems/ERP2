@@ -142,7 +142,7 @@ $stages = [
     <header
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" style="height: 50px;">
+            <img src="logo_display.php?v=2" alt="VS System" style="height: 60px;">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 1.5rem;">
                 CRM <span
                     style="background: linear-gradient(90deg, #8b5cf6, #d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">INTELLIGENT</span>

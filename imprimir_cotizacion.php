@@ -132,7 +132,7 @@ if (!$quote)
 
     <table class="header-table">
         <tr>
-            <td><img src="logo_display.php" class="logo"></td>
+            <td><img src="logo_display.php?v=2" class="logo" style="width: 250px; height: auto;"></td>
             <td class="quote-info">
                 <h1>PRESUPUESTO</h1>
                 <p><strong>Nº:</strong>

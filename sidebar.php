@@ -73,8 +73,8 @@ function isGroupActive($group, $currentPage)
 <nav class="sidebar">
     <div
         style="padding: 20px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;">
-        <img src="logo_display.php?v=1" alt="VS System"
-            style="height: 40px; filter: drop-shadow(0 0 5px var(--accent-violet));">
+        <img src="logo_display.php?v=2" alt="VS System"
+            style="height: 60px; filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.3));">
     </div>
 
     <?php foreach ($menu as $section): ?>

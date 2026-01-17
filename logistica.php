@@ -94,7 +94,7 @@ $phases = [
     <header
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" style="height: 50px;">
+            <img src="logo_display.php?v=2" alt="VS System" style="height: 60px;">
             <div style="color:white; font-weight:700; font-size:1.4rem;">GESTIÓN <span>LOGÍSTICA</span></div>
         </div>
     </header>
