@@ -213,4 +213,37 @@ class CRM
         $stmt = $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ?");
         return $stmt->execute([$statuses[$idx], $id]);
     }
+    /**
+     * Get Sales Funnel Stats (30 Days)
+     */
+    public function getFunnelStats()
+    {
+        try {
+            // 1. Clicks (Interactions of type 'Consulta Web' or public logs)
+            $clicks = $this->db->query("SELECT COUNT(*) FROM crm_interactions 
+                                        WHERE type = 'Consulta Web' 
+                                        AND interaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetchColumn();
+
+            // 2. Quoted (Quotations created)
+            $quoted = $this->db->query("SELECT COUNT(*) FROM quotations 
+                                        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetchColumn();
+
+            // 3. Sold (Confirmed Sales)
+            // Check if is_confirmed exists, otherwise fallback to status
+            $cols = $this->db->query("DESCRIBE quotations")->fetchAll(\PDO::FETCH_COLUMN);
+            $soldSql = in_array('is_confirmed', $cols)
+                ? "SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1 AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
+                : "SELECT COUNT(*) FROM quotations WHERE status = 'Aceptado' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+
+            $sold = $this->db->query($soldSql)->fetchColumn();
+
+            return [
+                'clicks' => $clicks ?: 0,
+                'quoted' => $quoted ?: 0,
+                'sold' => $sold ?: 0
+            ];
+        } catch (\Exception $e) {
+            return ['clicks' => 0, 'quoted' => 0, 'sold' => 0];
+        }
+    }
 }
