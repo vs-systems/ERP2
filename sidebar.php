@@ -24,6 +24,7 @@ $menu = [
     ],
     ['id' => 'crm', 'href' => 'crm.php', 'icon' => 'fas fa-handshake', 'label' => 'CRM'],
     ['id' => 'logistica', 'href' => 'logistica.php', 'icon' => 'fas fa-truck', 'label' => 'LOGÍSTICA'],
+    ['id' => 'calendar', 'href' => 'https://calendar.google.com/calendar/u/0/r?cid=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20', 'icon' => 'fas fa-calendar-alt', 'label' => 'CALENDARIO', 'external' => true],
     ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'fas fa-users', 'label' => 'CLIENTES'],
     ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'fas fa-truck-loading', 'label' => 'PROVEEDORES'],
     ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'fas fa-cogs', 'label' => 'CONFIGURACIÓN'],
@@ -93,8 +94,12 @@ function isGroupActive($group, $currentPage)
         <?php endif; ?>
     <?php endforeach; ?>
 
+    <a href="https://calendar.google.com/calendar/u/0/r?cid=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20" target="_blank"
+        class="nav-link" style="color: #6366f1; font-weight: 700;">
+        <i class="fas fa-calendar-alt"></i> MI CALENDARIO
+    </a>
     <a href="catalogo_publico.php" class="nav-link" target="_blank"
-        style="color: #10b981; font-weight: 700; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 20px; padding-top: 20px;">
+        style="color: #10b981; font-weight: 700; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 5px; padding-top: 10px;">
         <i class="fas fa-external-link-alt"></i> CATÁLOGO PÚBLICO
     </a>
 </nav>

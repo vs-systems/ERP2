@@ -7,55 +7,85 @@ use Vsys\Modules\Logistica\Logistics;
 $logistics = new Logistics();
 $pending = $logistics->getOrdersForPreparation();
 $transports = $logistics->getTransports();
+
+// Map phases to colors and icons
+$phases = [
+    'En reserva' => ['color' => '#f59e0b', 'icon' => 'fas fa-clock', 'label' => 'En Reserva'],
+    'En preparación' => ['color' => '#3b82f6', 'icon' => 'fas fa-tools', 'label' => 'En Preparación'],
+    'Disponible' => ['color' => '#10b981', 'icon' => 'fas fa-check-circle', 'label' => 'Disponible'],
+    'En su transporte' => ['color' => '#8b5cf6', 'icon' => 'fas fa-truck-loading', 'label' => 'En Transporte'],
+    'Entregado' => ['color' => '#64748b', 'icon' => 'fas fa-flag-checkered', 'label' => 'Entregado']
+];
 ?>
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <title>Logística - VS System</title>
+    <title>Logística Premium - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .status-pill {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
+        .phase-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
             font-weight: 700;
-            background: #10b981;
-            color: white;
-        }
-
-        .btn-remito {
-            background: var(--accent-violet);
-            border: none;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            text-transform: uppercase;
         }
 
-        .btn-remito:hover {
-            background: #7c3aed;
-            transform: scale(1.02);
-        }
-
-        .btn-remito:disabled {
-            background: #475569;
-            cursor: not-allowed;
-        }
-
-        .card h2 {
+        .process-flow {
             display: flex;
-            align-items: center;
             gap: 10px;
-            margin-bottom: 25px;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 15px;
+            margin-top: 10px;
+        }
+
+        .flow-step {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .flow-step.active {
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .btn-action {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            background: #334155;
+        }
+
+        .cost-input {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            padding: 5px;
+            border-radius: 4px;
+            width: 80px;
+            font-size: 0.85rem;
+        }
+
+        .payment-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid #f59e0b;
+            padding: 10px;
+            font-size: 0.85rem;
+            color: #f59e0b;
+            margin-top: 10px;
         }
     </style>
 </head>
@@ -65,69 +95,119 @@ $transports = $logistics->getTransports();
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
             <img src="logo_display.php?v=1" alt="VS System" style="height: 50px;">
-            <div style="color:white; font-weight:700; font-size:1.4rem;">CENTRO DE <span>LOGÍSTICA</span></div>
+            <div style="color:white; font-weight:700; font-size:1.4rem;">GESTIÓN <span>LOGÍSTICA</span></div>
         </div>
     </header>
+
     <div class="dashboard-container">
         <?php include 'sidebar.php'; ?>
         <main class="content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 30px;">
+                <h1>Centro de Operaciones Logísticas</h1>
+                <div class="stats-mini" style="display:flex; gap:20px;">
+                    <div class="card" style="padding:10px 20px; text-align:center; min-width: 150px;">
+                        <small style="color:#94a3b8">PENDIENTES</small>
+                        <div style="font-size:1.5rem; font-weight:700; color: #f59e0b;"><?php echo count($pending); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
-                <h2><i class="fas fa-shipping-fast" style="color: var(--accent-violet);"></i> Pendientes de Despacho
-                </h2>
-                <p style="color:#94a3b8; margin-bottom: 30px;">Pedidos con pago verificado o autorización técnica,
-                    listos para la emisión de remitos.</p>
                 <table style="width:100%; border-collapse:collapse;">
                     <thead>
                         <tr style="text-align:left; color:#94a3b8; border-bottom:2px solid #334155;">
                             <th style="padding:15px;">REF. PEDIDO</th>
-                            <th>CLIENTE</th>
+                            <th>FASE ACTUAL</th>
                             <th>ESTADO PAGO</th>
-                            <th style="width: 250px;">TRANSPORTISTA</th>
+                            <th>DETALLES DESPACHO</th>
                             <th>ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($pending as $p): ?>
-                            <tr style="border-bottom:1px solid #334155; transition: background 0.2s;"
-                                id="row-<?php echo $p['quote_number']; ?>">
-                                <td style="padding:20px; font-weight:700;">
-                                    <?php echo $p['quote_number']; ?>
+                        <?php foreach ($pending as $p):
+                            $currPhase = $p['current_phase'] ?? 'En reserva';
+                            $phaseData = $phases[$currPhase] ?? $phases['En reserva'];
+                            $isPaid = ($p['payment_status'] === 'Pagado');
+                            ?>
+                            <tr style="border-bottom:1px solid #334155;" id="row-<?php echo $p['quote_number']; ?>">
+                                <td style="padding:20px;">
+                                    <div style="font-weight:700; color:white;"><?php echo $p['quote_number']; ?></div>
+                                    <small style="color:#94a3b8;"><?php echo $p['client_name']; ?></small>
                                 </td>
                                 <td>
-                                    <?php echo $p['client_name']; ?>
-                                </td>
-                                <td><span class="status-pill">
-                                        <?php echo ($p['payment_status'] === 'Paid') ? 'PAGADO' : 'AUTORIZADO'; ?>
-                                    </span></td>
-                                <td>
-                                    <select id="transport-<?php echo $p['quote_number']; ?>"
-                                        style="width:100%; background:#0f172a; color:white; border:1px solid #334155; padding:8px; border-radius:6px; font-family:inherit;">
-                                        <?php foreach ($transports as $t): ?>
-                                            <option value="<?php echo $t['id']; ?>">
-                                                <?php echo $t['name']; ?>
-                                            </option>
+                                    <span class="phase-badge"
+                                        style="background: <?php echo $phaseData['color']; ?>20; color: <?php echo $phaseData['color']; ?>">
+                                        <i class="<?php echo $phaseData['icon']; ?>"></i> <?php echo $phaseData['label']; ?>
+                                    </span>
+                                    <div class="process-flow">
+                                        <?php
+                                        $pKeys = array_keys($phases);
+                                        $found = false;
+                                        foreach ($pKeys as $pk):
+                                            $active = ($pk === $currPhase);
+                                            $complete = !$found && !$active;
+                                            if ($active)
+                                                $found = true;
+                                            ?>
+                                            <div class="flow-step <?php echo $active ? 'active' : ''; ?>"
+                                                style="background: <?php echo ($active || $complete) ? $phases[$pk]['color'] : 'rgba(255,255,255,0.1)'; ?>;">
+                                            </div>
                                         <?php endforeach; ?>
-                                        <?php if (empty($transports)): ?>
-                                            <option value="">Configurar transportes...</option>
-                                        <?php endif; ?>
-                                    </select>
+                                    </div>
                                 </td>
                                 <td>
-                                    <button onclick="generarRemito('<?php echo $p['quote_number']; ?>')" class="btn-remito"
-                                        id="btn-<?php echo $p['quote_number']; ?>" <?php echo empty($transports) ? 'disabled' : ''; ?>>
-                                        <i class="fas fa-file-invoice"></i> Generar Remito
-                                    </button>
+                                    <?php if ($isPaid): ?>
+                                        <span style="color:#10b981; font-weight:700;"><i class="fas fa-check-double"></i>
+                                            PAGADO</span>
+                                    <?php else: ?>
+                                        <span style="color:#f59e0b; font-weight:700;"><i
+                                                class="fas fa-exclamation-triangle"></i> PENDIENTE</span>
+                                        <div class="payment-warning">Falta verificación de pago.</div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <div style="display:flex; flex-direction:column; gap:8px;">
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <label style="font-size:0.75rem; color:#94a3b8; min-width:60px;">Bultos:</label>
+                                            <input type="number" class="cost-input"
+                                                id="qty-<?php echo $p['quote_number']; ?>" value="1">
+                                        </div>
+                                        <div style="display:flex; align-items:center; gap:10px;">
+                                            <label style="font-size:0.75rem; color:#94a3b8; min-width:60px;">Flete
+                                                USD:</label>
+                                            <input type="number" class="cost-input"
+                                                id="cost-<?php echo $p['quote_number']; ?>" value="0.00" step="0.01">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
+                                        <?php if (!$isPaid): ?>
+                                            <button class="btn-action"
+                                                onclick="subirPago('<?php echo $p['quote_number']; ?>')"><i
+                                                    class="fas fa-file-upload"></i> Subir Pago</button>
+                                        <?php elseif ($currPhase === 'En reserva'): ?>
+                                            <button class="btn-action" style="color:#10b981;"
+                                                onclick="avanzarFase('<?php echo $p['quote_number']; ?>', 'En preparación')"><i
+                                                    class="fas fa-play"></i> Iniciar Prep.</button>
+                                        <?php elseif ($currPhase === 'En preparación'): ?>
+                                            <button class="btn-action" style="color:#3b82f6;"
+                                                onclick="avanzarFase('<?php echo $p['quote_number']; ?>', 'Disponible')"><i
+                                                    class="fas fa-box"></i> Marcar Listo</button>
+                                        <?php elseif ($currPhase === 'Disponible'): ?>
+                                            <button class="btn-remito btn-action"
+                                                onclick="despachar('<?php echo $p['quote_number']; ?>')"><i
+                                                    class="fas fa-truck-loading"></i> Despachar</button>
+                                        <?php elseif ($currPhase === 'En su transporte'): ?>
+                                            <button class="btn-action" style="color:#8b5cf6;"
+                                                onclick="subirGuia('<?php echo $p['quote_number']; ?>')"><i
+                                                    class="fas fa-file-image"></i> Subir Guía</button>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        <?php if (empty($pending)): ?>
-                            <tr>
-                                <td colspan="5" style="text-align:center; padding:60px; color:#94a3b8;"><i
-                                        class="fas fa-check-circle"
-                                        style="font-size:3rem; margin-bottom:15px; display:block; color:#1e293b;"></i> No
-                                    hay pedidos pendientes de despacho.</td>
-                            </tr>
-                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -135,46 +215,70 @@ $transports = $logistics->getTransports();
     </div>
 
     <script>
-        async function generarRemito(quoteNumber) {
-            const transportId = document.getElementById('transport-' + quoteNumber).value;
-            const btn = document.getElementById('btn-' + quoteNumber);
-
-            if (!transportId) { alert('Seleccione un transportista primero.'); return; }
-            if (!confirm('¿Confirmar despacho del pedido ' + quoteNumber + '?')) return;
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-sync fa-spin"></i> Emitiendo...';
+        async function avanzarFase(quoteNumber, phase) {
+            if (!confirm(`¿Mover pedido ${quoteNumber} a fase ${phase}?`)) return;
 
             const formData = new FormData();
-            formData.append('action', 'create_remito');
+            formData.append('action', 'update_phase');
+            formData.append('quote_number', quoteNumber);
+            formData.append('phase', phase);
+
+            const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) location.reload();
+            else alert(data.error);
+        }
+
+        async function despachar(quoteNumber) {
+            const qty = document.getElementById('qty-' + quoteNumber).value;
+            const cost = document.getElementById('cost-' + quoteNumber).value;
+
+            // For now, prompt for transport since we don't have it in the row UI yet (add simplified picker)
+            const transportId = prompt("Ingrese ID de Transportista (1-5):", "1");
+            if (!transportId) return;
+
+            const formData = new FormData();
+            formData.append('action', 'despachar');
             formData.append('quote_number', quoteNumber);
             formData.append('transport_id', transportId);
+            formData.append('packages_qty', qty);
+            formData.append('freight_cost', cost);
 
-            try {
-                const response = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
-                const result = await response.json();
-
-                if (result.success) {
-                    alert('Remito Emitido: ' + result.remito_number);
-                    const row = document.getElementById('row-' + quoteNumber);
-                    row.style.background = 'rgba(16, 185, 129, 0.05)';
-                    row.style.opacity = '0.5';
-                    btn.innerHTML = '<i class="fas fa-check"></i> Despachado';
-                    btn.style.background = '#10b981';
-                } else {
-                    alert('Error: ' + result.error);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-file-invoice"></i> Generar Remito';
-                }
-            } catch (error) {
-                console.error(error);
-                alert('Fallo de red al intentar generar el remito.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-file-invoice"></i> Generar Remito';
+            const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                alert("Despacho registrado correctamente.");
+                location.reload();
+            } else {
+                alert(data.error);
             }
+        }
+
+        function subirGuia(quoteNumber) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append('action', 'upload_guide');
+                formData.append('quote_number', quoteNumber);
+                formData.append('guide_photo', file);
+
+                const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Guía subida y pedido entregado.");
+                    location.reload();
+                } else {
+                    alert("Error: " + data.error);
+                }
+            };
+            input.click();
         }
     </script>
 </body>
 
 </html>
-PHP;

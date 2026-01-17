@@ -37,8 +37,12 @@ require_once __DIR__ . '/src/config/config.php';
         <main class="content">
             <?php
             require_once __DIR__ . '/src/modules/analysis/OperationAnalysis.php';
+            require_once __DIR__ . '/src/modules/logistica/Logistics.php';
             $analysis = new \Vsys\Modules\Analysis\OperationAnalysis();
+            $logistics = new \Vsys\Modules\Logistica\Logistics();
+
             $stats = $analysis->getDashboardSummary();
+            $shipStats = $logistics->getShippingStats();
             ?>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h1>Dashboard de Control Operativo</h1>
@@ -78,47 +82,60 @@ require_once __DIR__ . '/src/config/config.php';
                     <canvas id="opsChart" style="max-height: 300px;"></canvas>
                 </div>
                 <div class="card">
-                    <h3>Efectividad (Cotiz vs Pedidos)</h3>
-                    <canvas id="crmChart" style="max-height: 300px;"></canvas>
+                    <h3>Eficiencia (Cotiz vs Pedidos)</h3>
+                    <canvas id="crmChart" style="max-height: 250px;"></canvas>
+                </div>
+                <div class="card">
+                    <h3>Gestión de Envíos (Mes)</h3>
+                    <canvas id="shipChart" style="max-height: 250px;"></canvas>
                 </div>
             </div>
 
-            <div class="card" style="margin-top: 2rem;">
-                <h3>Cotizaciones Recientes</h3>
-                <div class="table-responsive">
-                    <table class="table-compact">
-                        <thead>
-                            <tr>
-                                <th>N&uacute;mero</th>
-                                <th>Cliente</th>
-                                <th style="text-align: right;">Total USD</th>
-                                <th>Estado</th>
-                                <th style="text-align: center;">An&aacute;lisis</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $db = Vsys\Lib\Database::getInstance();
-                            $recent = $db->query("SELECT q.*, e.name as client_name FROM quotations q JOIN entities e ON q.client_id = e.id ORDER BY q.id DESC LIMIT 5")->fetchAll();
-                            foreach ($recent as $r):
-                                ?>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 2rem;">
+                <div class="card">
+                    <h3>Cotizaciones Recientes</h3>
+                    <div class="table-responsive">
+                        <table class="table-compact">
+                            <thead>
                                 <tr>
-                                    <td><?php echo $r['quote_number']; ?></td>
-                                    <td><?php echo $r['client_name']; ?></td>
-                                    <td style="text-align: right;">$ <?php echo number_format($r['total_usd'], 2); ?></td>
-                                    <td><span class="badge"
-                                            style="background: rgba(255,255,255,0.1);"><?php echo $r['status']; ?></span>
-                                    </td>
-                                    <td style="text-align: center;">
-                                        <a href="analisis.php?id=<?php echo $r['id']; ?>" class="btn-primary"
-                                            style="padding: 4px 8px; font-size: 0.8rem;">
-                                            <i class="fas fa-chart-pie"></i>
-                                        </a>
-                                    </td>
+                                    <th>N&uacute;mero</th>
+                                    <th>Cliente</th>
+                                    <th style="text-align: right;">Total USD</th>
+                                    <th>Estado</th>
+                                    <th style="text-align: center;">An&aacute;lisis</th>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $db = Vsys\Lib\Database::getInstance();
+                                $recent = $db->query("SELECT q.*, e.name as client_name FROM quotations q JOIN entities e ON q.client_id = e.id ORDER BY q.id DESC LIMIT 5")->fetchAll();
+                                foreach ($recent as $r):
+                                    ?>
+                                    <tr>
+                                        <td><?php echo $r['quote_number']; ?></td>
+                                        <td><?php echo $r['client_name']; ?></td>
+                                        <td style="text-align: right;">$ <?php echo number_format($r['total_usd'], 2); ?>
+                                        </td>
+                                        <td><span class="badge"
+                                                style="background: rgba(255,255,255,0.1);"><?php echo $r['status']; ?></span>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <a href="analisys.php?id=<?php echo $r['id']; ?>" class="btn-primary"
+                                                style="padding: 4px 8px; font-size: 0.8rem;">
+                                                <i class="fas fa-chart-pie"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card" style="padding:0; overflow:hidden;">
+                    <h3 style="padding:20px 20px 10px;">Agenda de Reuniones</h3>
+                    <iframe
+                        src="https://calendar.google.com/calendar/embed?src=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20&ctz=America%2FArgentina%2FBuenos_Aires&showTitle=0&showNav=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0&mode=AGENDA"
+                        style="border: 0; width:100%; height:300px;" frameborder="0" scrolling="no"></iframe>
                 </div>
             </div>
         </main>

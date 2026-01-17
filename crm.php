@@ -148,7 +148,13 @@ $stages = [
                     style="background: linear-gradient(90deg, #8b5cf6, #d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">INTELLIGENT</span>
             </div>
         </div>
-        <div class="header-right"><span class="user-badge"><i class="fas fa-user-circle"></i> Admin</span></div>
+        <div class="header-right" style="display:flex; gap:15px; align-items:center;">
+            <button onclick="document.getElementById('newLeadModal').style.display='flex'" class="btn-primary"
+                style="background:var(--accent-violet); border:none; padding:8px 15px; border-radius:8px; font-weight:700; cursor:pointer;">
+                <i class="fas fa-plus"></i> NUEVO LEAD
+            </button>
+            <span class="user-badge"><i class="fas fa-user-circle"></i> Admin</span>
+        </div>
     </header>
 
     <div class="dashboard-container">
@@ -159,20 +165,23 @@ $stages = [
                 <div class="metric-card">
                     <h4 style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">Presupuestos Activos</h4>
                     <div style="font-size: 2.5rem; font-weight: 800; color: #fff;">
-                        <?php echo $stats['active_quotes']; ?></div>
+                        <?php echo $stats['active_quotes']; ?>
+                    </div>
                     <div style="font-size: 0.8rem; color: #10b981;"><i class="fas fa-arrow-up"></i> Pipeline saludable
                     </div>
                 </div>
                 <div class="metric-card">
                     <h4 style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">Cierres Técnicos Hoy</h4>
                     <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-violet);">
-                        <?php echo $stats['orders_today']; ?></div>
+                        <?php echo $stats['orders_today']; ?>
+                    </div>
                     <div style="font-size: 0.8rem; color: #94a3b8;">Conversión diaria</div>
                 </div>
                 <div class="metric-card">
                     <h4 style="color: #94a3b8; font-size: 0.8rem; text-transform: uppercase;">Eficiencia de Ventas</h4>
                     <div style="font-size: 2.5rem; font-weight: 800; color: #3b82f6;">
-                        <?php echo $stats['efficiency']; ?>%</div>
+                        <?php echo $stats['efficiency']; ?>%
+                    </div>
                     <div
                         style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px;">
                         <div
@@ -180,6 +189,24 @@ $stages = [
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Follow-up Alerts Section -->
+            <div class="alerts-section"
+                style="margin-bottom: 2rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                <div class="card"
+                    style="border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.05); padding: 15px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <div style="font-weight:700; color:#f59e0b; font-size:0.85rem;"><i class="fas fa-bell"></i>
+                                LLAMAR CLIENTE</div>
+                            <div style="color:white; margin:5px 0;">Seguimiento Presupuesto #882</div>
+                            <small style="color:#94a3b8;">Cliente: Juan Perez - Hace 2 días</small>
+                        </div>
+                        <button class="btn-primary" style="padding:4px 8px; font-size:0.7rem;">Llamar ahora</button>
+                    </div>
+                </div>
+                <!-- Logic for real alerts would go here -->
             </div>
 
             <div class="kanban-board">
