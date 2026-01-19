@@ -10,7 +10,7 @@ if (!isset($userAuth)) {
     $userAuth = new \Vsys\Lib\User();
 }
 
-$userName = $_SESSION['user_name'] ?? 'Usuario';
+$userName = $_SESSION['username'] ?? 'Usuario';
 $userRole = $_SESSION['role'] ?? 'Invitado';
 
 $menu = [
@@ -37,8 +37,8 @@ $menu = [
     ['id' => 'logistica', 'href' => 'logistica.php', 'icon' => 'local_shipping', 'label' => 'Logística'],
     ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'badge', 'label' => 'Clientes'],
     ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores'],
-    ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'settings', 'label' => 'Configuración', 'role' => 'Admin'],
-    ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios', 'role' => 'Admin'],
+    ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'settings', 'label' => 'Configuración', 'role' => 'admin'],
+    ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios', 'role' => 'admin'],
 ];
 // Cargar preferencia del sistema
 $settingsFile = __DIR__ . '/src/config/settings.json';
