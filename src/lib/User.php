@@ -15,6 +15,7 @@ class User
     private $username;
     private $role;
     private $entity_id;
+    private $permissions;
 
     public function __construct()
     {
@@ -32,7 +33,24 @@ class User
             $this->username = $_SESSION['username'];
             $this->role = $_SESSION['role'];
             $this->entity_id = $_SESSION['entity_id'] ?? null;
+            $this->permissions = json_decode($_SESSION['permissions'] ?? '[]', true);
         }
+    }
+
+    /**
+     * Check if user has modular permission
+     */
+    public function hasPermission($permission)
+    {
+        // Admin always has all permissions
+        if ($this->role === 'admin' || $this->role === 'Admin') {
+            return true;
+        }
+
+        if (!$this->permissions)
+            return false;
+
+        return in_array($permission, $this->permissions);
     }
 
     /**
@@ -49,6 +67,7 @@ class User
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['entity_id'] = $user['entity_id'] ?? null;
+            $_SESSION['permissions'] = $user['permissions'] ?? '[]';
 
             $this->loadFromSession();
 

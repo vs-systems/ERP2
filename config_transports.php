@@ -6,8 +6,9 @@ require_once __DIR__ . '/src/modules/logistica/Logistics.php';
 
 use Vsys\Modules\Logistica\Logistics;
 $logistics = new Logistics();
+$message = '';
+$messageType = 'success';
 
-// Handle Form Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = [
         'id' => $_POST['id'] ?? null,
@@ -18,194 +19,229 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'is_active' => isset($_POST['is_active']) ? 1 : 0
     ];
     $logistics->saveTransport($data);
-    header("Location: config_transports.php?success=1");
-    exit;
+    $message = $data['id'] ? "Transportista actualizado." : "Transportista registrado.";
 }
 
 $transports = $logistics->getTransports(false);
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html class="dark" lang="es">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Transportes - VS System</title>
-    <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script src="js/theme_handler.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                    },
+                },
+            },
+        }
+    </script>
     <style>
-        .transport-form {
-            background: rgba(30, 41, 59, 0.7);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            border: 1px solid #334155;
+        body {
+            font-family: 'Inter', sans-serif;
         }
 
-        .input-group {
-            margin-bottom: 15px;
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
 
-        label {
-            display: block;
-            color: #94a3b8;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
+        ::-webkit-scrollbar-track {
+            background: #101822;
         }
 
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"] {
-            width: 100%;
-            padding: 10px;
-            background: #0f172a;
-            border: 1px solid #334155;
-            color: white;
-            border-radius: 6px;
+        ::-webkit-scrollbar-thumb {
+            background: #233348;
+            border-radius: 3px;
         }
 
-        .is-active-check {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: white;
-            margin-top: 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #334155;
-        }
-
-        .status-pill {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .status-active {
-            background: rgba(16, 185, 129, 0.2);
-            color: #10b981;
-        }
-
-        .status-inactive {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
+        .form-input {
+            @apply w-full bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-xl text-sm dark:text-white text-slate-800 focus:ring-primary focus:border-primary transition-colors;
         }
     </style>
 </head>
 
-<body>
-    <header
-        style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large"style="height: 50px;">
-            <div style="color:white; font-weight:700; font-size:1.4rem;">GESTIó“N DE <span>TRANSPORTES</span></div>
-        </div>
-    </header>
-    <div class="dashboard-container">
+<body
+    class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white antialiased overflow-hidden transition-colors duration-300">
+    <div class="flex h-screen w-full">
         <?php include 'sidebar.php'; ?>
-        <main class="content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h1>Directorio de Transportes</h1>
-                <a href="configuration.php" class="btn-primary" style="background:#475569; text-decoration:none;"><i
-                        class="fas fa-arrow-left"></i> Volver a Config</a>
-            </div>
 
-            <div class="card">
-                <h2>
-                    <?php echo isset($_GET['edit']) ? 'Editar Empresa' : 'Nueva Empresa de Transporte'; ?>
-                </h2>
-                <form action="config_transports.php" method="POST" class="transport-form">
-                    <?php
-                    $editData = ['id' => '', 'name' => '', 'contact_person' => '', 'phone' => '', 'email' => '', 'is_active' => 1];
-                    if (isset($_GET['edit'])) {
-                        foreach ($transports as $t)
-                            if ($t['id'] == $_GET['edit'])
-                                $editData = $t;
-                    }
-                    ?>
-                    <input type="hidden" name="id" value="<?php echo $editData['id']; ?>">
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div class="input-group"><label>Nombre Comercial</label><input type="text" name="name"
-                                value="<?php echo $editData['name']; ?>" required></div>
-                        <div class="input-group"><label>Contacto Principal</label><input type="text"
-                                name="contact_person" value="<?php echo $editData['contact_person']; ?>"></div>
-                        <div class="input-group"><label>Teló©fono de Contacto</label><input type="tel" name="phone"
-                                value="<?php echo $editData['phone']; ?>"></div>
-                        <div class="input-group"><label>Email de Coordinació³n</label><input type="email" name="email"
-                                value="<?php echo $editData['email']; ?>"></div>
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- Header -->
+            <header
+                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 transition-colors duration-300">
+                <div class="flex items-center gap-3">
+                    <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
+                        <span class="material-symbols-outlined text-2xl">shipping</span>
                     </div>
-                    <div class="is-active-check">
-                        <input type="checkbox" name="is_active" id="is_active" <?php echo $editData['is_active'] ? 'checked' : ''; ?>>
-                        <label for="is_active" style="margin:0; color:white;">Empresa Habilitada</label>
-                    </div>
-                    <button type="submit" class="btn-primary"
-                        style="margin-top:20px; background:var(--accent-violet); border:none; padding:12px 25px; border-radius:8px; font-weight:700; cursor:pointer;">
-                        <i class="fas fa-save"></i>
-                        <?php echo $editData['id'] ? 'Actualizar Transportista' : 'Registrar Transportista'; ?>
-                    </button>
-                    <?php if ($editData['id']): ?><a href="config_transports.php"
-                            style="color:#94a3b8; margin-left:15px; text-decoration:none;">Cancelar</a>
+                    <h2 class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">Gestión de
+                        Transportes</h2>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                <div class="max-w-[1400px] mx-auto space-y-8">
+
+                    <?php if ($message): ?>
+                        <div
+                            class="flex items-center gap-3 p-4 rounded-2xl border bg-green-500/10 border-green-500/20 text-green-500 animate-in fade-in slide-in-from-top-4 duration-300">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            <span class="text-sm font-bold uppercase tracking-widest"><?php echo $message; ?></span>
+                        </div>
                     <?php endif; ?>
-                </form>
 
-                <h2>Empresas Registradas</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Transportista</th>
-                            <th>Contacto</th>
-                            <th>Teló©fono</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($transports as $t): ?>
-                            <tr>
-                                <td style="font-weight:700; color:var(--accent-violet);">
-                                    <?php echo $t['name']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $t['contact_person']; ?>
-                                </td>
-                                <td>
-                                    <?php echo $t['phone']; ?>
-                                </td>
-                                <td><span
-                                        class="status-pill <?php echo $t['is_active'] ? 'status-active' : 'status-inactive'; ?>">
-                                        <?php echo $t['is_active'] ? 'HABILITADO' : 'INACTIVO'; ?>
-                                    </span></td>
-                                <td><a href="config_transports.php?edit=<?php echo $t['id']; ?>" class="btn-primary"
-                                        style="padding:6px 12px; font-size:12px; text-decoration:none; background:#1e293b; border:1px solid #334155;"><i
-                                            class="fas fa-edit"></i> Editar</a></td>
-                            </tr>
-                        <?php endforeach; ?>
-                        <?php if (empty($transports)): ?>
-                            <tr>
-                                <td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">No se han
-                                    configurado empresas de transporte aóºn.</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- Form Section -->
+                        <div class="lg:col-span-4 h-fit">
+                            <div
+                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none transition-colors">
+                                <div
+                                    class="flex items-center gap-2 mb-6 border-b border-slate-100 dark:border-[#233348] pb-4">
+                                    <span class="material-symbols-outlined text-primary"
+                                        id="form-icon">local_shipping</span>
+                                    <h3 class="font-bold text-lg dark:text-white text-slate-800" id="form-title">Nueva
+                                        Empresa</h3>
+                                </div>
+
+                                <form method="POST" class="space-y-4">
+                                    <?php
+                                    $editData = ['id' => '', 'name' => '', 'contact_person' => '', 'phone' => '', 'email' => '', 'is_active' => 1];
+                                    if (isset($_GET['edit'])) {
+                                        foreach ($transports as $t)
+                                            if ($t['id'] == $_GET['edit'])
+                                                $editData = $t;
+                                    }
+                                    ?>
+                                    <input type="hidden" name="id" value="<?php echo $editData['id']; ?>">
+
+                                    <div>
+                                        <label
+                                            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Nombre
+                                            Comercial</label>
+                                        <input type="text" name="name" value="<?php echo $editData['name']; ?>" required
+                                            placeholder="Ej: Via Cargo" class="form-input">
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Contacto
+                                            Principal</label>
+                                        <input type="text" name="contact_person"
+                                            value="<?php echo $editData['contact_person']; ?>"
+                                            placeholder="Nombre del contacto" class="form-input">
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Teléfono</label>
+                                        <input type="tel" name="phone" value="<?php echo $editData['phone']; ?>"
+                                            placeholder="+54 11 ..." class="form-input">
+                                    </div>
+
+                                    <div>
+                                        <label
+                                            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Email</label>
+                                        <input type="email" name="email" value="<?php echo $editData['email']; ?>"
+                                            placeholder="email@transporte.com" class="form-input">
+                                    </div>
+
+                                    <div class="flex items-center gap-3 pt-2">
+                                        <input type="checkbox" name="is_active" id="is_active" <?php echo $editData['is_active'] ? 'checked' : ''; ?>
+                                            class="rounded text-primary focus:ring-primary bg-slate-100 dark:bg-[#101822] border-slate-200 dark:border-[#233348]">
+                                        <label for="is_active"
+                                            class="text-sm font-medium text-slate-600 dark:text-slate-400">Empresa
+                                            Habilitada</label>
+                                    </div>
+
+                                    <div class="pt-4 flex gap-2">
+                                        <?php if ($editData['id']): ?>
+                                            <a href="config_transports.php"
+                                                class="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-[#233348] text-slate-500 font-bold py-3 rounded-xl text-center text-[10px] uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center">CANCELAR</a>
+                                        <?php endif; ?>
+                                        <button type="submit"
+                                            class="flex-[2] bg-primary hover:bg-blue-600 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+                                            <span class="material-symbols-outlined text-sm">save</span>
+                                            <?php echo $editData['id'] ? 'ACTUALIZAR' : 'REGISTRAR'; ?>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Table Section -->
+                        <div class="lg:col-span-8">
+                            <div
+                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-xl dark:shadow-none transition-colors text-sm">
+                                <table class="w-full text-left">
+                                    <thead
+                                        class="bg-slate-50 dark:bg-[#101822]/50 border-b border-slate-200 dark:border-[#233348]">
+                                        <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                                            <th class="px-6 py-4">Transportista</th>
+                                            <th class="px-6 py-4">Contacto</th>
+                                            <th class="px-6 py-4">Estado</th>
+                                            <th class="px-6 py-4 text-center">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-[#233348]">
+                                        <?php foreach ($transports as $t): ?>
+                                            <tr
+                                                class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                                                <td class="px-6 py-5">
+                                                    <div class="font-bold dark:text-white text-slate-800">
+                                                        <?php echo $t['name']; ?></div>
+                                                    <div class="text-xs text-slate-500"><?php echo $t['email']; ?></div>
+                                                </td>
+                                                <td class="px-6 py-5">
+                                                    <div class="dark:text-slate-300"><?php echo $t['contact_person']; ?>
+                                                    </div>
+                                                    <div class="text-xs text-slate-500 font-mono"><?php echo $t['phone']; ?>
+                                                    </div>
+                                                </td>
+                                                <td class="px-6 py-5">
+                                                    <span
+                                                        class="text-[10px] font-bold uppercase py-1 px-2 rounded-full <?php echo $t['is_active'] ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'; ?>">
+                                                        <?php echo $t['is_active'] ? 'HABILITADO' : 'INACTIVO'; ?>
+                                                    </span>
+                                                </td>
+                                                <td class="px-6 py-5">
+                                                    <div class="flex items-center justify-center">
+                                                        <a href="config_transports.php?edit=<?php echo $t['id']; ?>"
+                                                            class="p-2 rounded-lg hover:bg-primary/10 text-slate-400 hover:text-primary transition-all"
+                                                            title="Editar">
+                                                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        <?php if (empty($transports)): ?>
+                                            <tr>
+                                                <td colspan="4" class="text-center py-20 text-slate-500 italic">No hay
+                                                    transportistas registrados.</td>
+                                            </tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
 </body>
 
 </html>
-
-
-
-
-
-

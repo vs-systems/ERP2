@@ -1,5 +1,5 @@
 ﻿<?php
-// sidebar.php - Rediseño basado en Stitch (Tailwind + Material Symbols) con Soporte de Temas
+// sidebar.php - Rediseño basado en Stitch (Tailwind + Material Symbols) con Soporte de Temas y Permisos
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/lib/User.php';
@@ -19,26 +19,36 @@ $menu = [
         'label' => 'Ventas',
         'icon' => 'receipt_long',
         'items' => [
-            ['id' => 'presupuestos', 'href' => 'presupuestos.php', 'icon' => 'history', 'label' => 'Historial'],
-            ['id' => 'cotizador', 'href' => 'cotizador.php', 'icon' => 'add_shopping_cart', 'label' => 'Generar Cotiz.'],
-            ['id' => 'productos', 'href' => 'productos.php', 'icon' => 'inventory_2', 'label' => 'Productos/Stock'],
+            ['id' => 'presupuestos', 'href' => 'presupuestos.php', 'icon' => 'history', 'label' => 'Historial', 'perm' => 'quotes'],
+            ['id' => 'cotizador', 'href' => 'cotizador.php', 'icon' => 'add_shopping_cart', 'label' => 'Generar Cotiz.', 'perm' => 'quotes'],
+            ['id' => 'productos', 'href' => 'productos.php', 'icon' => 'inventory_2', 'label' => 'Productos/Stock', 'perm' => 'catalog'],
         ]
     ],
     [
         'label' => 'Contabilidad',
         'icon' => 'payments',
         'items' => [
-            ['id' => 'compras', 'href' => 'compras.php', 'icon' => 'shopping_cart_checkout', 'label' => 'Compras'],
-            ['id' => 'facturacion', 'href' => 'facturacion.php', 'icon' => 'description', 'label' => 'Facturación'],
-            ['id' => 'analizador', 'href' => 'analizador.php', 'icon' => 'query_stats', 'label' => 'Análisis OP.'],
+            ['id' => 'compras', 'href' => 'compras.php', 'icon' => 'shopping_cart_checkout', 'label' => 'Compras', 'perm' => 'purchases'],
+            ['id' => 'facturacion', 'href' => 'facturacion.php', 'icon' => 'description', 'label' => 'Facturación', 'perm' => 'sales'],
+            ['id' => 'analizador', 'href' => 'analizador.php', 'icon' => 'query_stats', 'label' => 'Análisis OP.', 'perm' => 'sales'],
         ]
     ],
-    ['id' => 'crm', 'href' => 'crm.php', 'icon' => 'group', 'label' => 'CRM'],
-    ['id' => 'logistica', 'href' => 'logistica.php', 'icon' => 'local_shipping', 'label' => 'Logística'],
-    ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'badge', 'label' => 'Clientes'],
-    ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores'],
-    ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'settings', 'label' => 'Configuración', 'role' => 'admin'],
-    ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios', 'role' => 'admin'],
+    ['id' => 'crm', 'href' => 'crm.php', 'icon' => 'group', 'label' => 'CRM', 'perm' => 'clients'],
+    ['id' => 'logistica', 'href' => 'logistica.php', 'icon' => 'local_shipping', 'label' => 'Logística', 'perm' => 'logistics'],
+    ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'badge', 'label' => 'Clientes', 'perm' => 'clients'],
+    ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores', 'perm' => 'suppliers'],
+    [
+        'label' => 'Configuración',
+        'icon' => 'settings',
+        'perm' => 'admin',
+        'items' => [
+            ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'tune', 'label' => 'General'],
+            ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios'],
+            ['id' => 'config_precios', 'href' => 'config_precios.php', 'icon' => 'universal_currency_alt', 'label' => 'Precios'],
+            ['id' => 'config_transports', 'href' => 'config_transports.php', 'icon' => 'shipping', 'label' => 'Transportes'],
+            ['id' => 'importar', 'href' => 'importar.php', 'icon' => 'upload_file', 'label' => 'Carga Masiva'],
+        ]
+    ],
 ];
 // Cargar preferencia del sistema
 $settingsFile = __DIR__ . '/src/config/settings.json';
@@ -51,18 +61,14 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
 
 <!-- Theme Handler (Prevent FOUC) -->
 <script>
-    // Inyectar preferencia del sistema para que theme_handler.js la use
     window.vsys_default_theme = "<?php echo $defaultTheme; ?>";
 </script>
 <script src="js/theme_handler.js"></script>
-
-<!-- Material Symbols Font -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet" />
 
 <aside
     class="hidden md:flex flex-col w-64 h-full bg-[#101822] border-r border-[#233348] flex-shrink-0 overflow-y-auto transition-colors duration-300 dark:bg-[#101822] bg-white border-slate-200 dark:border-[#233348]">
-    <!-- Brand Logo Section -->
     <div class="p-6 flex items-center gap-3">
         <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec] flex items-center justify-center">
             <span class="material-symbols-outlined text-2xl">shield</span>
@@ -73,34 +79,29 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
         </div>
     </div>
 
-    <!-- Navigation Menu -->
     <nav class="flex-1 px-4 py-2 space-y-1">
         <?php foreach ($menu as $section): ?>
             <?php
+            // Check permission for parent section if defined
+            if (isset($section['perm']) && !$userAuth->hasPermission($section['perm']))
+                continue;
+            // Legacy Role Check
             if (isset($section['role']) && !$userAuth->hasRole($section['role']))
                 continue;
 
-            $isActiveParent = false;
-            if (isset($section['items'])) {
-                foreach ($section['items'] as $sub) {
-                    if ($currentPage === $sub['id']) {
-                        $isActiveParent = true;
-                        break;
-                    }
-                }
-            } else {
-                $isActiveParent = ($currentPage === $section['id']);
-            }
-            ?>
-
-            <?php if (isset($section['items'])): ?>
+            if (isset($section['items'])):
+                // Check if at least one child is visible
+                $visibleItems = array_filter($section['items'], function ($item) use ($userAuth) {
+                    return !isset($item['perm']) || $userAuth->hasPermission($item['perm']);
+                });
+                if (empty($visibleItems))
+                    continue;
+                ?>
                 <div class="pt-4 pb-1">
                     <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 font-display">
                         <?php echo $section['label']; ?>
                     </p>
-                    <?php foreach ($section['items'] as $item): ?>
-                        <?php if (isset($item['role']) && !$userAuth->hasRole($item['role']))
-                            continue; ?>
+                    <?php foreach ($visibleItems as $item): ?>
                         <a href="<?php echo $item['href']; ?>"
                             class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
                             <span class="material-symbols-outlined text-[20px]"><?php echo $item['icon']; ?></span>
@@ -110,14 +111,13 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
                 </div>
             <?php else: ?>
                 <a href="<?php echo $section['href']; ?>"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?php echo $isActiveParent ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?php echo ($currentPage === $section['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
                     <span class="material-symbols-outlined text-[20px]"><?php echo $section['icon']; ?></span>
                     <span class="text-sm font-medium"><?php echo $section['label']; ?></span>
                 </a>
             <?php endif; ?>
         <?php endforeach; ?>
 
-        <!-- External Links -->
         <div class="pt-6 border-t border-slate-200 dark:border-[#233348] mt-4">
             <a href="catalogo_publico.php" target="_blank"
                 class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#10b981] hover:bg-[#10b981]/10 transition-all font-bold">
@@ -132,7 +132,6 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
         </div>
     </nav>
 
-    <!-- User Section -->
     <div class="p-4 border-t border-slate-200 dark:border-[#233348]">
         <div class="flex items-center gap-3 px-2 py-3">
             <div
@@ -144,7 +143,6 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
                 <p class="text-slate-500 text-[10px] uppercase font-bold tracking-tighter"><?php echo $userRole; ?></p>
             </div>
 
-            <!-- Theme Toggle -->
             <button onclick="toggleVsysTheme()" class="text-slate-400 hover:text-[#136dec] transition-colors p-1"
                 title="Cambiar Tema">
                 <span class="material-symbols-outlined text-[20px] dark:hidden">dark_mode</span>
@@ -162,13 +160,9 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
     function toggleVsysTheme() {
         const current = localStorage.getItem('vsys_theme') || 'auto';
         let next = 'dark';
-
         if (current === 'dark') next = 'light';
         else if (current === 'light') next = 'dark';
-        else {
-            next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-        }
-
+        else next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
         window.setVsysTheme(next);
     }
 </script>
