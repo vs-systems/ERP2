@@ -204,8 +204,8 @@ $availablePerms = [
                                             <label
                                                 class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Estado</label>
                                             <select name="status" class="form-input">
-                                                <option value="active" <?php echo ($editUser['status'] ?? '') == 'active' ? 'selected' : ''; ?>>Activo</option>
-                                                <option value="inactive" <?php echo ($editUser['status'] ?? '') == 'inactive' ? 'selected' : ''; ?>>Inactivo</option>
+                                                <option value="active" <?php echo strtolower($editUser['status'] ?? '') == 'active' ? 'selected' : ''; ?>>Activo</option>
+                                                <option value="inactive" <?php echo strtolower($editUser['status'] ?? '') == 'inactive' ? 'selected' : ''; ?>>Inactivo</option>
                                             </select>
                                         </div>
                                     </div>
@@ -292,8 +292,8 @@ $availablePerms = [
                                                 </td>
                                                 <td class="px-6 py-5 text-center">
                                                     <span
-                                                        class="text-[10px] font-bold uppercase py-1 px-2 rounded-full <?php echo $u['status'] == 'active' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'; ?>">
-                                                        <?php echo $u['status'] == 'active' ? 'ACTIVO' : 'INACTIVO'; ?>
+                                                        class="text-[10px] font-bold uppercase py-1 px-2 rounded-full <?php echo strtolower($u['status']) == 'active' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'; ?>">
+                                                        <?php echo strtolower($u['status']) == 'active' ? 'ACTIVO' : 'INACTIVO'; ?>
                                                     </span>
                                                 </td>
                                                 <td class="px-6 py-5 text-center">

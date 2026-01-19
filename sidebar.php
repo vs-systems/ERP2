@@ -1,5 +1,5 @@
 ﻿<?php
-// sidebar.php - Rediseño basado en Stitch (Tailwind + Material Symbols) con Soporte de Temas y Permisos
+// sidebar.php - Rediseño basado en Stitch (Tailwind + Material Symbols) con Soporte de Temas, Permisos y Menús Colapsables
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/lib/User.php';
@@ -16,6 +16,7 @@ $userRole = $_SESSION['role'] ?? 'Invitado';
 $menu = [
     ['id' => 'index', 'href' => 'index.php', 'icon' => 'dashboard', 'label' => 'Inicio'],
     [
+        'id' => 'group_ventas',
         'label' => 'Ventas',
         'icon' => 'receipt_long',
         'items' => [
@@ -25,6 +26,7 @@ $menu = [
         ]
     ],
     [
+        'id' => 'group_contabilidad',
         'label' => 'Contabilidad',
         'icon' => 'payments',
         'items' => [
@@ -38,6 +40,7 @@ $menu = [
     ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'badge', 'label' => 'Clientes', 'perm' => 'clients'],
     ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores', 'perm' => 'suppliers'],
     [
+        'id' => 'group_config',
         'label' => 'Configuración',
         'icon' => 'settings',
         'perm' => 'admin',
@@ -45,11 +48,12 @@ $menu = [
             ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'tune', 'label' => 'General'],
             ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios'],
             ['id' => 'config_precios', 'href' => 'config_precios.php', 'icon' => 'universal_currency_alt', 'label' => 'Precios'],
-            ['id' => 'config_transports', 'href' => 'config_transports.php', 'icon' => 'shipping', 'label' => 'Transportes'],
+            ['id' => 'config_transports', 'href' => 'config_transports.php', 'icon' => 'local_shipping_filled', 'label' => 'Transportes'],
             ['id' => 'importar', 'href' => 'importar.php', 'icon' => 'upload_file', 'label' => 'Carga Masiva'],
         ]
     ],
 ];
+
 // Cargar preferencia del sistema
 $settingsFile = __DIR__ . '/src/config/settings.json';
 $sysSettings = ['default_theme' => 'auto'];
@@ -59,7 +63,27 @@ if (file_exists($settingsFile)) {
 $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
 ?>
 
-<!-- Theme Handler (Prevent FOUC) -->
+<style>
+    .menu-group-content {
+        transition: all 0.3s ease-in-out;
+        max-height: 0;
+        overflow: hidden;
+    }
+
+    .menu-group-content.expanded {
+        max-height: 500px;
+    }
+
+    .chevron-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .expanded .chevron-icon {
+        transform: rotate(180deg);
+    }
+</style>
+
+<!-- Theme Handler -->
 <script>
     window.vsys_default_theme = "<?php echo $defaultTheme; ?>";
 </script>
@@ -82,32 +106,48 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
     <nav class="flex-1 px-4 py-2 space-y-1">
         <?php foreach ($menu as $section): ?>
             <?php
-            // Check permission for parent section if defined
             if (isset($section['perm']) && !$userAuth->hasPermission($section['perm']))
                 continue;
-            // Legacy Role Check
             if (isset($section['role']) && !$userAuth->hasRole($section['role']))
                 continue;
 
             if (isset($section['items'])):
-                // Check if at least one child is visible
                 $visibleItems = array_filter($section['items'], function ($item) use ($userAuth) {
                     return !isset($item['perm']) || $userAuth->hasPermission($item['perm']);
                 });
                 if (empty($visibleItems))
                     continue;
+
+                $isAnyChildActive = false;
+                foreach ($visibleItems as $item) {
+                    if ($currentPage === $item['id']) {
+                        $isAnyChildActive = true;
+                        break;
+                    }
+                }
                 ?>
-                <div class="pt-4 pb-1">
-                    <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 font-display">
-                        <?php echo $section['label']; ?>
-                    </p>
-                    <?php foreach ($visibleItems as $item): ?>
-                        <a href="<?php echo $item['href']; ?>"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
-                            <span class="material-symbols-outlined text-[20px]"><?php echo $item['icon']; ?></span>
-                            <span class="text-sm font-medium"><?php echo $item['label']; ?></span>
-                        </a>
-                    <?php endforeach; ?>
+                <div class="menu-group pt-2">
+                    <button onclick="toggleMenuGroup('<?php echo $section['id']; ?>')"
+                        class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] transition-all group">
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[20px]"><?php echo $section['icon']; ?></span>
+                            <span
+                                class="text-sm font-bold uppercase tracking-widest text-[10px]"><?php echo $section['label']; ?></span>
+                        </div>
+                        <span class="material-symbols-outlined text-[18px] chevron-icon"
+                            id="chevron-<?php echo $section['id']; ?>">expand_more</span>
+                    </button>
+
+                    <div id="content-<?php echo $section['id']; ?>"
+                        class="menu-group-content space-y-1 mt-1 ml-4 border-l border-slate-200 dark:border-[#233348] pl-2 <?php echo $isAnyChildActive ? 'expanded' : ''; ?>">
+                        <?php foreach ($visibleItems as $item): ?>
+                            <a href="<?php echo $item['href']; ?>"
+                                class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
+                                <span class="material-symbols-outlined text-[18px]"><?php echo $item['icon']; ?></span>
+                                <span class="text-sm font-medium"><?php echo $item['label']; ?></span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             <?php else: ?>
                 <a href="<?php echo $section['href']; ?>"
@@ -157,6 +197,34 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
 </aside>
 
 <script>
+    function toggleMenuGroup(groupId) {
+        const content = document.getElementById('content-' + groupId);
+        const chevron = document.getElementById('chevron-' + groupId);
+
+        content.classList.toggle('expanded');
+        chevron.classList.toggle('rotate-180');
+
+        // Guardar estado en localStorage
+        const isExpanded = content.classList.contains('expanded');
+        localStorage.setItem('menu_' + groupId, isExpanded ? '1' : '0');
+    }
+
+    // Restaurar estado al cargar
+    document.addEventListener('DOMContentLoaded', () => {
+        const groups = ['group_ventas', 'group_contabilidad', 'group_config'];
+        groups.forEach(id => {
+            const state = localStorage.getItem('menu_' + id);
+            const content = document.getElementById('content-' + id);
+            const chevron = document.getElementById('chevron-' + id);
+
+            // Si el estado es 1 o si hay un hijo activo dentro
+            if (state === '1' || content.classList.contains('expanded')) {
+                content.classList.add('expanded');
+                chevron.classList.add('rotate-180');
+            }
+        });
+    });
+
     function toggleVsysTheme() {
         const current = localStorage.getItem('vsys_theme') || 'auto';
         let next = 'dark';
