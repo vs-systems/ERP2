@@ -4,14 +4,17 @@ require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
 // Role check - Only admin can access this page
-if (strtolower($_SESSION['role'] ?? '') !== 'admin') {
-    header("Location: index.php");
+// Use case-insensitive check and redirect to dashboard to avoid loops if index is protected differently
+$userRole = strtolower($_SESSION['role'] ?? '');
+if ($userRole !== 'admin' && $userRole !== 'sistemas') {
+    header("Location: dashboard.php");
     exit;
 }
 
 $db = Vsys\Lib\Database::getInstance();
-$message = '';
-$messageType = 'success';
+$message = $_SESSION['user_message'] ?? '';
+$messageType = $_SESSION['user_message_type'] ?? 'success';
+unset($_SESSION['user_message'], $_SESSION['user_message_type']);
 
 // Handle delete
 if (isset($_GET['delete'])) {
@@ -49,6 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$username, $hashed, $role, $status, $perms, $_SESSION['company_id']]);
         $message = "Usuario creado correctamente.";
     }
+
+    $_SESSION['user_message'] = $message;
+    $_SESSION['user_message_type'] = $messageType;
+    header("Location: usuarios.php" . ($id ? "?edit=$id" : ""));
+    exit;
 }
 
 $users = $db->prepare("SELECT * FROM users WHERE company_id = ? ORDER BY username ASC");

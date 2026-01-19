@@ -139,7 +139,8 @@ $quotes = $cot->getAllQuotations(100);
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-xs font-semibold dark:text-slate-200 text-slate-700">
-                                                    <?php echo $q['client_name']; ?></div>
+                                                    <?php echo $q['client_name']; ?>
+                                                </div>
                                             </td>
                                             <td
                                                 class="px-6 py-5 text-right font-mono text-sm dark:text-white text-slate-800">
@@ -244,7 +245,10 @@ $quotes = $cot->getAllQuotations(100);
                 });
                 const data = await res.json();
                 if (data.success) alert('Email enviado correctamente.');
-                else alert('Error: ' + data.error);
+                else {
+                    console.error('Email Error:', data.error);
+                    alert('Error al enviar email: ' + data.error);
+                }
             } catch (e) {
                 alert('Error de conexión');
             } finally {
