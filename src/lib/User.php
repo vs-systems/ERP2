@@ -19,7 +19,7 @@ class User
     public function __construct()
     {
         $this->db = Database::getInstance();
-        if (session_status() === PHP_SESSION_NONE) {
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
             session_start();
         }
         $this->loadFromSession();
@@ -40,7 +40,6 @@ class User
      */
     public function login($username, $password)
     {
-        // Using 'status' and 'password_hash' to match actual schema
         $stmt = $this->db->prepare("SELECT * FROM users WHERE username = :u AND status = 'Active'");
         $stmt->execute([':u' => $username]);
         $user = $stmt->fetch();
@@ -62,7 +61,7 @@ class User
 
     public function logout()
     {
-        if (session_status() === PHP_SESSION_NONE) {
+        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
             session_start();
         }
         session_destroy();
