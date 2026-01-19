@@ -142,19 +142,32 @@ class Logistics
         ];
 
         try {
+            // Check if company_id exists in logistics_process
+            $cols = $this->db->query("DESCRIBE logistics_process")->fetchAll(\PDO::FETCH_COLUMN);
+            $hasCid = in_array('company_id', $cols);
+
             // Pending: En reserva or En preparación
-            $stmtP = $this->db->prepare("SELECT COUNT(*) FROM logistics_process WHERE current_phase IN ('En reserva', 'En preparación') AND MONTH(updated_at) = MONTH(CURRENT_DATE) AND company_id = ?");
-            $stmtP->execute([$this->company_id]);
+            $sqlP = "SELECT COUNT(*) FROM logistics_process WHERE current_phase IN ('En reserva', 'En preparación') AND MONTH(updated_at) = MONTH(CURRENT_DATE)";
+            if ($hasCid)
+                $sqlP .= " AND company_id = ?";
+            $stmtP = $this->db->prepare($sqlP);
+            $hasCid ? $stmtP->execute([$this->company_id]) : $stmtP->execute();
             $stats['pending'] = $stmtP->fetchColumn() ?: 0;
 
             // Prepared: Disponible
-            $stmtD = $this->db->prepare("SELECT COUNT(*) FROM logistics_process WHERE current_phase = 'Disponible' AND MONTH(updated_at) = MONTH(CURRENT_DATE) AND company_id = ?");
-            $stmtD->execute([$this->company_id]);
+            $sqlD = "SELECT COUNT(*) FROM logistics_process WHERE current_phase = 'Disponible' AND MONTH(updated_at) = MONTH(CURRENT_DATE)";
+            if ($hasCid)
+                $sqlD .= " AND company_id = ?";
+            $stmtD = $this->db->prepare($sqlD);
+            $hasCid ? $stmtD->execute([$this->company_id]) : $stmtD->execute();
             $stats['prepared'] = $stmtD->fetchColumn() ?: 0;
 
             // Dispatched: En su transporte or Entregado
-            $stmtS = $this->db->prepare("SELECT COUNT(*) FROM logistics_process WHERE current_phase IN ('En su transporte', 'Entregado') AND MONTH(updated_at) = MONTH(CURRENT_DATE) AND company_id = ?");
-            $stmtS->execute([$this->company_id]);
+            $sqlS = "SELECT COUNT(*) FROM logistics_process WHERE current_phase IN ('En su transporte', 'Entregado') AND MONTH(updated_at) = MONTH(CURRENT_DATE)";
+            if ($hasCid)
+                $sqlS .= " AND company_id = ?";
+            $stmtS = $this->db->prepare($sqlS);
+            $hasCid ? $stmtS->execute([$this->company_id]) : $stmtS->execute();
             $stats['dispatched'] = $stmtS->fetchColumn() ?: 0;
 
             return $stats;

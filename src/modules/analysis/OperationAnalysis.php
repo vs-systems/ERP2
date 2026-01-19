@@ -75,41 +75,79 @@ class OperationAnalysis
      */
     public function getDashboardSummary()
     {
-        // Check for columns to avoid Fatal error if migration hasn't run
-        $quoteCols = $this->db->query("DESCRIBE quotations")->fetchAll(\PDO::FETCH_COLUMN);
-        $purchaseCols = $this->db->query("DESCRIBE purchases")->fetchAll(\PDO::FETCH_COLUMN);
+        try {
+            $quoteCols = $this->db->query("DESCRIBE quotations")->fetchAll(\PDO::FETCH_COLUMN);
+        } catch (\Exception $e) {
+            $quoteCols = [];
+        }
+
+        $purchaseCols = [];
+        try {
+            $purchaseCols = $this->db->query("DESCRIBE purchases")->fetchAll(\PDO::FETCH_COLUMN);
+        } catch (\Exception $e) {
+            // Table might be missing or different
+            try {
+                $purchaseCols = $this->db->query("DESCRIBE purchase_orders")->fetchAll(\PDO::FETCH_COLUMN);
+            } catch (\Exception $e2) {
+                $purchaseCols = [];
+            }
+        }
 
         $hasQuoteConfirmed = in_array('is_confirmed', $quoteCols);
         $hasPurchaseConfirmed = in_array('is_confirmed', $purchaseCols);
         $hasQuotePaymentStatus = in_array('payment_status', $quoteCols);
         $hasPurchasePaymentStatus = in_array('payment_status', $purchaseCols);
+        $hasPurchaseCompanyId = in_array('company_id', $purchaseCols);
+        $hasQuoteCompanyId = in_array('company_id', $quoteCols);
 
         // Net Sales (USD)
         $salesSql = $hasQuoteConfirmed
-            ? "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1 AND company_id = ?"
-            : "SELECT SUM(subtotal_usd) FROM quotations WHERE status = 'Aceptado' AND company_id = ?";
+            ? "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1"
+            : "SELECT SUM(subtotal_usd) FROM quotations WHERE status = 'Aceptado'";
+
+        if ($hasQuoteCompanyId) {
+            $salesSql .= " AND company_id = ?";
+        }
+
         $stmtSales = $this->db->prepare($salesSql);
-        $stmtSales->execute([$this->company_id]);
+        $hasQuoteCompanyId ? $stmtSales->execute([$this->company_id]) : $stmtSales->execute();
         $totalSales = $stmtSales->fetchColumn() ?: 0;
 
         // Net Purchases (USD)
-        $purchasesSql = $hasPurchasePaymentStatus
-            ? "SELECT SUM(subtotal_usd) FROM purchases WHERE payment_status = 'Pagado' AND company_id = ?"
-            : "SELECT SUM(subtotal_usd) FROM purchases WHERE status = 'Pagado' AND company_id = ?";
-        $stmtPurchases = $this->db->prepare($purchasesSql);
-        $stmtPurchases->execute([$this->company_id]);
-        $totalPurchases = $stmtPurchases->fetchColumn() ?: 0;
+        $totalPurchases = 0;
+        if (!empty($purchaseCols)) {
+            $pTable = in_array('purchase_number', $purchaseCols) ? 'purchases' : 'purchase_orders';
+            $purchasesSql = $hasPurchasePaymentStatus
+                ? "SELECT SUM(subtotal_usd) FROM $pTable WHERE payment_status = 'Pagado'"
+                : "SELECT SUM(subtotal_usd) FROM $pTable WHERE status = 'Pagado'";
+
+            if ($hasPurchaseCompanyId) {
+                $purchasesSql .= " AND company_id = ?";
+            }
+
+            $stmtPurchases = $this->db->prepare($purchasesSql);
+            $hasPurchaseCompanyId ? $stmtPurchases->execute([$this->company_id]) : $stmtPurchases->execute();
+            $totalPurchases = $stmtPurchases->fetchColumn() ?: 0;
+        }
 
         // Effectiveness
-        $stmtTotalQuotes = $this->db->prepare("SELECT COUNT(*) FROM quotations WHERE company_id = ?");
-        $stmtTotalQuotes->execute([$this->company_id]);
+        $qSqlShort = "SELECT COUNT(*) FROM quotations";
+        if ($hasQuoteCompanyId)
+            $qSqlShort .= " WHERE company_id = ?";
+        $stmtTotalQuotes = $this->db->prepare($qSqlShort);
+        $hasQuoteCompanyId ? $stmtTotalQuotes->execute([$this->company_id]) : $stmtTotalQuotes->execute();
         $totalQuotes = $stmtTotalQuotes->fetchColumn() ?: 0;
 
         $acceptedQuotesSql = $hasQuoteConfirmed
-            ? "SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1 AND company_id = ?"
-            : "SELECT COUNT(*) FROM quotations WHERE status = 'Aceptado' AND company_id = ?";
+            ? "SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1"
+            : "SELECT COUNT(*) FROM quotations WHERE status = 'Aceptado'";
+
+        if ($hasQuoteCompanyId) {
+            $acceptedQuotesSql .= " AND company_id = ?";
+        }
+
         $stmtAccepted = $this->db->prepare($acceptedQuotesSql);
-        $stmtAccepted->execute([$this->company_id]);
+        $hasQuoteCompanyId ? $stmtAccepted->execute([$this->company_id]) : $stmtAccepted->execute();
         $acceptedQuotes = $stmtAccepted->fetchColumn() ?: 0;
         $effectiveness = $totalQuotes > 0 ? ($acceptedQuotes / $totalQuotes) * 100 : 0;
 
