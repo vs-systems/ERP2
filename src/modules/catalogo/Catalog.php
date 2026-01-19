@@ -10,44 +10,47 @@ use Vsys\Lib\Database;
 class Catalog
 {
     private $db;
+    private $company_id;
 
-    public function __construct()
+    public function __construct($company_id = null)
     {
         $this->db = Database::getInstance();
+        $this->company_id = $company_id ?: ($_SESSION['company_id'] ?? null);
     }
 
     public function getAllProducts()
     {
-        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.description ASC");
-        $stmt->execute();
+        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.company_id = ? ORDER BY p.description ASC");
+        $stmt->execute([$this->company_id]);
         return $stmt->fetchAll();
     }
 
     public function getProviders()
     {
-        $stmt = $this->db->prepare("SELECT id, name FROM entities WHERE type = 'provider' OR type = 'supplier' ORDER BY name ASC");
-        $stmt->execute();
+        $stmt = $this->db->prepare("SELECT id, name FROM entities WHERE (type = 'provider' OR type = 'supplier') AND company_id = ? ORDER BY name ASC");
+        $stmt->execute([$this->company_id]);
         return $stmt->fetchAll();
     }
 
     public function searchProducts($query)
     {
         $sql = "SELECT * FROM products WHERE 
-                sku LIKE ? OR 
+                (sku LIKE ? OR 
                 barcode LIKE ? OR 
                 provider_code LIKE ? OR 
-                description LIKE ? 
+                description LIKE ?) 
+                AND company_id = ?
                 LIMIT 20";
         $searchTerm = "%$query%";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm, $this->company_id]);
         return $stmt->fetchAll();
     }
 
     public function addProduct($data)
     {
-        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current) 
-                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current)
+        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current, company_id) 
+                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current, :company_id)
                 ON DUPLICATE KEY UPDATE 
                 barcode = VALUES(barcode),
                 image_url = VALUES(image_url),
@@ -79,14 +82,15 @@ class Catalog
             ':iva_rate' => $data['iva_rate'],
             ':brand' => $data['brand'] ?? '',
             ':has_serial_number' => $data['has_serial_number'] ?? 0,
-            ':stock_current' => $data['stock_current'] ?? 0
+            ':stock_current' => $data['stock_current'] ?? 0,
+            ':company_id' => $this->company_id
         ]);
     }
 
     public function getCategories()
     {
-        $stmt = $this->db->prepare("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category ASC");
-        $stmt->execute();
+        $stmt = $this->db->prepare("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' AND company_id = ? ORDER BY category ASC");
+        $stmt->execute([$this->company_id]);
         return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
 
