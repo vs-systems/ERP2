@@ -12,10 +12,12 @@ use Vsys\Lib\Database;
 class OperationAnalysis
 {
     private $db;
+    private $company_id;
 
-    public function __construct()
+    public function __construct($company_id = null)
     {
         $this->db = Database::getInstance();
+        $this->company_id = $company_id ?: ($_SESSION['company_id'] ?? null);
     }
 
     /**
@@ -27,9 +29,9 @@ class OperationAnalysis
         $sqlQuote = "SELECT q.*, e.name as client_name, e.tax_category, e.is_retention_agent 
                      FROM quotations q 
                      JOIN entities e ON q.client_id = e.id 
-                     WHERE q.id = :id";
+                     WHERE q.id = :id AND q.company_id = :cid";
         $quote = $this->db->prepare($sqlQuote);
-        $quote->execute([':id' => $quoteId]);
+        $quote->execute([':id' => $quoteId, ':cid' => $this->company_id]);
         $header = $quote->fetch();
 
         if (!$header)
@@ -84,35 +86,48 @@ class OperationAnalysis
 
         // Net Sales (USD)
         $salesSql = $hasQuoteConfirmed
-            ? "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1"
-            : "SELECT SUM(subtotal_usd) FROM quotations WHERE status = 'Aceptado'";
-        $totalSales = $this->db->query($salesSql)->fetchColumn() ?: 0;
+            ? "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1 AND company_id = ?"
+            : "SELECT SUM(subtotal_usd) FROM quotations WHERE status = 'Aceptado' AND company_id = ?";
+        $stmtSales = $this->db->prepare($salesSql);
+        $stmtSales->execute([$this->company_id]);
+        $totalSales = $stmtSales->fetchColumn() ?: 0;
 
         // Net Purchases (USD)
         $purchasesSql = $hasPurchasePaymentStatus
-            ? "SELECT SUM(subtotal_usd) FROM purchases WHERE payment_status = 'Pagado'"
-            : "SELECT SUM(subtotal_usd) FROM purchases WHERE status = 'Pagado'";
-        $totalPurchases = $this->db->query($purchasesSql)->fetchColumn() ?: 0;
+            ? "SELECT SUM(subtotal_usd) FROM purchases WHERE payment_status = 'Pagado' AND company_id = ?"
+            : "SELECT SUM(subtotal_usd) FROM purchases WHERE status = 'Pagado' AND company_id = ?";
+        $stmtPurchases = $this->db->prepare($purchasesSql);
+        $stmtPurchases->execute([$this->company_id]);
+        $totalPurchases = $stmtPurchases->fetchColumn() ?: 0;
 
         // Effectiveness
-        $totalQuotes = $this->db->query("SELECT COUNT(*) FROM quotations")->fetchColumn() ?: 0;
+        $stmtTotalQuotes = $this->db->prepare("SELECT COUNT(*) FROM quotations WHERE company_id = ?");
+        $stmtTotalQuotes->execute([$this->company_id]);
+        $totalQuotes = $stmtTotalQuotes->fetchColumn() ?: 0;
+
         $acceptedQuotesSql = $hasQuoteConfirmed
-            ? "SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1"
-            : "SELECT COUNT(*) FROM quotations WHERE status = 'Aceptado'";
-        $acceptedQuotes = $this->db->query($acceptedQuotesSql)->fetchColumn() ?: 0;
+            ? "SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1 AND company_id = ?"
+            : "SELECT COUNT(*) FROM quotations WHERE status = 'Aceptado' AND company_id = ?";
+        $stmtAccepted = $this->db->prepare($acceptedQuotesSql);
+        $stmtAccepted->execute([$this->company_id]);
+        $acceptedQuotes = $stmtAccepted->fetchColumn() ?: 0;
         $effectiveness = $totalQuotes > 0 ? ($acceptedQuotes / $totalQuotes) * 100 : 0;
 
         // Commercial Status Summaries
         $pendingCollections = 0;
         if ($hasQuoteConfirmed && $hasQuotePaymentStatus) {
-            $pendingCollSql = "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1 AND payment_status = 'Pendiente'";
-            $pendingCollections = $this->db->query($pendingCollSql)->fetchColumn() ?: 0;
+            $pendingCollSql = "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1 AND payment_status = 'Pendiente' AND company_id = ?";
+            $stmtPendingColl = $this->db->prepare($pendingCollSql);
+            $stmtPendingColl->execute([$this->company_id]);
+            $pendingCollections = $stmtPendingColl->fetchColumn() ?: 0;
         }
 
         $pendingPayments = 0;
         if ($hasPurchaseConfirmed && $hasPurchasePaymentStatus) {
-            $pendingPaySql = "SELECT SUM(subtotal_usd) FROM purchases WHERE is_confirmed = 1 AND payment_status = 'Pendiente'";
-            $pendingPayments = $this->db->query($pendingPaySql)->fetchColumn() ?: 0;
+            $pendingPaySql = "SELECT SUM(subtotal_usd) FROM purchases WHERE is_confirmed = 1 AND payment_status = 'Pendiente' AND company_id = ?";
+            $stmtPendingPay = $this->db->prepare($pendingPaySql);
+            $stmtPendingPay->execute([$this->company_id]);
+            $pendingPayments = $stmtPendingPay->fetchColumn() ?: 0;
         }
 
         return [

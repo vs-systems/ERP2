@@ -47,8 +47,8 @@ if (isset($_GET['sku'])) {
     // Manual search query since Catalog doesn't have getBySku public method easily accessible in one line (it has search).
     // Let's rely on DB directly or add method. Simplest: DB query here.
     $db = Vsys\Lib\Database::getInstance();
-    $stmt = $db->prepare("SELECT * FROM products WHERE sku = ?");
-    $stmt->execute([$sku]);
+    $stmt = $db->prepare("SELECT * FROM products WHERE sku = ? AND company_id = ?");
+    $stmt->execute([$sku, $_SESSION['company_id']]);
     $editingProduct = $stmt->fetch();
 }
 
@@ -77,7 +77,7 @@ $suppliers = $catalog->getProviders();
     <header
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large" class="logo-large">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem;">
                 Configuració³n <span style="color: var(--accent-violet);">Productos</span>
             </div>
@@ -180,7 +180,3 @@ $suppliers = $catalog->getProviders();
 </body>
 
 </html>
-
-
-
-

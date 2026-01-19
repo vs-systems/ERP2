@@ -72,7 +72,7 @@ if ($quotationId) {
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
             <a href="index.php" style="text-decoration:none;">
-                <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
+                <img src="logo_display.php?v=2" alt="VS System" class="logo-large" class="logo-large">
             </a>
             <div
                 style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);">
@@ -118,10 +118,13 @@ if ($quotationId) {
                             <tbody>
                                 <?php
                                 $db = Vsys\Lib\Database::getInstance();
-                                $recentOps = $db->query("SELECT q.id, q.quote_number, q.created_at, q.subtotal_usd, e.name as client_name 
+                                $recentOps = $db->prepare("SELECT q.id, q.quote_number, q.created_at, q.subtotal_usd, e.name as client_name 
                                                          FROM quotations q 
                                                          JOIN entities e ON q.client_id = e.id 
-                                                         ORDER BY q.id DESC LIMIT 10")->fetchAll();
+                                                         WHERE q.company_id = ?
+                                                         ORDER BY q.id DESC LIMIT 10");
+                                $recentOps->execute([$_SESSION['company_id']]);
+                                $recentOps = $recentOps->fetchAll();
                                 foreach ($recentOps as $op):
                                     ?>
                                     <tr>
@@ -293,7 +296,3 @@ if ($quotationId) {
 </body>
 
 </html>
-
-
-
-

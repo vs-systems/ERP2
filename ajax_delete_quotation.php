@@ -19,13 +19,13 @@ try {
     $db = Vsys\Lib\Database::getInstance();
     $db->beginTransaction();
 
-    // 1. Delete items
-    $stmtItems = $db->prepare("DELETE FROM quotation_items WHERE quotation_id = ?");
-    $stmtItems->execute([$id]);
+    // 1. Delete items (filtered by quotation_id and company_id indirectly via the header check, or directly if items have company_id)
+    $stmtItems = $db->prepare("DELETE FROM quotation_items WHERE quotation_id = ? AND company_id = ?");
+    $stmtItems->execute([$id, $_SESSION['company_id']]);
 
     // 2. Delete header
-    $stmtHeader = $db->prepare("DELETE FROM quotations WHERE id = ?");
-    $stmtHeader->execute([$id]);
+    $stmtHeader = $db->prepare("DELETE FROM quotations WHERE id = ? AND company_id = ?");
+    $stmtHeader->execute([$id, $_SESSION['company_id']]);
 
     $db->commit();
     echo json_encode(['success' => true]);

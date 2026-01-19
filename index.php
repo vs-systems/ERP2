@@ -306,7 +306,11 @@ if ($userRole === 'Vendedor') {
                                 <tbody class="divide-y divide-slate-100 dark:divide-[#233348] transition-colors">
                                     <?php
                                     $db = \Vsys\Lib\Database::getInstance();
-                                    $quotations = ($userRole === 'Vendedor') ? $recentQuotations : $db->query("SELECT q.*, e.name as client_name FROM quotations q JOIN entities e ON q.client_id = e.id ORDER BY q.id DESC LIMIT 8")->fetchAll();
+                                    $quotations = ($userRole === 'Vendedor') ? $recentQuotations : $db->prepare("SELECT q.*, e.name as client_name FROM quotations q JOIN entities e ON q.client_id = e.id WHERE q.company_id = ? ORDER BY q.id DESC LIMIT 8");
+                                    if ($userRole !== 'Vendedor') {
+                                        $quotations->execute([$_SESSION['company_id']]);
+                                        $quotations = $quotations->fetchAll();
+                                    }
                                     foreach ($quotations as $r):
                                         $statusColor = ($r['status'] === 'Pedido') ? 'text-green-500 bg-green-500/10' : 'text-slate-400 bg-white/5';
                                         ?>
@@ -329,7 +333,7 @@ if ($userRole === 'Vendedor') {
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 text-center">
-                                                <a href="analisys.php?id=<?php echo $r['id']; ?>"
+                                                <a href="analisis.php?id=<?php echo $r['id']; ?>"
                                                     class="p-1.5 text-slate-400 hover:text-[#136dec] transition-colors">
                                                     <span class="material-symbols-outlined text-xl">monitoring</span>
                                                 </a>

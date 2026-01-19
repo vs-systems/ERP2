@@ -42,9 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_entity'])) {
 }
 
 // Get all clients
-$sql = "SELECT * FROM entities WHERE type = 'client' ORDER BY name ASC";
+$sql = "SELECT * FROM entities WHERE type = 'client' AND company_id = ? ORDER BY name ASC";
 $db = Vsys\Lib\Database::getInstance();
-$clients = $db->query($sql)->fetchAll();
+$stmt = $db->prepare($sql);
+$stmt->execute([$_SESSION['company_id']]);
+$clients = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="es">
@@ -175,19 +177,23 @@ $clients = $db->query($sql)->fetchAll();
                                             class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group <?php echo !$c['is_enabled'] ? 'opacity-60' : ''; ?>">
                                             <td class="px-6 py-5">
                                                 <div class="font-bold text-sm dark:text-white text-slate-800">
-                                                    <?php echo $c['name']; ?></div>
+                                                    <?php echo $c['name']; ?>
+                                                </div>
                                                 <div class="text-[11px] text-slate-500 font-medium">
-                                                    <?php echo $c['fantasy_name']; ?></div>
+                                                    <?php echo $c['fantasy_name']; ?>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800 font-mono">
-                                                    <?php echo $c['tax_id']; ?></div>
+                                                    <?php echo $c['tax_id']; ?>
+                                                </div>
                                                 <div class="text-[11px] text-slate-500"><?php echo $c['document_number']; ?>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800 font-medium">
-                                                    <?php echo $c['contact_person']; ?></div>
+                                                    <?php echo $c['contact_person']; ?>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <span
@@ -197,10 +203,12 @@ $clients = $db->query($sql)->fetchAll();
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800">
-                                                    <?php echo $c['email']; ?></div>
+                                                    <?php echo $c['email']; ?>
+                                                </div>
                                                 <div
                                                     class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
-                                                    <?php echo $c['mobile'] ?: $c['phone']; ?></div>
+                                                    <?php echo $c['mobile'] ?: $c['phone']; ?>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-5 text-center">
                                                 <span

@@ -38,8 +38,8 @@ $editData = [
 ];
 
 if ($id) {
-    $stmt = $db->prepare("SELECT * FROM entities WHERE id = ?");
-    $stmt->execute([$id]);
+    $stmt = $db->prepare("SELECT * FROM entities WHERE id = ? AND company_id = ?");
+    $stmt->execute([$id, $_SESSION['company_id']]);
     $res = $stmt->fetch();
     if ($res)
         $editData = $res;
@@ -314,11 +314,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         <select name="seller_id" class="form-input">
                                             <option value="">-- Sin Vendedor --</option>
                                             <?php
-                                            $sellers = $db->query("SELECT id, username FROM users WHERE role = 'Vendedor' OR role = 'Ventas'")->fetchAll();
+                                            $stmtSellers = $db->prepare("SELECT id, username FROM users WHERE (role = 'Vendedor' OR role = 'Ventas') AND company_id = ?");
+                                            $stmtSellers->execute([$_SESSION['company_id']]);
+                                            $sellers = $stmtSellers->fetchAll();
                                             foreach ($sellers as $s):
                                                 ?>
                                                 <option value="<?php echo $s['id']; ?>" <?php echo $editData['seller_id'] == $s['id'] ? 'selected' : ''; ?>>
-                                                    <?php echo $s['username']; ?></option>
+                                                    <?php echo $s['username']; ?>
+                                                </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>

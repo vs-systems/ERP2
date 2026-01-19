@@ -12,11 +12,13 @@ class SellerDashboard
 {
     private $db;
     private $seller_id;
+    private $company_id;
 
-    public function __construct($userId)
+    public function __construct($userId, $companyId = null)
     {
         $this->db = Database::getInstance();
         $this->seller_id = $userId;
+        $this->company_id = $companyId ?: ($_SESSION['company_id'] ?? null);
     }
 
     public function getEfficiencyStats()
@@ -26,9 +28,9 @@ class SellerDashboard
                     COUNT(*) as total,
                     SUM(CASE WHEN authorized_dispatch = 1 THEN 1 ELSE 0 END) as converted
                 FROM quotations 
-                WHERE seller_id = :sid";
+                WHERE seller_id = :sid AND company_id = :cid";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['sid' => $this->seller_id]);
+        $stmt->execute(['sid' => $this->seller_id, 'cid' => $this->company_id]);
         return $stmt->fetch();
     }
 
@@ -37,11 +39,11 @@ class SellerDashboard
         $sql = "SELECT q.*, e.name as client_name 
                 FROM quotations q 
                 JOIN entities e ON q.client_id = e.id 
-                WHERE q.seller_id = :sid 
+                WHERE q.seller_id = :sid AND q.company_id = :cid
                 ORDER BY q.created_at DESC 
                 LIMIT 5";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['sid' => $this->seller_id]);
+        $stmt->execute(['sid' => $this->seller_id, 'cid' => $this->company_id]);
         return $stmt->fetchAll();
     }
 
@@ -51,11 +53,11 @@ class SellerDashboard
                 FROM logistics_process l 
                 JOIN quotations q ON l.quote_number = q.quote_number 
                 JOIN entities e ON q.client_id = e.id 
-                WHERE q.seller_id = :sid 
+                WHERE q.seller_id = :sid AND q.company_id = :cid
                 ORDER BY l.updated_at DESC 
                 LIMIT 5";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['sid' => $this->seller_id]);
+        $stmt->execute(['sid' => $this->seller_id, 'cid' => $this->company_id]);
         return $stmt->fetchAll();
     }
 }

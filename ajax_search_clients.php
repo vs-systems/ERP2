@@ -38,8 +38,8 @@ foreach ($results as $r) {
 // Search Leads too
 $db = Vsys\Lib\Database::getInstance();
 $q = "%" . strtolower($query) . "%";
-$leads = $db->prepare("SELECT id, name, tax_id, address FROM crm_leads WHERE LOWER(name) LIKE ? LIMIT 10");
-$leads->execute([$q]);
+$leads = $db->prepare("SELECT id, name, tax_id, address FROM crm_leads WHERE LOWER(name) LIKE ? AND company_id = ? LIMIT 10");
+$leads->execute([$q, $_SESSION['company_id']]);
 foreach ($leads->fetchAll() as $l) {
     $finalResults[] = [
         'id' => $l['id'],

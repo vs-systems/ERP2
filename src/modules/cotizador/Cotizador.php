@@ -11,10 +11,12 @@ use Vsys\Lib\BCRAClient;
 class Cotizador
 {
     private $db;
+    private $company_id;
 
-    public function __construct()
+    public function __construct($company_id = null)
     {
         $this->db = Database::getInstance();
+        $this->company_id = $company_id ?: ($_SESSION['company_id'] ?? null);
     }
 
     /**
@@ -26,8 +28,8 @@ class Cotizador
         $prefix = "VS-COT-" . $dateStr . "-";
 
         // Get the last number used today to avoid collisions even if records were deleted
-        $stmt = $this->db->prepare("SELECT quote_number FROM quotations WHERE quote_number LIKE :prefix ORDER BY id DESC LIMIT 1");
-        $stmt->execute(['prefix' => $prefix . '%']);
+        $stmt = $this->db->prepare("SELECT quote_number FROM quotations WHERE quote_number LIKE :prefix AND company_id = :cid ORDER BY id DESC LIMIT 1");
+        $stmt->execute(['prefix' => $prefix . '%', 'cid' => $this->company_id]);
         $lastQuote = $stmt->fetch();
 
         if ($lastQuote) {
@@ -48,8 +50,8 @@ class Cotizador
      */
     public function createNewVersion($parentQuoteId)
     {
-        $stmt = $this->db->prepare("SELECT quote_number, version FROM quotations WHERE id = ?");
-        $stmt->execute([$parentQuoteId]);
+        $stmt = $this->db->prepare("SELECT quote_number, version FROM quotations WHERE id = ? AND company_id = ?");
+        $stmt->execute([$parentQuoteId, $this->company_id]);
         $parent = $stmt->fetch();
 
         if (!$parent)
@@ -92,8 +94,8 @@ class Cotizador
 
     public function saveQuotation($data)
     {
-        $sql = "INSERT INTO quotations (quote_number, version, client_id, user_id, payment_method, with_iva, exchange_rate_usd, subtotal_usd, subtotal_ars, total_usd, total_ars, valid_until, observations) 
-                VALUES (:number, :version, :client_id, :user_id, :payment, :with_iva, :rate, :subtotal, :subtotal_ars, :total_usd, :total_ars, :valid, :obs)";
+        $sql = "INSERT INTO quotations (quote_number, version, client_id, user_id, payment_method, with_iva, exchange_rate_usd, subtotal_usd, subtotal_ars, total_usd, total_ars, valid_until, observations, company_id) 
+                VALUES (:number, :version, :client_id, :user_id, :payment, :with_iva, :rate, :subtotal, :subtotal_ars, :total_usd, :total_ars, :valid, :obs, :company_id)";
 
         $stmt = $this->db->prepare($sql);
         $result = $stmt->execute([
@@ -109,7 +111,8 @@ class Cotizador
             'total_usd' => $data['total_usd'],
             'total_ars' => $data['total_ars'],
             'valid' => $data['valid_until'],
-            'obs' => $data['observations'] ?? ''
+            'obs' => $data['observations'] ?? '',
+            'company_id' => $this->company_id
         ]);
 
         if (!$result)
@@ -141,8 +144,8 @@ class Cotizador
                                     FROM quotations q 
                                     JOIN entities e ON q.client_id = e.id 
                                     JOIN users u ON q.user_id = u.id 
-                                    WHERE q.id = ?");
-        $stmt->execute([$id]);
+                                    WHERE q.id = ? AND q.company_id = ?");
+        $stmt->execute([$id, $this->company_id]);
         return $stmt->fetch();
     }
 
@@ -164,13 +167,14 @@ class Cotizador
         $sql = "SELECT q.*, e.name as client_name 
                 FROM quotations q 
                 JOIN entities e ON q.client_id = e.id 
+                WHERE q.company_id = :cid
                 ORDER BY q.created_at DESC 
                 LIMIT :limit";
         $stmt = $this->db->prepare($sql);
+        $stmt->bindValue(':cid', $this->company_id);
         $stmt->bindValue(':limit', (int) $limit, \PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 }
 ?>
-

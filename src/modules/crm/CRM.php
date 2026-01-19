@@ -12,10 +12,12 @@ use Vsys\Lib\Database;
 class CRM
 {
     private $db;
+    private $company_id;
 
-    public function __construct()
+    public function __construct($company_id = null)
     {
         $this->db = Database::getInstance();
+        $this->company_id = $company_id ?: ($_SESSION['company_id'] ?? null);
     }
 
     /**
@@ -31,17 +33,25 @@ class CRM
     {
         try {
             // Active Quotes (Presupuestado)
-            $activeQuotes = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status = 'Presupuestado'")->fetchColumn();
+            $stmtAct = $this->db->prepare("SELECT COUNT(*) FROM crm_leads WHERE status = 'Presupuestado' AND company_id = ?");
+            $stmtAct->execute([$this->company_id]);
+            $activeQuotes = $stmtAct->fetchColumn();
 
             // Orders Today (Ganado today) - Use provided date or CURDATE()
             $dateFilter = $date ? $date : date('Y-m-d');
-            $stmt = $this->db->prepare("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado' AND DATE(updated_at) = ?");
-            $stmt->execute([$dateFilter]);
+            $stmt = $this->db->prepare("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado' AND DATE(updated_at) = ? AND company_id = ?");
+            $stmt->execute([$dateFilter, $this->company_id]);
             $ordersToday = $stmt->fetchColumn();
 
             // Efficiency (Won / Total)
-            $total = $this->db->query("SELECT COUNT(*) FROM crm_leads")->fetchColumn();
-            $won = $this->db->query("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado'")->fetchColumn();
+            $stmtTot = $this->db->prepare("SELECT COUNT(*) FROM crm_leads WHERE company_id = ?");
+            $stmtTot->execute([$this->company_id]);
+            $total = $stmtTot->fetchColumn();
+
+            $stmtWon = $this->db->prepare("SELECT COUNT(*) FROM crm_leads WHERE status = 'Ganado' AND company_id = ?");
+            $stmtWon->execute([$this->company_id]);
+            $won = $stmtWon->fetchColumn();
+
             $efficiency = $total > 0 ? round(($won / $total) * 100, 1) : 0;
 
             return [
@@ -61,8 +71,10 @@ class CRM
     public function getLeadsStats()
     {
         try {
-            $sql = "SELECT status, COUNT(*) as total FROM crm_leads GROUP BY status";
-            return $this->db->query($sql)->fetchAll(\PDO::FETCH_KEY_PAIR);
+            $sql = "SELECT status, COUNT(*) as total FROM crm_leads WHERE company_id = ? GROUP BY status";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([$this->company_id]);
+            return $stmt->fetchAll(\PDO::FETCH_KEY_PAIR);
         } catch (\Exception $e) {
             return [];
         }
@@ -74,9 +86,9 @@ class CRM
     public function getLeadsByStatus($status)
     {
         try {
-            $sql = "SELECT * FROM crm_leads WHERE status = :status ORDER BY updated_at DESC";
+            $sql = "SELECT * FROM crm_leads WHERE status = :status AND company_id = :cid ORDER BY updated_at DESC";
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([':status' => $status]);
+            $stmt->execute([':status' => $status, ':cid' => $this->company_id]);
             return $stmt->fetchAll();
         } catch (\Exception $e) {
             return [];
@@ -92,7 +104,7 @@ class CRM
             $sql = "UPDATE crm_leads SET 
                     name = :name, contact_person = :contact, email = :email, 
                     phone = :phone, status = :status, notes = :notes 
-                    WHERE id = :id";
+                    WHERE id = :id AND company_id = :cid";
             $params = [
                 ':name' => $data['name'],
                 ':contact' => $data['contact_person'] ?? '',
@@ -100,18 +112,20 @@ class CRM
                 ':phone' => $data['phone'] ?? '',
                 ':status' => $data['status'] ?? 'Nuevo',
                 ':notes' => $data['notes'] ?? '',
-                ':id' => $data['id']
+                ':id' => $data['id'],
+                ':cid' => $this->company_id
             ];
         } else {
-            $sql = "INSERT INTO crm_leads (name, contact_person, email, phone, status, notes) 
-                    VALUES (:name, :contact, :email, :phone, :status, :notes)";
+            $sql = "INSERT INTO crm_leads (name, contact_person, email, phone, status, notes, company_id) 
+                    VALUES (:name, :contact, :email, :phone, :status, :notes, :cid)";
             $params = [
                 ':name' => $data['name'],
                 ':contact' => $data['contact_person'] ?? '',
                 ':email' => $data['email'] ?? '',
                 ':phone' => $data['phone'] ?? '',
                 ':status' => $data['status'] ?? 'Nuevo',
-                ':notes' => $data['notes'] ?? ''
+                ':notes' => $data['notes'] ?? '',
+                ':cid' => $this->company_id
             ];
         }
 
@@ -126,14 +140,14 @@ class CRM
     {
         // 1. If it's an 'entity' (Client), check if we should create/link a Lead
         if ($entityType === 'entity') {
-            $stmt = $this->db->prepare("SELECT name, contact_person, email, phone FROM entities WHERE id = ?");
-            $stmt->execute([$entityId]);
+            $stmt = $this->db->prepare("SELECT name, contact_person, email, phone FROM entities WHERE id = ? AND company_id = ?");
+            $stmt->execute([$entityId, $this->company_id]);
             $ent = $stmt->fetch();
 
             if ($ent) {
                 // Check if lead already exists based on name
-                $stmtLead = $this->db->prepare("SELECT id FROM crm_leads WHERE name = ? LIMIT 1");
-                $stmtLead->execute([$ent['name']]);
+                $stmtLead = $this->db->prepare("SELECT id FROM crm_leads WHERE name = ? AND company_id = ? LIMIT 1");
+                $stmtLead->execute([$ent['name'], $this->company_id]);
                 $leadId = $stmtLead->fetchColumn();
 
                 if (!$leadId) {
@@ -143,13 +157,13 @@ class CRM
                         'contact_person' => $ent['contact_person'],
                         'email' => $ent['email'],
                         'phone' => $ent['phone'],
-                        'status' => ($type === 'Presupuesto' || $type === 'Envó­o Presupuesto') ? 'Presupuestado' : 'Contactado',
-                        'notes' => 'Auto-generado desde interacció³n con Cliente'
+                        'status' => ($type === 'Presupuesto' || $type === 'Envió Presupuesto') ? 'Presupuestado' : 'Contactado',
+                        'notes' => 'Auto-generado desde interacción con Cliente'
                     ]);
                 } else {
                     // Update existing lead status
-                    $newStatus = ($type === 'Presupuesto' || $type === 'Envó­o Presupuesto') ? 'Presupuestado' : 'Contactado';
-                    $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ?")->execute([$newStatus, $leadId]);
+                    $newStatus = ($type === 'Presupuesto' || $type === 'Envió Presupuesto') ? 'Presupuestado' : 'Contactado';
+                    $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ? AND company_id = ?")->execute([$newStatus, $leadId, $this->company_id]);
                 }
 
                 // AUTO-ASSIGN SELLER: If entity has no seller_id, assign the current user
@@ -158,19 +172,20 @@ class CRM
             }
         } elseif ($entityType === 'lead') {
             // Update existing lead status
-            $newStatus = ($type === 'Presupuesto' || $type === 'Envó­o Presupuesto') ? 'Presupuestado' : 'Contactado';
-            $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ? AND status IN ('Nuevo', 'Contactado')")->execute([$newStatus, $entityId]);
+            $newStatus = ($type === 'Presupuesto' || $type === 'Envió Presupuesto') ? 'Presupuestado' : 'Contactado';
+            $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ? AND status IN ('Nuevo', 'Contactado') AND company_id = ?")->execute([$newStatus, $entityId, $this->company_id]);
         }
 
-        $sql = "INSERT INTO crm_interactions (entity_id, entity_type, user_id, type, description, interaction_date) 
-                VALUES (:eid, :etype, :uid, :type, :desc, NOW())";
+        $sql = "INSERT INTO crm_interactions (entity_id, entity_type, user_id, type, description, interaction_date, company_id) 
+                VALUES (:eid, :etype, :uid, :type, :desc, NOW(), :cid)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':eid' => $entityId,
             ':etype' => $entityType,
             ':uid' => $userId,
             ':type' => $type,
-            ':desc' => $description
+            ':desc' => $description,
+            ':cid' => $this->company_id
         ]);
     }
 
@@ -184,19 +199,21 @@ class CRM
                            i.type as interaction_type,
                            i.interaction_date as created_at,
                            CASE 
-                            WHEN i.entity_type = 'entity' THEN (SELECT name FROM entities WHERE id = i.entity_id LIMIT 1)
-                            WHEN i.entity_type = 'lead' THEN (SELECT name FROM crm_leads WHERE id = i.entity_id LIMIT 1)
+                            WHEN i.entity_type = 'entity' THEN (SELECT name FROM entities WHERE id = i.entity_id AND company_id = i.company_id LIMIT 1)
+                            WHEN i.entity_type = 'lead' THEN (SELECT name FROM crm_leads WHERE id = i.entity_id AND company_id = i.company_id LIMIT 1)
                            END as client_name,
                            CASE 
-                            WHEN i.entity_type = 'entity' THEN (SELECT name FROM entities WHERE id = i.entity_id LIMIT 1)
-                            WHEN i.entity_type = 'lead' THEN (SELECT name FROM crm_leads WHERE id = i.entity_id LIMIT 1)
+                            WHEN i.entity_type = 'entity' THEN (SELECT name FROM entities WHERE id = i.entity_id AND company_id = i.company_id LIMIT 1)
+                            WHEN i.entity_type = 'lead' THEN (SELECT name FROM crm_leads WHERE id = i.entity_id AND company_id = i.company_id LIMIT 1)
                            END as entity_name,
                            u.full_name as user_name 
                     FROM crm_interactions i 
                     LEFT JOIN users u ON i.user_id = u.id 
+                    WHERE i.company_id = :cid
                     ORDER BY i.interaction_date DESC LIMIT :limit";
             $stmt = $this->db->prepare($sql);
             $stmt->bindValue(':limit', (int) $limit, \PDO::PARAM_INT);
+            $stmt->bindValue(':cid', $this->company_id, \PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll();
         } catch (\Exception $e) {
@@ -211,8 +228,8 @@ class CRM
     {
         $statuses = ['Nuevo', 'Contactado', 'Presupuestado', 'Ganado', 'Perdido'];
 
-        $stmt = $this->db->prepare("SELECT status FROM crm_leads WHERE id = ?");
-        $stmt->execute([$id]);
+        $stmt = $this->db->prepare("SELECT status FROM crm_leads WHERE id = ? AND company_id = ?");
+        $stmt->execute([$id, $this->company_id]);
         $current = $stmt->fetchColumn();
 
         if (!$current)
@@ -226,8 +243,8 @@ class CRM
         else
             return true; // No movement possible but ok
 
-        $stmt = $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ?");
-        return $stmt->execute([$statuses[$idx], $id]);
+        $stmt = $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ? AND company_id = ?");
+        return $stmt->execute([$statuses[$idx], $id, $this->company_id]);
     }
     /**
      * Get Sales Funnel Stats (30 Days)
@@ -236,22 +253,30 @@ class CRM
     {
         try {
             // 1. Clicks (Interactions of type 'Consulta Web' or public logs)
-            $clicks = $this->db->query("SELECT COUNT(*) FROM crm_interactions 
-                                        WHERE type = 'Consulta Web' 
-                                        AND interaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetchColumn();
+            $stmtCl = $this->db->prepare("SELECT COUNT(*) FROM crm_interactions 
+                                         WHERE type = 'Consulta Web' 
+                                         AND interaction_date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                                         AND company_id = ?");
+            $stmtCl->execute([$this->company_id]);
+            $clicks = $stmtCl->fetchColumn();
 
             // 2. Quoted (Quotations created)
-            $quoted = $this->db->query("SELECT COUNT(*) FROM quotations 
-                                        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)")->fetchColumn();
+            $stmtQu = $this->db->prepare("SELECT COUNT(*) FROM quotations 
+                                         WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                                         AND company_id = ?");
+            $stmtQu->execute([$this->company_id]);
+            $quoted = $stmtQu->fetchColumn();
 
             // 3. Sold (Confirmed Sales)
             // Check if is_confirmed exists, otherwise fallback to status
             $cols = $this->db->query("DESCRIBE quotations")->fetchAll(\PDO::FETCH_COLUMN);
             $soldSql = in_array('is_confirmed', $cols)
-                ? "SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1 AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)"
-                : "SELECT COUNT(*) FROM quotations WHERE status = 'Aceptado' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                ? "SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1 AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND company_id = ?"
+                : "SELECT COUNT(*) FROM quotations WHERE status = 'Aceptado' AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND company_id = ?";
 
-            $sold = $this->db->query($soldSql)->fetchColumn();
+            $stmtSo = $this->db->prepare($soldSql);
+            $stmtSo->execute([$this->company_id]);
+            $sold = $stmtSo->fetchColumn();
 
             return [
                 'clicks' => $clicks ?: 0,

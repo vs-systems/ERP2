@@ -10,10 +10,12 @@ use Vsys\Lib\Database;
 class Client
 {
     private $db;
+    private $company_id;
 
-    public function __construct()
+    public function __construct($company_id = null)
     {
         $this->db = Database::getInstance();
+        $this->company_id = $company_id ?: ($_SESSION['company_id'] ?? null);
     }
 
     /**
@@ -23,6 +25,7 @@ class Client
     {
         $typeFilter = ($type === 'all') ? "1=1" : "type = :type";
         $sql = "SELECT * FROM entities WHERE 
+                company_id = :cid AND 
                 $typeFilter AND (
                     LOWER(name) LIKE :q1 OR 
                     LOWER(fantasy_name) LIKE :q2 OR
@@ -37,6 +40,7 @@ class Client
 
         $searchTerm = "%" . mb_strtolower($query, 'UTF-8') . "%";
         $params = [
+            'cid' => $this->company_id,
             'q1' => $searchTerm,
             'q2' => $searchTerm,
             'q3' => $searchTerm,
@@ -60,19 +64,22 @@ class Client
      */
     public function saveClient($data)
     {
+        // Add company_id to the data array
+        $data['company_id'] = $this->company_id;
+
         $sql = "INSERT INTO entities (
                     id, type, tax_id, document_number, name, fantasy_name, 
                     contact_person, email, phone, mobile, address, 
                     delivery_address, default_voucher_type, tax_category,
                     is_enabled, is_retention_agent, payment_condition, preferred_payment_method,
-                    seller_id, client_profile, is_verified
+                    seller_id, client_profile, is_verified, company_id
                 ) 
                 VALUES (
                     :id, :type, :tax_id, :document_number, :name, :fantasy_name, 
                     :contact, :email, :phone, :mobile, :address, 
                     :delivery_address, :default_voucher, :tax_category,
                     :is_enabled, :retention, :payment_condition, :payment_method,
-                    :seller_id, :client_profile, :is_verified
+                    :seller_id, :client_profile, :is_verified, :company_id
                 )
                 ON DUPLICATE KEY UPDATE 
                 document_number = VALUES(document_number),

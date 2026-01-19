@@ -35,23 +35,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Update
         if (!empty($password)) {
             $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $db->prepare("UPDATE users SET username = ?, password_hash = ?, role = ?, status = ?, permissions = ? WHERE id = ?");
-            $stmt->execute([$username, $hashed, $role, $status, $perms, $id]);
+            $stmt = $db->prepare("UPDATE users SET username = ?, password_hash = ?, role = ?, status = ?, permissions = ? WHERE id = ? AND company_id = ?");
+            $stmt->execute([$username, $hashed, $role, $status, $perms, $id, $_SESSION['company_id']]);
         } else {
-            $stmt = $db->prepare("UPDATE users SET username = ?, role = ?, status = ?, permissions = ? WHERE id = ?");
-            $stmt->execute([$username, $role, $status, $perms, $id]);
+            $stmt = $db->prepare("UPDATE users SET username = ?, role = ?, status = ?, permissions = ? WHERE id = ? AND company_id = ?");
+            $stmt->execute([$username, $role, $status, $perms, $id, $_SESSION['company_id']]);
         }
         $message = "Usuario actualizado correctamente.";
     } else {
         // Create
         $hashed = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $db->prepare("INSERT INTO users (username, password_hash, role, status, permissions) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$username, $hashed, $role, $status, $perms]);
+        $stmt = $db->prepare("INSERT INTO users (username, password_hash, role, status, permissions, company_id) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$username, $hashed, $role, $status, $perms, $_SESSION['company_id']]);
         $message = "Usuario creado correctamente.";
     }
 }
 
-$users = $db->query("SELECT * FROM users ORDER BY username ASC")->fetchAll();
+$users = $db->prepare("SELECT * FROM users WHERE company_id = ? ORDER BY username ASC");
+$users->execute([$_SESSION['company_id']]);
+$users = $users->fetchAll();
 $editUser = null;
 if (isset($_GET['edit'])) {
     foreach ($users as $u)
