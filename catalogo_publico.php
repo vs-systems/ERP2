@@ -206,9 +206,9 @@ sort($brands);
                             </div>
                             <button onclick='addToCart(<?php echo json_encode($p); ?>)'
                                 class="bg-[#10b981] hover:bg-[#059669] text-white px-6 py-2.5 rounded-full flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-[#10b981]/20 group/btn relative overflow-hidden">
-                                <span class="material-symbols-outlined text-[20px]">whatsapp</span>
+                                <span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
                                 <span
-                                    class="text-[10px] font-extrabold uppercase tracking-widest relative z-10">Consultar</span>
+                                    class="text-[10px] font-extrabold uppercase tracking-widest relative z-10">AGREGAR</span>
                                 <div
                                     class="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300">
                                 </div>

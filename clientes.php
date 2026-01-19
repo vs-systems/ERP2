@@ -223,6 +223,14 @@ $clients = $stmt->fetchAll();
                                                         title="Editar Cliente">
                                                         <span class="material-symbols-outlined text-[18px]">edit</span>
                                                     </a>
+                                                    <?php if (($_SESSION['role'] ?? '') === 'Admin' || ($_SESSION['role'] ?? '') === 'admin'): ?>
+                                                        <button
+                                                            onclick="deleteClient(<?php echo $c['id']; ?>, '<?php echo addslashes($c['name']); ?>')"
+                                                            class="p-2 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all shadow-sm"
+                                                            title="Eliminar Cliente">
+                                                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                                                        </button>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -235,6 +243,32 @@ $clients = $stmt->fetchAll();
             </div>
         </main>
     </div>
+
+    <script>
+        async function deleteClient(id, name) {
+            if (!confirm(`¿Está seguro de eliminar al cliente "${name}"? Esta acción no se puede deshacer.`)) return;
+
+            try {
+                const res = await fetch('ajax_delete_entity.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: id
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error de conexión al intentar eliminar.');
+            }
+        }
+    </script>
 </body>
 
 </html>

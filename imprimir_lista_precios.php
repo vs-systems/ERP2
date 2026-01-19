@@ -5,6 +5,7 @@
  */
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
+require_once 'auth_check.php';
 require_once __DIR__ . '/src/modules/catalogo/Catalog.php';
 require_once __DIR__ . '/src/modules/config/PriceList.php';
 
