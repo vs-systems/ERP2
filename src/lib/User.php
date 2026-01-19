@@ -16,6 +16,7 @@ class User
     private $role;
     private $entity_id;
     private $permissions;
+    private $company_id;
 
     public function __construct()
     {
@@ -33,6 +34,7 @@ class User
             $this->username = $_SESSION['username'];
             $this->role = $_SESSION['role'];
             $this->entity_id = $_SESSION['entity_id'] ?? null;
+            $this->company_id = $_SESSION['company_id'] ?? null;
             $this->permissions = json_decode($_SESSION['permissions'] ?? '[]', true);
         }
     }
@@ -67,6 +69,7 @@ class User
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['entity_id'] = $user['entity_id'] ?? null;
+            $_SESSION['company_id'] = $user['company_id'] ?? null;
             $_SESSION['permissions'] = $user['permissions'] ?? '[]';
 
             $this->loadFromSession();
@@ -105,6 +108,11 @@ class User
     public function getEntityId()
     {
         return $this->entity_id;
+    }
+
+    public function getCompanyId()
+    {
+        return $this->company_id;
     }
 
     /**
