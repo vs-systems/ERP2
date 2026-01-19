@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth_check.php';
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
@@ -8,208 +8,261 @@ $logistics = new Logistics();
 $pending = $logistics->getOrdersForPreparation();
 $transports = $logistics->getTransports();
 
-// Map phases to colors and icons
+// Map phases to colors and icons (Material Symbols)
 $phases = [
-    'En reserva' => ['color' => '#f59e0b', 'icon' => 'fas fa-clock', 'label' => 'En Reserva'],
-    'En preparación' => ['color' => '#3b82f6', 'icon' => 'fas fa-tools', 'label' => 'En Preparación'],
-    'Disponible' => ['color' => '#10b981', 'icon' => 'fas fa-check-circle', 'label' => 'Disponible'],
-    'En su transporte' => ['color' => '#8b5cf6', 'icon' => 'fas fa-truck-loading', 'label' => 'En Transporte'],
-    'Entregado' => ['color' => '#64748b', 'icon' => 'fas fa-flag-checkered', 'label' => 'Entregado']
+    'En reserva' => ['color' => '#f59e0b', 'icon' => 'schedule', 'label' => 'En Reserva'],
+    'En preparación' => ['color' => '#3b82f6', 'icon' => 'engineering', 'label' => 'En Preparación'],
+    'Disponible' => ['color' => '#10b981', 'icon' => 'check_circle', 'label' => 'Disponible'],
+    'En su transporte' => ['color' => '#8b5cf6', 'icon' => 'local_shipping', 'label' => 'En Transporte'],
+    'Entregado' => ['color' => '#64748b', 'icon' => 'flag', 'label' => 'Entregado']
 ];
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html class="dark" lang="es">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logística Premium - VS System</title>
-    <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script src="js/theme_handler.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "background-dark": "#101822",
+                        "surface-dark": "#16202e",
+                        "surface-border": "#233348",
+                    },
+                },
+            },
+        }
+    </script>
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #101822;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #233348;
+            border-radius: 3px;
+        }
+
         .phase-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.7rem;
             font-weight: 700;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             text-transform: uppercase;
         }
 
-        .process-flow {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .flow-step {
-            flex: 1;
-            height: 6px;
-            border-radius: 3px;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .flow-step.active {
-            box-shadow: 0 0 10px currentColor;
-        }
-
-        .btn-action {
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: white;
-            padding: 6px 10px;
+        .cost-input {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #1e293b;
+            padding: 4px 8px;
             border-radius: 6px;
+            width: 70px;
             font-size: 0.8rem;
-            cursor: pointer;
+            outline: none;
             transition: all 0.2s;
         }
 
-        .btn-action:hover {
-            background: #334155;
-        }
-
-        .cost-input {
+        .dark .cost-input {
             background: #0f172a;
-            border: 1px solid #334155;
+            border: 1px solid #233348;
             color: white;
-            padding: 5px;
-            border-radius: 4px;
-            width: 80px;
-            font-size: 0.85rem;
         }
 
-        .payment-warning {
-            background: rgba(245, 158, 11, 0.1);
-            border-left: 3px solid #f59e0b;
-            padding: 10px;
-            font-size: 0.85rem;
-            color: #f59e0b;
-            margin-top: 10px;
+        .cost-input:focus {
+            border-color: #136dec;
         }
     </style>
 </head>
 
-<body>
-    <header
-        style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=2" alt="VS System" style="height: 60px;">
-            <div style="color:white; font-weight:700; font-size:1.4rem;">GESTIÓN <span>LOGÍSTICA</span></div>
-        </div>
-    </header>
-
-    <div class="dashboard-container">
+<body
+    class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white antialiased overflow-hidden transition-colors duration-300">
+    <div class="flex h-screen w-full">
         <?php include 'sidebar.php'; ?>
-        <main class="content">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 30px;">
-                <h1>Centro de Operaciones Logísticas</h1>
-                <div class="stats-mini" style="display:flex; gap:20px;">
-                    <div class="card" style="padding:10px 20px; text-align:center; min-width: 150px;">
-                        <small style="color:#94a3b8">PENDIENTES</small>
-                        <div style="font-size:1.5rem; font-weight:700; color: #f59e0b;"><?php echo count($pending); ?>
+
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- Header -->
+            <header
+                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 transition-colors duration-300">
+                <div class="flex items-center gap-3">
+                    <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
+                        <span class="material-symbols-outlined text-2xl">local_shipping</span>
+                    </div>
+                    <h2 class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">Gestión
+                        Logística</h2>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <div class="max-w-[1400px] mx-auto space-y-6">
+
+                    <div class="flex justify-between items-end">
+                        <h1 class="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">Centro de
+                            Operaciones Logísticas</h1>
+                        <div
+                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] px-6 py-3 rounded-xl flex flex-col items-center shadow-sm dark:shadow-none transition-colors">
+                            <span
+                                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pendientes</span>
+                            <span class="text-xl font-bold text-[#f59e0b]"><?php echo count($pending); ?></span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-xl dark:shadow-none transition-colors">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50 dark:bg-[#101822]/50 transition-colors">
+                                    <tr class="text-slate-500 text-[10px] font-bold uppercase">
+                                        <th class="px-6 py-4">Ref. Pedido</th>
+                                        <th class="px-6 py-4 text-center">Fase Actual</th>
+                                        <th class="px-6 py-4">Estado Pago</th>
+                                        <th class="px-6 py-4">Detalles Despacho</th>
+                                        <th class="px-6 py-4 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-[#233348] transition-colors">
+                                    <?php foreach ($pending as $p):
+                                        $currPhase = $p['current_phase'] ?? 'En reserva';
+                                        $phaseData = $phases[$currPhase] ?? $phases['En reserva'];
+                                        $isPaid = ($p['payment_status'] === 'Pagado');
+                                        ?>
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                                            <td class="px-6 py-6 min-w-[180px]">
+                                                <div
+                                                    class="font-bold dark:text-white text-slate-800 group-hover:text-[#136dec] transition-colors">
+                                                    <?php echo $p['quote_number']; ?>
+                                                </div>
+                                                <div class="text-xs text-slate-500 mt-1"><?php echo $p['client_name']; ?>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-6 text-center">
+                                                <span class="phase-badge bg-opacity-10"
+                                                    style="background-color: <?php echo $phaseData['color']; ?>20; color: <?php echo $phaseData['color']; ?>">
+                                                    <span
+                                                        class="material-symbols-outlined text-sm"><?php echo $phaseData['icon']; ?></span>
+                                                    <?php echo $phaseData['label']; ?>
+                                                </span>
+                                                <!-- Visual Progress Tracker -->
+                                                <div
+                                                    class="flex gap-1 justify-center mt-3 h-1 w-24 mx-auto bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                                                    <?php
+                                                    $found = false;
+                                                    foreach ($phases as $k => $v):
+                                                        $active = ($k === $currPhase);
+                                                        $complete = !$found && !$active;
+                                                        if ($active)
+                                                            $found = true;
+                                                        $bgColor = ($active || $complete) ? $v['color'] : 'transparent';
+                                                        ?>
+                                                        <div class="flex-1" style="background-color: <?php echo $bgColor; ?>;">
+                                                        </div>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-6">
+                                                <?php if ($isPaid): ?>
+                                                    <div class="flex items-center gap-2 text-green-500 font-bold text-xs">
+                                                        <span class="material-symbols-outlined text-sm">verified</span> PAGADO
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="flex flex-col gap-1">
+                                                        <div class="flex items-center gap-2 text-amber-500 font-bold text-xs">
+                                                            <span class="material-symbols-outlined text-sm">warning</span>
+                                                            PENDIENTE
+                                                        </div>
+                                                        <div class="text-[10px] text-slate-500 italic">Verificar comprobante
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="px-6 py-6">
+                                                <div class="space-y-2">
+                                                    <div class="flex items-center justify-between gap-4">
+                                                        <span
+                                                            class="text-[10px] font-bold text-slate-500 uppercase">Bultos</span>
+                                                        <input type="number" class="cost-input"
+                                                            id="qty-<?php echo $p['quote_number']; ?>" value="1">
+                                                    </div>
+                                                    <div class="flex items-center justify-between gap-4">
+                                                        <span class="text-[10px] font-bold text-slate-500 uppercase">Flete
+                                                            USD</span>
+                                                        <input type="number" class="cost-input"
+                                                            id="cost-<?php echo $p['quote_number']; ?>" value="0.00"
+                                                            step="0.01">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-6 text-center">
+                                                <div class="flex flex-col gap-2 max-w-[140px] mx-auto">
+                                                    <?php if (!$isPaid): ?>
+                                                        <button
+                                                            class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
+                                                            onclick="subirPago('<?php echo $p['quote_number']; ?>')">
+                                                            <span class="material-symbols-outlined text-sm">upload_file</span>
+                                                            Subir Pago
+                                                        </button>
+                                                    <?php elseif ($currPhase === 'En reserva'): ?>
+                                                        <button
+                                                            class="bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white py-2 px-4 rounded-xl text-xs font-bold transition-all border border-green-500/20 flex items-center justify-center gap-2"
+                                                            onclick="avanzarFase('<?php echo $p['quote_number']; ?>', 'En preparación')">
+                                                            <span class="material-symbols-outlined text-sm">play_arrow</span>
+                                                            INICIAR PREP.
+                                                        </button>
+                                                    <?php elseif ($currPhase === 'En preparación'): ?>
+                                                        <button
+                                                            class="bg-[#136dec]/10 hover:bg-[#136dec] text-[#136dec] hover:text-white py-2 px-4 rounded-xl text-xs font-bold transition-all border border-[#136dec]/20 flex items-center justify-center gap-2"
+                                                            onclick="avanzarFase('<?php echo $p['quote_number']; ?>', 'Disponible')">
+                                                            <span class="material-symbols-outlined text-sm">package_2</span>
+                                                            MARCAR LISTO
+                                                        </button>
+                                                    <?php elseif ($currPhase === 'Disponible'): ?>
+                                                        <button
+                                                            class="bg-primary text-white py-2 px-4 rounded-xl text-xs font-extra-bold shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
+                                                            onclick="despachar('<?php echo $p['quote_number']; ?>')">
+                                                            <span class="material-symbols-outlined text-sm">shipping</span>
+                                                            DESPACHAR
+                                                        </button>
+                                                    <?php elseif ($currPhase === 'En su transporte'): ?>
+                                                        <button
+                                                            class="bg-purple-500/10 hover:bg-purple-500 text-purple-500 hover:text-white py-1.5 px-3 rounded-lg text-xs font-bold transition-all border border-purple-500/20 flex items-center justify-center gap-2"
+                                                            onclick="subirGuia('<?php echo $p['quote_number']; ?>')">
+                                                            <span class="material-symbols-outlined text-sm">file_present</span>
+                                                            SUBIR GUÍA
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="card">
-                <table style="width:100%; border-collapse:collapse;">
-                    <thead>
-                        <tr style="text-align:left; color:#94a3b8; border-bottom:2px solid #334155;">
-                            <th style="padding:15px;">REF. PEDIDO</th>
-                            <th>FASE ACTUAL</th>
-                            <th>ESTADO PAGO</th>
-                            <th>DETALLES DESPACHO</th>
-                            <th>ACCIONES</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($pending as $p):
-                            $currPhase = $p['current_phase'] ?? 'En reserva';
-                            $phaseData = $phases[$currPhase] ?? $phases['En reserva'];
-                            $isPaid = ($p['payment_status'] === 'Pagado');
-                            ?>
-                            <tr style="border-bottom:1px solid #334155;" id="row-<?php echo $p['quote_number']; ?>">
-                                <td style="padding:20px;">
-                                    <div style="font-weight:700; color:white;"><?php echo $p['quote_number']; ?></div>
-                                    <small style="color:#94a3b8;"><?php echo $p['client_name']; ?></small>
-                                </td>
-                                <td>
-                                    <span class="phase-badge"
-                                        style="background: <?php echo $phaseData['color']; ?>20; color: <?php echo $phaseData['color']; ?>">
-                                        <i class="<?php echo $phaseData['icon']; ?>"></i> <?php echo $phaseData['label']; ?>
-                                    </span>
-                                    <div class="process-flow">
-                                        <?php
-                                        $pKeys = array_keys($phases);
-                                        $found = false;
-                                        foreach ($pKeys as $pk):
-                                            $active = ($pk === $currPhase);
-                                            $complete = !$found && !$active;
-                                            if ($active)
-                                                $found = true;
-                                            ?>
-                                            <div class="flow-step <?php echo $active ? 'active' : ''; ?>"
-                                                style="background: <?php echo ($active || $complete) ? $phases[$pk]['color'] : 'rgba(255,255,255,0.1)'; ?>;">
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <?php if ($isPaid): ?>
-                                        <span style="color:#10b981; font-weight:700;"><i class="fas fa-check-double"></i>
-                                            PAGADO</span>
-                                    <?php else: ?>
-                                        <span style="color:#f59e0b; font-weight:700;"><i
-                                                class="fas fa-exclamation-triangle"></i> PENDIENTE</span>
-                                        <div class="payment-warning">Falta verificación de pago.</div>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <div style="display:flex; flex-direction:column; gap:8px;">
-                                        <div style="display:flex; align-items:center; gap:10px;">
-                                            <label style="font-size:0.75rem; color:#94a3b8; min-width:60px;">Bultos:</label>
-                                            <input type="number" class="cost-input"
-                                                id="qty-<?php echo $p['quote_number']; ?>" value="1">
-                                        </div>
-                                        <div style="display:flex; align-items:center; gap:10px;">
-                                            <label style="font-size:0.75rem; color:#94a3b8; min-width:60px;">Flete
-                                                USD:</label>
-                                            <input type="number" class="cost-input"
-                                                id="cost-<?php echo $p['quote_number']; ?>" value="0.00" step="0.01">
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
-                                        <?php if (!$isPaid): ?>
-                                            <button class="btn-action"
-                                                onclick="subirPago('<?php echo $p['quote_number']; ?>')"><i
-                                                    class="fas fa-file-upload"></i> Subir Pago</button>
-                                        <?php elseif ($currPhase === 'En reserva'): ?>
-                                            <button class="btn-action" style="color:#10b981;"
-                                                onclick="avanzarFase('<?php echo $p['quote_number']; ?>', 'En preparación')"><i
-                                                    class="fas fa-play"></i> Iniciar Prep.</button>
-                                        <?php elseif ($currPhase === 'En preparación'): ?>
-                                            <button class="btn-action" style="color:#3b82f6;"
-                                                onclick="avanzarFase('<?php echo $p['quote_number']; ?>', 'Disponible')"><i
-                                                    class="fas fa-box"></i> Marcar Listo</button>
-                                        <?php elseif ($currPhase === 'Disponible'): ?>
-                                            <button class="btn-remito btn-action"
-                                                onclick="despachar('<?php echo $p['quote_number']; ?>')"><i
-                                                    class="fas fa-truck-loading"></i> Despachar</button>
-                                        <?php elseif ($currPhase === 'En su transporte'): ?>
-                                            <button class="btn-action" style="color:#8b5cf6;"
-                                                onclick="subirGuia('<?php echo $p['quote_number']; ?>')"><i
-                                                    class="fas fa-file-image"></i> Subir Guía</button>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
             </div>
         </main>
     </div>
@@ -217,12 +270,10 @@ $phases = [
     <script>
         async function avanzarFase(quoteNumber, phase) {
             if (!confirm(`¿Mover pedido ${quoteNumber} a fase ${phase}?`)) return;
-
             const formData = new FormData();
             formData.append('action', 'update_phase');
             formData.append('quote_number', quoteNumber);
             formData.append('phase', phase);
-
             const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
             const data = await res.json();
             if (data.success) location.reload();
@@ -232,26 +283,20 @@ $phases = [
         async function despachar(quoteNumber) {
             const qty = document.getElementById('qty-' + quoteNumber).value;
             const cost = document.getElementById('cost-' + quoteNumber).value;
-
-            // For now, prompt for transport since we don't have it in the row UI yet (add simplified picker)
             const transportId = prompt("Ingrese ID de Transportista (1-5):", "1");
             if (!transportId) return;
-
             const formData = new FormData();
             formData.append('action', 'despachar');
             formData.append('quote_number', quoteNumber);
             formData.append('transport_id', transportId);
             formData.append('packages_qty', qty);
             formData.append('freight_cost', cost);
-
             const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
             const data = await res.json();
             if (data.success) {
                 alert("Despacho registrado correctamente.");
                 location.reload();
-            } else {
-                alert(data.error);
-            }
+            } else { alert(data.error); }
         }
 
         function subirGuia(quoteNumber) {
@@ -261,20 +306,16 @@ $phases = [
             input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
-
                 const formData = new FormData();
                 formData.append('action', 'upload_guide');
                 formData.append('quote_number', quoteNumber);
                 formData.append('guide_photo', file);
-
                 const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
                     alert("Guía subida y pedido entregado.");
                     location.reload();
-                } else {
-                    alert("Error: " + data.error);
-                }
+                } else { alert("Error: " + data.error); }
             };
             input.click();
         }

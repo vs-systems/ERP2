@@ -16,12 +16,16 @@ class Mailer
 
     public function __construct()
     {
-        // Credentials provided by USER
-        $this->host = 'ssl://mail.vecinoseguro.com.ar';
-        $this->port = 465;
-        $this->user = 'web@vecinoseguro.com.ar';
-        $this->pass = 'Andrea1910';
-        $this->from = 'web@vecinoseguro.com.ar';
+        // Credentials from config
+        $host = defined('SMTP_HOST') ? SMTP_HOST : 'smtp.gmail.com';
+        $port = defined('SMTP_PORT') ? SMTP_PORT : 587;
+        $secure = defined('SMTP_SECURE') ? SMTP_SECURE : 'tls';
+
+        $this->host = ($secure === 'ssl' ? 'ssl://' : 'tls://') . $host;
+        $this->port = $port;
+        $this->user = defined('SMTP_USER') ? SMTP_USER : 'user@example.com';
+        $this->pass = defined('SMTP_PASS') ? SMTP_PASS : 'password';
+        $this->from = $this->user;
     }
 
     public function send($to, $subject, $body, $isHtml = true)
@@ -77,3 +81,5 @@ class Mailer
         }
     }
 }
+
+

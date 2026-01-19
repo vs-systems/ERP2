@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth_check.php';
 /**
  * VS System ERP - Add Product Manually
@@ -77,9 +77,9 @@ $suppliers = $catalog->getProviders();
     <header
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem;">
-                Configuración <span style="color: var(--accent-violet);">Productos</span>
+                Configuració³n <span style="color: var(--accent-violet);">Productos</span>
             </div>
         </div>
         <div class="header-right" style="color: #cbd5e1;">
@@ -107,13 +107,13 @@ $suppliers = $catalog->getProviders();
                             <input type="text" name="sku" id="sku" required placeholder="C&Oacute;DIGO">
                         </div>
                         <div class="form-group">
-                            <label>Descripción del Producto</label>
+                            <label>Descripció³n del Producto</label>
                             <input type="text" name="description" id="form-description" required>
                         </div>
                         <div class="form-group">
-                            <label><i class="fas fa-barcode"></i> Código EAN / Barra (Opcional)</label>
+                            <label><i class="fas fa-barcode"></i> Có³digo EAN / Barra (Opcional)</label>
                             <input type="text" name="barcode" id="form-barcode"
-                                placeholder="Escanear o ingresar código...">
+                                placeholder="Escanear o ingresar có³digo...">
                         </div>
                     </div>
 
@@ -121,7 +121,7 @@ $suppliers = $catalog->getProviders();
                         <div class="form-group"
                             style="display: flex; align-items: center; gap: 10px; padding-top: 25px;">
                             <input type="checkbox" name="has_serial_number" id="form-has-serial">
-                            <label for="form-has-serial" style="cursor: pointer;">Requiere Número de Serie
+                            <label for="form-has-serial" style="cursor: pointer;">Requiere Nóºmero de Serie
                                 (Trazabilidad)</label>
                         </div>
                         <div class="form-group">
@@ -180,3 +180,7 @@ $suppliers = $catalog->getProviders();
 </body>
 
 </html>
+
+
+
+

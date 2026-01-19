@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - Logo Proxy
  */
@@ -22,3 +22,8 @@ if ($fullPath && file_exists($fullPath)) {
     exit;
 }
 ?>
+
+
+
+
+

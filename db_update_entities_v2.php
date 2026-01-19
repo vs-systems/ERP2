@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - Database Update Utility (Enhanced Entities & CRM)
  */
@@ -7,7 +7,7 @@ require_once __DIR__ . '/src/lib/Database.php';
 
 use Vsys\Lib\Database;
 
-echo "<h1>VS System - Actualización de Entidades y CRM</h1>";
+echo "<h1>VS System - Actualizació³n de Entidades y CRM</h1>";
 
 try {
     $db = Database::getInstance();
@@ -60,8 +60,13 @@ try {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
     echo "<span style='color:green'>OK</span></li>";
 
-    echo "<h3>✅ Base de Datos actualizada correctamente.</h3>";
+    echo "<h3>âœ… Base de Datos actualizada correctamente.</h3>";
 } catch (Exception $e) {
-    echo "<h3>❌ Error: " . $e->getMessage() . "</h3>";
+    echo "<h3>âŒ Error: " . $e->getMessage() . "</h3>";
 }
 ?>
+
+
+
+
+

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - FTP Migration Tool
  */
@@ -24,13 +24,18 @@ if (@ftp_login($conn_id, $ftp_user, $ftp_pass)) {
     foreach ($files as $local => $remote) {
         echo "Subiendo $local a $remote... ";
         if (ftp_put($conn_id, "public_html/" . $remote, $local, FTP_BINARY)) {
-            echo "✅ OK<br>";
+            echo "âœ… OK<br>";
         } else {
-            echo "❌ FALLÓ<br>";
+            echo "âŒ FALLó“<br>";
         }
     }
 } else {
-    echo "❌ No se pudo autenticar FTP";
+    echo "âŒ No se pudo autenticar FTP";
 }
 
 ftp_close($conn_id);
+
+
+
+
+

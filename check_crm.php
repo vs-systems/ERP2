@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
@@ -15,3 +15,8 @@ try {
 } catch (Exception $e) {
     echo "Error: " . $e->getMessage();
 }
+
+
+
+
+

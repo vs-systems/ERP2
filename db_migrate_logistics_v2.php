@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Database Migration - Logistics V2
  * Adds support for order phases, freight costs, and transport directory fields.
@@ -21,7 +21,7 @@ try {
     $sqlProcess = "CREATE TABLE IF NOT EXISTS logistics_process (
         id INT AUTO_INCREMENT PRIMARY KEY,
         quote_number VARCHAR(50) NOT NULL,
-        current_phase ENUM('En reserva', 'En preparación', 'Disponible', 'En su transporte', 'Entregado') DEFAULT 'En reserva',
+        current_phase ENUM('En reserva', 'En preparació³n', 'Disponible', 'En su transporte', 'Entregado') DEFAULT 'En reserva',
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         INDEX (quote_number)
     )";
@@ -55,3 +55,8 @@ try {
 } catch (Exception $e) {
     echo "Migration failed: " . $e->getMessage();
 }
+
+
+
+
+

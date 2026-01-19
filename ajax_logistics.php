@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX Handler - Logistics Actions
  */
@@ -51,7 +51,7 @@ try {
 
                 if (move_uploaded_file($_FILES['guide_photo']['tmp_name'], $dest)) {
                     // Log the document
-                    $logistics->attachDocument($quoteNumber, 'quotation', 'Shipping Guide', 'uploads/guides/' . $fileName, 'Guía de transporte subida.');
+                    $logistics->attachDocument($quoteNumber, 'quotation', 'Shipping Guide', 'uploads/guides/' . $fileName, 'Guó­a de transporte subida.');
                     // Update phase to Entregado
                     $logistics->updateOrderPhase($quoteNumber, 'Entregado');
                     echo json_encode(['success' => true]);
@@ -59,13 +59,18 @@ try {
                     echo json_encode(['success' => false, 'error' => 'Error al guardar el archivo.']);
                 }
             } else {
-                echo json_encode(['success' => false, 'error' => 'No se recibió ningún archivo.']);
+                echo json_encode(['success' => false, 'error' => 'No se recibió³ ningóºn archivo.']);
             }
             break;
 
         default:
-            echo json_encode(['success' => false, 'error' => 'Acción no válida']);
+            echo json_encode(['success' => false, 'error' => 'Acció³n no vó¡lida']);
     }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
+
+
+
+
+

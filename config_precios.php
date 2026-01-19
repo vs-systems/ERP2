@@ -1,7 +1,7 @@
-<?php
+﻿<?php
 require_once 'auth_check.php';
 /**
- * Configuración de Precios y Márgenes - VS System ERP
+ * Configuració³n de Precios y Mó¡rgenes - VS System ERP
  */
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($_POST['margins'] as $id => $margin) {
                 $priceListModule->updateMargin($id, $margin);
             }
-            $message = "Márgenes actualizados correctamente.";
+            $message = "Mó¡rgenes actualizados correctamente.";
         }
     } catch (Exception $e) {
         $message = "Error: " . $e->getMessage();
@@ -32,7 +32,7 @@ $lists = $priceListModule->getAll();
 
 <head>
     <meta charset="UTF-8">
-    <title>Configuración de Precios - VS System</title>
+    <title>Configuració³n de Precios - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -41,9 +41,9 @@ $lists = $priceListModule->getAll();
     <header
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem;">
-                Configuración <span style="color: var(--accent-violet);">Precios</span>
+                Configuració³n <span style="color: var(--accent-violet);">Precios</span>
             </div>
         </div>
         <div class="header-right" style="color: #cbd5e1;">
@@ -56,7 +56,7 @@ $lists = $priceListModule->getAll();
 
         <main class="content">
             <div class="card">
-                <h2><i class="fas fa-percentage"></i> Gestión de Márgenes por Lista</h2>
+                <h2><i class="fas fa-percentage"></i> Gestión de Mó¡rgenes por Lista</h2>
                 <p style="color: #94a3b8; margin-bottom: 2rem;">Defina el porcentaje de ganancia sobre el costo (USD)
                     para cada lista de precios.</p>
 
@@ -109,3 +109,7 @@ $lists = $priceListModule->getAll();
 </body>
 
 </html>
+
+
+
+

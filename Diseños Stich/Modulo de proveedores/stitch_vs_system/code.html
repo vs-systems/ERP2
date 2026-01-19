@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VS System | Gestión de Proveedores</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#136dec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#111827",
+              "surface-dark": "#1f2937",
+              "surface-light": "#ffffff",
+              "border-dark": "#374151",
+              "border-light": "#e5e7eb",
+              "text-secondary": "#9ca3af",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "2xl": "1rem",
+              "full": "9999px"
+            },
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar for dark mode tables */
+        .dark ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #111827; 
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #374151; 
+            border-radius: 4px;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #4b5563; 
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white overflow-x-hidden min-h-screen flex flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-border-light dark:border-border-dark px-6 py-3 bg-surface-light dark:bg-[#161e2c]">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-8 flex items-center justify-center bg-primary rounded-lg text-white">
+<span class="material-symbols-outlined text-xl">security</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight">VS System | ERP</h2>
+</div>
+<div class="hidden md:flex flex-1 justify-center gap-8">
+<nav class="flex items-center gap-6">
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Dashboard</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Inventario</a>
+<a class="text-primary text-sm font-bold border-b-2 border-primary pb-0.5" href="#">Proveedores</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Ventas</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Finanzas</a>
+</nav>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex gap-1">
+<button class="flex items-center justify-center rounded-full size-10 hover:bg-slate-100 dark:hover:bg-surface-dark text-slate-500 dark:text-slate-400 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-full size-10 hover:bg-slate-100 dark:hover:bg-surface-dark text-slate-500 dark:text-slate-400 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="flex items-center justify-center rounded-full size-10 hover:bg-slate-100 dark:hover:bg-surface-dark text-slate-500 dark:text-slate-400 transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-9 ml-2 border border-border-light dark:border-border-dark" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBG5nPX1goJ5VewPY_hEEp6h55EPjOQoWJMjuQsb_bdfMrZqouAiryV7Njw9gGsTVrXaXY787cCckajCR2SoVHm83IPDto_ActVL6WnYrwLmKbvrV_WtWbKP2NU1ughTT6HJrmvkwvNVjjTiRfAb3N6wpW_aQfd59TSFK8a0USbdCbz4VFdI2Adr4XwNlW0gXYMnBUzn1atR9OTCXgOd10dmqKPhwMFrbbMOJn5XOZyRHYLZCGVshhdgXVN-zGONzjDaGzo5MJpMQ");'></div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col p-6 lg:px-10 xl:px-20 max-w-[1600px] mx-auto w-full gap-6">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="flex flex-col gap-1">
+<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Gestión de Proveedores</h1>
+<p class="text-slate-500 dark:text-text-secondary text-sm">Administre su cadena de suministro, saldos y calificaciones de cumplimiento.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center justify-center gap-2 rounded-lg h-10 px-4 border border-border-light dark:border-border-dark text-slate-700 dark:text-white bg-surface-light dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium shadow-sm">
+<span class="material-symbols-outlined text-[20px]">file_upload</span>
+<span>Importar</span>
+</button>
+<button class="flex items-center justify-center gap-2 rounded-lg h-10 px-5 bg-primary text-white hover:bg-blue-600 transition-all shadow-md shadow-blue-900/20 text-sm font-bold">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span>Nuevo Proveedor</span>
+</button>
+</div>
+</div>
+<!-- Filters & Search Bar -->
+<div class="flex flex-col lg:flex-row gap-4 lg:items-center justify-between bg-surface-light dark:bg-[#161e2c] p-4 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<!-- Search -->
+<div class="flex-1 max-w-lg">
+<label class="relative flex items-center w-full">
+<span class="absolute left-3 text-slate-400">
+<span class="material-symbols-outlined">search</span>
+</span>
+<input class="form-input w-full pl-10 pr-4 py-2.5 rounded-lg border-border-light dark:border-border-dark bg-slate-50 dark:bg-surface-dark text-slate-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-primary text-sm placeholder-slate-400" placeholder="Buscar por nombre, CUIT o ID de proveedor..." type="text"/>
+</label>
+</div>
+<!-- Chips / Filters -->
+<div class="flex flex-wrap gap-2 items-center">
+<span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mr-2">Filtros:</span>
+<button class="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors">
+<span>Rubro: Cámaras</span>
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+<button class="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-border-dark text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span>Rubro: Monitoreo</span>
+<span class="material-symbols-outlined text-[16px] text-slate-400">keyboard_arrow_down</span>
+</button>
+<button class="group flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-surface-dark border border-slate-200 dark:border-border-dark text-slate-700 dark:text-slate-300 text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span>Rubro: Conectividad</span>
+<span class="material-symbols-outlined text-[16px] text-slate-400">keyboard_arrow_down</span>
+</button>
+</div>
+</div>
+<!-- Split View Container: Table (Master) & Details (Detail) -->
+<!-- In a real app, this might be a resizable pane. Here we stack them vertically or use a grid. -->
+<div class="flex flex-col gap-6">
+<!-- MASTER: Vendors List Table -->
+<div class="rounded-xl border border-border-light dark:border-border-dark bg-surface-light dark:bg-[#161e2c] overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-[#1f2937] border-b border-border-light dark:border-border-dark text-xs uppercase text-slate-500 dark:text-slate-400">
+<th class="px-6 py-4 font-semibold w-[25%]">Proveedor</th>
+<th class="px-6 py-4 font-semibold w-[15%]">Rubro</th>
+<th class="px-6 py-4 font-semibold w-[20%]">Contacto Principal</th>
+<th class="px-6 py-4 font-semibold w-[15%]">Saldo C.C.</th>
+<th class="px-6 py-4 font-semibold w-[15%]">Cumplimiento</th>
+<th class="px-6 py-4 font-semibold text-right w-[10%]">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-light dark:divide-border-dark">
+<!-- Active/Selected Row -->
+<tr class="bg-blue-50/50 dark:bg-blue-900/10 border-l-4 border-l-primary cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-white dark:bg-surface-dark p-1 border border-border-light dark:border-border-dark flex items-center justify-center overflow-hidden">
+<img alt="Logo" class="rounded-full" data-alt="Vendor Logo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjvkDriTdVfo-UNxjDHPe121Z85gCJandWc_hX314kuY0cbHVgoDU6HsaCTA7yeEdyxT-Tz0n-KTH7P2283_M6kqZhQ7iQROShb7ju4jki0fHpf04VIx8MuzQewXoZcxZ6ELho3QMo0HpT-latW5SgoTC8HGORMleOEbvz4kzlkrjqH3Z1IJOQ9jc5CtfwsIE1XI3mYP3iLDbMTxvEeJSzkR7cZTnBc38b1JVPv5HPEBgbReuM1l6REy684MqkaA_iGx3umfBMmg"/>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-white">Seguridad Total S.A.</p>
+<p class="text-xs text-slate-500">ID: PROV-0024</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
+                                        Cámaras
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col text-sm">
+<span class="text-slate-700 dark:text-slate-300 font-medium">Juan Perez</span>
+<span class="text-slate-500 text-xs">contacto@seguridadtotal.com</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-bold text-red-600 dark:text-red-400">-$150.000 ARS</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center text-yellow-400">
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px] text-slate-300 dark:text-slate-600">star</span>
+<span class="ml-2 text-xs text-slate-500 font-medium">4.0</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Other Rows -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-l-4 border-l-transparent">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-white dark:bg-surface-dark p-1 border border-border-light dark:border-border-dark flex items-center justify-center overflow-hidden">
+<div class="font-bold text-xs text-slate-500">TV</div>
+</div>
+<div>
+<p class="font-medium text-slate-900 dark:text-slate-200">TecnoVigila</p>
+<p class="text-xs text-slate-500">ID: PROV-0089</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                        Monitoreo
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col text-sm">
+<span class="text-slate-700 dark:text-slate-300 font-medium">Maria Gonzalez</span>
+<span class="text-slate-500 text-xs">ventas@tecnovigila.com.ar</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-medium text-slate-500 dark:text-slate-400">$0.00</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center text-yellow-400">
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined text-[18px] text-slate-300 dark:text-slate-600">star</span>
+<span class="material-symbols-outlined text-[18px] text-slate-300 dark:text-slate-600">star</span>
+<span class="ml-2 text-xs text-slate-500 font-medium">3.0</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-l-4 border-l-transparent">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-white dark:bg-surface-dark p-1 border border-border-light dark:border-border-dark flex items-center justify-center overflow-hidden">
+<div class="font-bold text-xs text-slate-500">HI</div>
+</div>
+<div>
+<p class="font-medium text-slate-900 dark:text-slate-200">Hikvision Import</p>
+<p class="text-xs text-slate-500">ID: PROV-0102</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300">
+                                        Cámaras
+                                    </span>
+</td>
+<td class="px-6 py-4">
+<div class="flex flex-col text-sm">
+<span class="text-slate-700 dark:text-slate-300 font-medium">Carlos Ruiz</span>
+<span class="text-slate-500 text-xs">sales@hik-import.com.ar</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="font-bold text-red-600 dark:text-red-400">-$500.000 ARS</span>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center text-yellow-400">
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="material-symbols-outlined icon-filled text-[18px]">star</span>
+<span class="ml-2 text-xs text-slate-500 font-medium">5.0</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="px-6 py-3 border-t border-border-light dark:border-border-dark flex items-center justify-between bg-slate-50 dark:bg-[#1f2937]">
+<span class="text-xs text-slate-500">Mostrando 1-3 de 12 proveedores</span>
+<div class="flex gap-2">
+<button class="size-8 flex items-center justify-center rounded-md border border-border-light dark:border-border-dark text-slate-500 hover:bg-white dark:hover:bg-surface-dark"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+<button class="size-8 flex items-center justify-center rounded-md border border-border-light dark:border-border-dark text-slate-500 hover:bg-white dark:hover:bg-surface-dark"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+</div>
+</div>
+</div>
+<!-- DETAIL: Selected Vendor Expanded View -->
+<section class="flex flex-col gap-4 animate-fade-in-up">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary">subdirectory_arrow_right</span>
+<h3 class="text-lg font-bold text-slate-800 dark:text-white">Detalle: Seguridad Total S.A.</h3>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+<!-- LEFT COLUMN: Financials & History -->
+<div class="xl:col-span-2 flex flex-col gap-6">
+<!-- Quick Stats Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+<div class="bg-surface-light dark:bg-[#161e2c] p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col justify-between h-32 relative overflow-hidden group">
+<div class="flex justify-between items-start z-10">
+<div>
+<p class="text-xs text-slate-500 uppercase font-semibold">Saldo Pendiente</p>
+<p class="text-2xl font-bold text-red-600 mt-1">-$150.000 <span class="text-sm font-normal text-slate-500">ARS</span></p>
+</div>
+<div class="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg text-red-600 dark:text-red-400">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+</div>
+<div class="mt-auto flex items-center gap-2 text-xs text-red-600 z-10">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>+12% vs mes pasado</span>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 dark:opacity-10 pointer-events-none group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[100px]">payments</span>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-[#161e2c] p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col justify-between h-32 relative overflow-hidden">
+<div class="flex justify-between items-start z-10">
+<div>
+<p class="text-xs text-slate-500 uppercase font-semibold">Órdenes Activas</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">3 <span class="text-sm font-normal text-slate-500">En proceso</span></p>
+</div>
+<div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+</div>
+<div class="mt-auto flex items-center gap-2 text-xs text-slate-500 z-10">
+<span>Última orden: #PO-4492 (Ayer)</span>
+</div>
+</div>
+<div class="bg-surface-light dark:bg-[#161e2c] p-5 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex flex-col justify-between h-32 relative overflow-hidden">
+<div class="flex justify-between items-start z-10">
+<div>
+<p class="text-xs text-slate-500 uppercase font-semibold">RMA / Garantías</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white mt-1">0 <span class="text-sm font-normal text-slate-500">Casos</span></p>
+</div>
+<div class="bg-emerald-100 dark:bg-emerald-900/30 p-2 rounded-lg text-emerald-600 dark:text-emerald-400">
+<span class="material-symbols-outlined">verified_user</span>
+</div>
+</div>
+<div class="mt-auto flex items-center gap-2 text-xs text-emerald-600 z-10">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+<span>Excelente estado</span>
+</div>
+</div>
+</div>
+<!-- Tabs & Product Table -->
+<div class="bg-surface-light dark:bg-[#161e2c] rounded-xl border border-border-light dark:border-border-dark shadow-sm flex-1">
+<div class="border-b border-border-light dark:border-border-dark px-6">
+<nav aria-label="Tabs" class="-mb-px flex gap-6">
+<a aria-current="page" class="border-b-2 border-primary py-4 px-1 text-sm font-medium text-primary" href="#">Productos &amp; Costos</a>
+<a class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" href="#">Historial de Órdenes</a>
+<a class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200" href="#">Notas Internas</a>
+</nav>
+</div>
+<div class="p-0">
+<table class="min-w-full text-left text-sm whitespace-nowrap">
+<thead class="bg-slate-50 dark:bg-[#1f2937] text-slate-500 dark:text-slate-400 font-semibold">
+<tr>
+<th class="px-6 py-3">SKU</th>
+<th class="px-6 py-3">Producto</th>
+<th class="px-6 py-3">Costo Histórico (6m)</th>
+<th class="px-6 py-3 text-right">Costo Actual (USD)</th>
+<th class="px-6 py-3 text-right">Stock Proveedor</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-light dark:divide-border-dark">
+<tr>
+<td class="px-6 py-3 text-slate-500">CAM-HK-004</td>
+<td class="px-6 py-3 font-medium text-slate-900 dark:text-white">Hikvision Bullet 2MP IR</td>
+<td class="px-6 py-3">
+<!-- Mock sparkline -->
+<div class="flex items-end gap-1 h-6 w-24">
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[40%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[50%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[45%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[60%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[70%]"></div>
+<div class="w-2 bg-primary rounded-t-sm h-[75%]"></div>
+</div>
+</td>
+<td class="px-6 py-3 text-right font-medium text-slate-900 dark:text-white">$45.00</td>
+<td class="px-6 py-3 text-right text-emerald-600">500+</td>
+</tr>
+<tr>
+<td class="px-6 py-3 text-slate-500">DVR-HK-08</td>
+<td class="px-6 py-3 font-medium text-slate-900 dark:text-white">DVR 8 Canales 1080p Lite</td>
+<td class="px-6 py-3">
+<!-- Mock sparkline -->
+<div class="flex items-end gap-1 h-6 w-24">
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[80%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[80%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[75%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[70%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[65%]"></div>
+<div class="w-2 bg-primary rounded-t-sm h-[65%]"></div>
+</div>
+</td>
+<td class="px-6 py-3 text-right font-medium text-slate-900 dark:text-white">$82.50</td>
+<td class="px-6 py-3 text-right text-orange-500">Low (12)</td>
+</tr>
+<tr>
+<td class="px-6 py-3 text-slate-500">PTZ-HK-20</td>
+<td class="px-6 py-3 font-medium text-slate-900 dark:text-white">PTZ 20x Zoom Optico</td>
+<td class="px-6 py-3">
+<!-- Mock sparkline -->
+<div class="flex items-end gap-1 h-6 w-24">
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[30%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[35%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[40%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[50%]"></div>
+<div class="w-2 bg-slate-300 dark:bg-slate-600 rounded-t-sm h-[60%]"></div>
+<div class="w-2 bg-primary rounded-t-sm h-[90%]"></div>
+</div>
+</td>
+<td class="px-6 py-3 text-right font-medium text-slate-900 dark:text-white">$320.00</td>
+<td class="px-6 py-3 text-right text-slate-500">Consultar</td>
+</tr>
+</tbody>
+</table>
+<div class="px-6 py-3 border-t border-border-light dark:border-border-dark">
+<button class="text-sm text-primary font-medium hover:underline">Ver catálogo completo (245 items)</button>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Contact & Docs -->
+<div class="flex flex-col gap-6">
+<!-- Contact Card -->
+<div class="bg-surface-light dark:bg-[#161e2c] p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+<h4 class="text-sm font-bold uppercase text-slate-500 tracking-wider mb-4">Contacto Directo</h4>
+<div class="flex items-center gap-4 mb-6">
+<div class="size-12 rounded-full bg-slate-200 dark:bg-slate-700 bg-center bg-cover" data-alt="Contact person portrait" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAyHJ7cVf2jRk4AmLzAqUme1SDoyawPe-CZiIiF9n1IpGQTqJ3OkQ3Tx54mb-YjvGCvudJ21ttkBTSklu1TKjaeLd80qn-FB9Hz44x4GUgRQm25kqf6O4bB9ukUG2KcAhZDFIpRQGYLGTdJA8Fer0RtXbaEX52mpSlOR5DZR-G9jWldaui-EG3GR-vZpjK4Ol0iQfvXqZe3LSFhCccLhFA2rcUO_gz_EFrn-ILy_s6n8JQerfYKL2_B2fhlCMCcXJ59bq1vpsgjEA");'></div>
+<div>
+<p class="font-bold text-slate-900 dark:text-white">Juan Perez</p>
+<p class="text-sm text-slate-500">Gerente de Cuentas</p>
+</div>
+</div>
+<div class="space-y-4">
+<a class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary/50 transition-colors group" href="#">
+<div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">call</span>
+</div>
+<span class="text-sm font-medium text-slate-700 dark:text-slate-200">+54 9 11 1234-5678</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary/50 transition-colors group" href="#">
+<div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">mail</span>
+</div>
+<span class="text-sm font-medium text-slate-700 dark:text-slate-200">juan@seguridadtotal.com</span>
+</a>
+<a class="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-surface-dark border border-border-light dark:border-border-dark hover:border-primary/50 transition-colors group" href="#">
+<div class="size-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm">language</span>
+</div>
+<span class="text-sm font-medium text-slate-700 dark:text-slate-200">www.seguridadtotal.com</span>
+</a>
+</div>
+</div>
+<!-- Documents Card -->
+<div class="bg-surface-light dark:bg-[#161e2c] p-6 rounded-xl border border-border-light dark:border-border-dark shadow-sm flex-1">
+<div class="flex items-center justify-between mb-4">
+<h4 class="text-sm font-bold uppercase text-slate-500 tracking-wider">Documentos</h4>
+<button class="text-primary text-sm hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">add</span> Subir
+                                </button>
+</div>
+<ul class="space-y-3">
+<li class="flex items-center justify-between p-3 rounded-lg border border-border-light dark:border-border-dark hover:bg-slate-50 dark:hover:bg-surface-dark transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="text-red-500"><span class="material-symbols-outlined">picture_as_pdf</span></div>
+<div>
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200">Contrato Marco 2024</p>
+<p class="text-xs text-slate-500">1.2 MB • 12 Oct 2023</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-400 hover:text-primary">download</span>
+</li>
+<li class="flex items-center justify-between p-3 rounded-lg border border-border-light dark:border-border-dark hover:bg-slate-50 dark:hover:bg-surface-dark transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="text-red-500"><span class="material-symbols-outlined">picture_as_pdf</span></div>
+<div>
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200">Condiciones Garantía RMA</p>
+<p class="text-xs text-slate-500">840 KB • 05 Ene 2024</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-400 hover:text-primary">download</span>
+</li>
+<li class="flex items-center justify-between p-3 rounded-lg border border-border-light dark:border-border-dark hover:bg-slate-50 dark:hover:bg-surface-dark transition-colors cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="text-blue-500"><span class="material-symbols-outlined">description</span></div>
+<div>
+<p class="text-sm font-medium text-slate-800 dark:text-slate-200">Lista de Precios (XLS)</p>
+<p class="text-xs text-slate-500">3.5 MB • Actualizado hoy</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-400 hover:text-primary">download</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>

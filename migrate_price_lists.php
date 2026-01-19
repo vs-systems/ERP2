@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // migrate_price_lists.php
 require_once 'src/config/config.php';
 require_once 'src/lib/Database.php';
@@ -37,3 +37,7 @@ try {
     die("Error: " . $e->getMessage() . "\n");
 }
 ?>
+
+
+
+

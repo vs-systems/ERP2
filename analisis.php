@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth_check.php';
 /**
  * VS System ERP - Análisis de Operaciones
@@ -25,7 +25,7 @@ if ($quotationId) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Análisis de Operación - VS System</title>
+    <title>Análisis de Operació³n - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -72,7 +72,7 @@ if ($quotationId) {
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
             <a href="index.php" style="text-decoration:none;">
-                <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+                <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
             </a>
             <div
                 style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);">
@@ -92,10 +92,10 @@ if ($quotationId) {
         <main class="content">
             <?php if (!$quotationId): ?>
                 <div class="card" style="text-align: center; padding: 50px;">
-                    <h3><i class="fas fa-search-dollar"></i> Seleccione una Cotización</h3>
-                    <p>Ingrese el ID de la cotización para ver su análisis de rentabilidad.</p>
+                    <h3><i class="fas fa-search-dollar"></i> Seleccione una Cotizació³n</h3>
+                    <p>Ingrese el ID de la cotizació³n para ver su Análisis de rentabilidad.</p>
                     <div style="display: flex; gap: 10px;">
-                        <input type="number" name="id" placeholder="ID Cotización"
+                        <input type="number" name="id" placeholder="ID Cotizació³n"
                             style="padding: 10px; width: 150px; border-radius: 6px; border: 1px solid var(--accent-violet); background: #1e293b; color: white;">
                         <button type="submit" class="btn-primary">BUSCAR</button>
                     </div>
@@ -167,17 +167,17 @@ if ($quotationId) {
                         <div class="metric-big" style="color: #a5b4fc;">$
                             <?php echo number_format($analysis['total_revenue'], 2); ?>
                         </div>
-                        <small>Facturación proyectada sin IVA</small>
+                        <small>Facturació³n proyectada sin IVA</small>
                     </div>
 
                     <!-- Cost -->
                     <div class="card"
                         style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(239, 68, 68, 0.1)); border: 1px solid rgba(239, 68, 68, 0.3);">
-                        <div class="metric-label">Costo Mercadería (CMV)</div>
+                        <div class="metric-label">Costo Mercaderó­a (CMV)</div>
                         <div class="metric-big" style="color: #fca5a5;">$
                             <?php echo number_format($analysis['total_cost'], 2); ?>
                         </div>
-                        <small>Costo de reposición estimado</small>
+                        <small>Costo de reposició³n estimado</small>
                     </div>
 
                     <!-- Profit -->
@@ -188,7 +188,7 @@ if ($quotationId) {
                             class="metric-big <?php echo $analysis['profit'] >= 0 ? 'profit-positive' : 'profit-negative'; ?>">
                             $ <?php echo number_format($analysis['profit'], 2); ?>
                         </div>
-                        <small>Ganancia neta de la operación</small>
+                        <small>Ganancia neta de la operació³n</small>
                     </div>
                 </div>
 
@@ -239,7 +239,7 @@ if ($quotationId) {
                         <canvas id="marginChart"></canvas>
                         <div class="cost-breakdown">
                             <div class="cost-item">
-                                <span>Costo Mercadería</span>
+                                <span>Costo Mercaderó­a</span>
                                 <strong><?php echo number_format(($analysis['total_cost'] / $analysis['total_revenue']) * 100, 1); ?>%</strong>
                             </div>
                             <div class="cost-item">
@@ -293,3 +293,7 @@ if ($quotationId) {
 </body>
 
 </html>
+
+
+
+

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // check_schema.php
 require_once 'src/config/config.php';
 require_once 'src/lib/Database.php';
@@ -23,3 +23,7 @@ foreach ($tables as $table) {
     }
 }
 ?>
+
+
+
+

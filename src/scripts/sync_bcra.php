@@ -23,3 +23,4 @@ if ($rate) {
     echo "Error: Could not fetch rate from BCRA API. Check token or connectivity.\n";
 }
 ?>
+

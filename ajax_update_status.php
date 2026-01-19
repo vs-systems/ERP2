@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - AJAX Update Status (Confirmed / Paid)
  */
@@ -14,7 +14,7 @@ $field = $input['field'] ?? ''; // 'is_confirmed' or 'payment_status'
 $value = $input['value'] ?? null;
 
 if (!$id || !$type || !$field) {
-    echo json_encode(['success' => false, 'error' => 'Parámetros incompletos']);
+    echo json_encode(['success' => false, 'error' => 'Paró¡metros incompletos']);
     exit;
 }
 
@@ -35,3 +35,8 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
+
+
+
+
+

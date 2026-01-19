@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>VS System - Panel de Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#136dec",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101822",
+              "surface-dark": "#16202e", // Slightly lighter than background-dark for cards
+              "surface-border": "#233348",
+            },
+            fontFamily: {
+              "display": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            animation: {
+                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #101822; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #233348; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #324867; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white antialiased overflow-hidden">
+<div class="flex h-screen w-full">
+<aside class="hidden md:flex flex-col w-64 h-full bg-background-dark border-r border-surface-border flex-shrink-0">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary/20 p-2 rounded-lg text-primary">
+<span class="material-symbols-outlined text-3xl">shield</span>
+</div>
+<div>
+<h1 class="text-white text-lg font-bold leading-tight">VS System</h1>
+<p class="text-slate-400 text-xs font-normal">ERP &amp; Seguridad</p>
+</div>
+</div>
+<nav class="flex-1 overflow-y-auto px-4 py-2 space-y-2">
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg bg-primary text-white shadow-lg shadow-primary/20" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Inicio</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-surface-border transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Clientes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-surface-border transition-colors" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="text-sm font-medium">Mapa Zonal</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-surface-border transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-sm font-medium">Productos</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-surface-border transition-colors" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-sm font-medium">Facturación</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-surface-border transition-colors" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-sm font-medium">Reportes</span>
+</a>
+</nav>
+<div class="p-4 border-t border-surface-border">
+<a class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-surface-border transition-colors mb-2" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Configuración</span>
+</a>
+<div class="flex items-center gap-3 mt-4 pt-4 border-t border-surface-border px-2">
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-primary/50" data-alt="User profile picture of a man in a suit" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuASxvsTUoPsB_0Em0Mrgj3qEMRoZHTUSYPkI-Cji4KdSXhzVYLSDCNwbVxTOqL1GykZ1YTSNXrWuGpKM6y-R_bvRP-KBzv76IL9VP3mz8-bdGu8npwwTsDWpzMD7EGUJ4iIeNU9ydJAj183yREpwvFpmIvVG06g0gajgx6pL8R18X5PrJ1kpIqTTjSGn8DuR7lcA-n7Nb35pXhBL4BSek0ZbqBMp7X98T0y9DGPCeWQRRUwLCDRwqWBxbklwx9xHsw9ie0YKW6bYQ");'></div>
+<div class="flex flex-col">
+<p class="text-white text-sm font-medium">Carlos Ruiz</p>
+<p class="text-slate-500 text-xs">Admin</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<header class="h-16 flex items-center justify-between px-6 border-b border-surface-border bg-background-dark/95 backdrop-blur z-10 flex-shrink-0">
+<div class="flex items-center gap-4 lg:hidden">
+<button class="text-white">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="text-white font-bold text-lg">VS System</span>
+</div>
+<div class="hidden lg:flex items-center flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+<input class="w-full bg-surface-dark border-none rounded-lg py-2.5 pl-10 pr-4 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Buscar cliente, SKU o factura..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4 ml-auto">
+<button class="flex items-center gap-2 text-primary hover:text-white transition-colors text-sm font-medium bg-primary/10 hover:bg-primary/20 px-3 py-2 rounded-lg">
+<span class="material-symbols-outlined text-[20px]">tune</span>
+<span class="hidden sm:inline">Personalizar</span>
+</button>
+<div class="h-8 w-px bg-surface-border mx-2"></div>
+<button class="relative text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 size-2.5 bg-red-500 rounded-full border-2 border-background-dark"></span>
+</button>
+<button class="text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto p-6 scroll-smooth">
+<div class="max-w-[1400px] mx-auto space-y-6">
+<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+<div>
+<h2 class="text-2xl font-bold text-white tracking-tight">Panel de Control</h2>
+<p class="text-slate-400">Resumen de actividad al 24 de Octubre, 2023</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow-lg shadow-primary/25 transition-all">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                                Nueva Venta
+                            </button>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-surface-dark border border-surface-border rounded-xl p-5 hover:border-primary/30 transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-green-500/10 rounded-lg text-green-500 group-hover:bg-green-500 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">attach_money</span>
+</div>
+<span class="flex items-center text-green-500 text-xs font-medium bg-green-500/10 px-2 py-1 rounded-full">
+                                    +12% <span class="material-symbols-outlined text-xs ml-0.5">trending_up</span>
+</span>
+</div>
+<p class="text-slate-400 text-sm font-medium mb-1">Ventas de Hoy</p>
+<h3 class="text-2xl font-bold text-white tracking-tight">$ 125.400</h3>
+</div>
+<div class="bg-surface-dark border border-surface-border rounded-xl p-5 hover:border-primary/30 transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-blue-500/10 rounded-lg text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">person_add</span>
+</div>
+<span class="flex items-center text-blue-500 text-xs font-medium bg-blue-500/10 px-2 py-1 rounded-full">
+                                    +3 nuevos
+                                </span>
+</div>
+<p class="text-slate-400 text-sm font-medium mb-1">Nuevos Clientes</p>
+<h3 class="text-2xl font-bold text-white tracking-tight">3</h3>
+</div>
+<div class="bg-surface-dark border border-surface-border rounded-xl p-5 hover:border-primary/30 transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-amber-500/10 rounded-lg text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+</div>
+<span class="text-slate-500 text-xs font-medium px-2 py-1">
+                                    Pendientes
+                                </span>
+</div>
+<p class="text-slate-400 text-sm font-medium mb-1">Pedidos Activos</p>
+<h3 class="text-2xl font-bold text-white tracking-tight">12</h3>
+</div>
+<div class="bg-surface-dark border border-surface-border rounded-xl p-5 hover:border-red-500/30 transition-colors group">
+<div class="flex justify-between items-start mb-4">
+<div class="p-2 bg-red-500/10 rounded-lg text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<span class="flex items-center text-red-500 text-xs font-medium bg-red-500/10 px-2 py-1 rounded-full">
+                                    -2 crítico
+                                </span>
+</div>
+<p class="text-slate-400 text-sm font-medium mb-1">Stock Bajo</p>
+<h3 class="text-2xl font-bold text-white tracking-tight">8 productos</h3>
+</div>
+</div>
+<div class="bg-surface-dark border border-surface-border rounded-xl p-6 relative overflow-hidden">
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4 z-10 relative">
+<div>
+<h3 class="text-white text-xl font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">public</span>
+                Distribución Geográfica de Ventas
+            </h3>
+<p class="text-slate-400 text-sm mt-1">Geolocalización de clientes y penetración de mercado por zona.</p>
+</div>
+<div class="flex flex-wrap gap-2 sm:gap-3 bg-background-dark/50 p-1.5 rounded-lg border border-surface-border">
+<select class="bg-surface-dark border-none text-white text-xs sm:text-sm rounded-md focus:ring-1 focus:ring-primary py-1.5 pl-3 pr-8 cursor-pointer hover:bg-surface-border transition-colors">
+<option>Volumen de Ventas</option>
+<option>Mayor a $1M</option>
+<option>Menor a $500k</option>
+</select>
+<div class="w-px bg-surface-border my-1 hidden sm:block"></div>
+<select class="bg-surface-dark border-none text-white text-xs sm:text-sm rounded-md focus:ring-1 focus:ring-primary py-1.5 pl-3 pr-8 cursor-pointer hover:bg-surface-border transition-colors">
+<option>Todos los Rubros</option>
+<option>Instaladores</option>
+<option>Integradores</option>
+<option>Distribuidores</option>
+</select>
+<div class="w-px bg-surface-border my-1 hidden sm:block"></div>
+<select class="bg-surface-dark border-none text-white text-xs sm:text-sm rounded-md focus:ring-1 focus:ring-primary py-1.5 pl-3 pr-8 cursor-pointer hover:bg-surface-border transition-colors">
+<option>Por Provincias</option>
+<option>Por Regiones</option>
+</select>
+</div>
+</div>
+<div class="relative w-full h-[600px] bg-[#101822] rounded-xl border border-surface-border overflow-hidden group">
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#233348 1px, transparent 1px); background-size: 30px 30px;"></div>
+<div class="absolute bottom-4 right-4 bg-surface-dark/95 backdrop-blur border border-surface-border p-4 rounded-lg z-20 shadow-xl max-w-[200px]">
+<h4 class="text-white text-xs font-bold mb-3 uppercase tracking-wider">Métricas de Zona</h4>
+<div class="space-y-2.5">
+<div class="flex items-center gap-3">
+<span class="size-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
+<span class="text-slate-300 text-xs">Alta (&gt;75%)</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="size-3 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></span>
+<span class="text-slate-300 text-xs">Media (30-75%)</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="size-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></span>
+<span class="text-slate-300 text-xs">Baja (&lt;30%)</span>
+</div>
+</div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center p-4 sm:p-8">
+<svg class="h-full w-auto drop-shadow-[0_0_25px_rgba(19,109,236,0.15)]" fill="none" viewBox="0 0 350 780" xmlns="http://www.w3.org/2000/svg">
+<path class="fill-[#1e293b] stroke-surface-border hover:fill-[#253246] transition-all duration-700 ease-in-out" d="M108.5 28.5L145 35L172.5 76L160.5 137.5L200.5 142.5L210 178.5L175.5 220L170 264.5L194.5 291L185.5 306.5L168.5 297L132 306.5L108.5 330.5L113.5 407.5L138.5 464L132 506.5L118.5 528.5L104 597L128.5 659.5L132 679.5L88 679.5L78.5 664L69 572L65 470L54 353L57.5 240L65 190.5L88 94L88 67L108.5 28.5Z" stroke-width="1.5"></path>
+<g class="group/pin cursor-pointer">
+<circle class="fill-red-500/10 animate-pulse-slow" cx="175" cy="300" r="45"></circle>
+<circle class="fill-red-500/20" cx="175" cy="300" r="25"></circle>
+<circle class="fill-red-500 stroke-white stroke-2 shadow-lg" cx="175" cy="300" r="6"></circle>
+<foreignObject class="opacity-0 group-hover/pin:opacity-100 transition-opacity duration-300 pointer-events-none z-50" height="130" width="220" x="190" y="240">
+<div class="bg-surface-dark border border-surface-border rounded-lg p-4 shadow-2xl relative" xmlns="http://www.w3.org/1999/xhtml">
+<div class="absolute top-1/2 -left-1.5 w-3 h-3 bg-surface-dark border-l border-b border-surface-border transform rotate-45 -translate-y-1/2"></div>
+<div class="relative z-10">
+<div class="flex justify-between items-center mb-3">
+<h5 class="text-white font-bold text-sm">Buenos Aires</h5>
+<span class="bg-red-500/20 text-red-400 text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wide">Hot Spot</span>
+</div>
+<div class="space-y-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Clientes:</span>
+<span class="text-white font-medium">1,240</span>
+</div>
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Ventas (30d):</span>
+<span class="text-green-400 font-medium">$45.2M</span>
+</div>
+<div class="mt-2 w-full bg-surface-border h-1.5 rounded-full overflow-hidden">
+<div class="bg-gradient-to-r from-red-600 to-red-400 h-full w-[85%] rounded-full"></div>
+</div>
+<p class="text-[10px] text-slate-500 text-right mt-0.5">85% Penetración de Mercado</p>
+</div>
+</div>
+</div>
+</foreignObject>
+</g>
+<g class="group/pin cursor-pointer">
+<circle class="fill-amber-500/10 animate-pulse-slow" cx="120" cy="240" r="30" style="animation-delay: 0.5s"></circle>
+<circle class="fill-amber-500 stroke-white stroke-2" cx="120" cy="240" r="5"></circle>
+<foreignObject class="opacity-0 group-hover/pin:opacity-100 transition-opacity duration-300 pointer-events-none z-50" height="110" width="180" x="135" y="190">
+<div class="bg-surface-dark border border-surface-border rounded-lg p-3 shadow-2xl" xmlns="http://www.w3.org/1999/xhtml">
+<h5 class="text-white font-bold text-sm mb-2 border-b border-surface-border pb-1">Córdoba</h5>
+<div class="space-y-1">
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Clientes:</span>
+<span class="text-white font-medium">450</span>
+</div>
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Ventas:</span>
+<span class="text-green-400 font-medium">$12.5M</span>
+</div>
+<div class="mt-2 w-full bg-surface-border h-1.5 rounded-full overflow-hidden">
+<div class="bg-amber-500 h-full w-[55%] rounded-full"></div>
+</div>
+<p class="text-[10px] text-slate-500 text-right mt-0.5">55% Penetración</p>
+</div>
+</div>
+</foreignObject>
+</g>
+<g class="group/pin cursor-pointer">
+<circle class="fill-blue-500/10 animate-pulse-slow" cx="75" cy="260" r="25" style="animation-delay: 1s"></circle>
+<circle class="fill-blue-500 stroke-white stroke-2" cx="75" cy="260" r="5"></circle>
+<foreignObject class="opacity-0 group-hover/pin:opacity-100 transition-opacity duration-300 pointer-events-none z-50" height="100" width="160" x="90" y="220">
+<div class="bg-surface-dark border border-surface-border rounded-lg p-3 shadow-2xl" xmlns="http://www.w3.org/1999/xhtml">
+<h5 class="text-white font-bold text-sm mb-2 border-b border-surface-border pb-1">Mendoza</h5>
+<div class="space-y-1">
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Clientes:</span>
+<span class="text-white font-medium">125</span>
+</div>
+<div class="mt-2 w-full bg-surface-border h-1.5 rounded-full overflow-hidden">
+<div class="bg-blue-500 h-full w-[25%] rounded-full"></div>
+</div>
+<p class="text-[10px] text-slate-500 text-right mt-0.5">25% Penetración</p>
+</div>
+</div>
+</foreignObject>
+</g>
+<g class="group/pin cursor-pointer">
+<circle class="fill-amber-500/10 animate-pulse-slow" cx="155" cy="220" r="28" style="animation-delay: 0.2s"></circle>
+<circle class="fill-amber-500 stroke-white stroke-2" cx="155" cy="220" r="5"></circle>
+<foreignObject class="opacity-0 group-hover/pin:opacity-100 transition-opacity duration-300 pointer-events-none z-50" height="90" width="160" x="170" y="170">
+<div class="bg-surface-dark border border-surface-border rounded-lg p-3 shadow-2xl" xmlns="http://www.w3.org/1999/xhtml">
+<h5 class="text-white font-bold text-sm mb-2 border-b border-surface-border pb-1">Santa Fe</h5>
+<div class="space-y-1">
+<div class="flex justify-between text-xs">
+<span class="text-slate-400">Clientes:</span>
+<span class="text-white font-medium">380</span>
+</div>
+<div class="mt-2 w-full bg-surface-border h-1.5 rounded-full overflow-hidden">
+<div class="bg-amber-500 h-full w-[45%] rounded-full"></div>
+</div>
+</div>
+</div>
+</foreignObject>
+</g>
+<g class="group/pin cursor-pointer">
+<circle class="fill-blue-500 stroke-white stroke-2" cx="115" cy="150" r="4"></circle>
+</g>
+<g class="group/pin cursor-pointer">
+<circle class="fill-primary stroke-white stroke-2" cx="85" cy="380" r="6"></circle>
+</g>
+<g class="group/pin cursor-pointer">
+<circle class="fill-purple-500 stroke-white stroke-2" cx="115" cy="670" r="6"></circle>
+</g>
+</svg>
+</div>
+<div class="absolute bottom-4 left-4 flex flex-col gap-2">
+<button class="bg-surface-dark border border-surface-border text-white p-2 rounded hover:bg-surface-border transition-colors">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+<button class="bg-surface-dark border border-surface-border text-white p-2 rounded hover:bg-surface-border transition-colors">
+<span class="material-symbols-outlined text-lg">remove</span>
+</button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 bg-surface-dark border border-surface-border rounded-xl p-6">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h3 class="text-white text-lg font-bold">Ingresos Semanales</h3>
+<div class="flex gap-2 items-center mt-1">
+<span class="text-3xl font-bold text-white">$850.000</span>
+<span class="text-green-500 text-sm font-medium bg-green-500/10 px-2 py-0.5 rounded">+5.2%</span>
+</div>
+</div>
+<select class="bg-background-dark border-surface-border text-white text-sm rounded-lg focus:ring-primary focus:border-primary p-2">
+<option>Últimos 7 días</option>
+<option>Últimos 30 días</option>
+</select>
+</div>
+<div class="w-full h-[240px] relative">
+<svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 478 150">
+<defs>
+<linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#136dec" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#136dec" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<path d="M0 109C18.15 109 18.15 21 36.3 21C54.46 21 54.46 41 72.6 41C90.7 41 90.7 93 108.9 93C127 93 127 33 145.2 33C163.4 33 163.4 101 181.5 101C199.7 101 199.7 61 217.8 61C236 61 236 45 254.1 45C272.3 45 272.3 121 290.4 121C308.6 121 308.6 149 326.7 149C344.9 149 344.9 1 363 1C381.2 1 381.2 81 399.4 81C417.5 81 417.5 129 435.7 129C453.8 129 453.8 25 472 25V149H0V109Z" fill="url(#chartGradient)"></path>
+<path d="M0 109C18.15 109 18.15 21 36.3 21C54.46 21 54.46 41 72.6 41C90.7 41 90.7 93 108.9 93C127 93 127 33 145.2 33C163.4 33 163.4 101 181.5 101C199.7 101 199.7 61 217.8 61C236 61 236 45 254.1 45C272.3 45 272.3 121 290.4 121C308.6 121 308.6 149 326.7 149C344.9 149 344.9 1 363 1C381.2 1 381.2 81 399.4 81C417.5 81 417.5 129 435.7 129C453.8 129 453.8 25 472 25" fill="none" stroke="#136dec" stroke-linecap="round" stroke-width="3"></path>
+</svg>
+<div class="flex justify-between text-slate-500 text-xs font-medium mt-2 px-2">
+<span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-dark border border-surface-border rounded-xl flex flex-col">
+<div class="p-5 border-b border-surface-border flex justify-between items-center">
+<h3 class="text-white font-bold">Alertas de Stock</h3>
+<button class="text-primary text-sm hover:underline">Ver todo</button>
+</div>
+<div class="flex-1 overflow-y-auto max-h-[300px] p-2">
+<ul class="space-y-1">
+<li class="flex items-center justify-between p-3 hover:bg-surface-border/50 rounded-lg transition-colors group cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="bg-slate-700 size-10 rounded-lg bg-cover bg-center" data-alt="Security camera product image" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAgK22CFP5Y9rs0FBoDnkPgD6JT_RGUSpgTLb4_mPALpw8eiWndhGlJ9yTwXXRZkkRTSi_fZHCHlDd1dCg8S7AcGeh3Xf_6HVKWkkKObA3bQnaXrUXN-dm8M05RxdKlQ2BnsQrZwRNKpHigJjXCtC182iE4Z4T1ifN5WnOkKZBkTKEM7ijmzABM_DujR3_KE0q3vWjse1T7-hzjHn95V4cGcFu8PHNsg0RgXQTvtZX9o4rMa5Eo004cxvliY7M4jgaw3NlaoD6mCQ')"></div>
+<div>
+<p class="text-white text-sm font-medium">Cámara IP Dome 4MP</p>
+<p class="text-slate-500 text-xs">SKU: CAM-004</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-red-500 font-bold text-sm">2 un.</p>
+<p class="text-red-400/70 text-[10px]">Crítico</p>
+</div>
+</li>
+<li class="flex items-center justify-between p-3 hover:bg-surface-border/50 rounded-lg transition-colors group cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="bg-slate-700 size-10 rounded-lg bg-cover bg-center" data-alt="Motion sensor product image" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAZfacwWmLmXbwv2pmks-1bIlZ_lkt1SKy8roU9qWF4ee3y8l4Owm_qqZM7RDAoWGhTULjYcG2iO6lDuk9-v51V914hcgn6wBrgXsalgDgVXa-DxuCPF_dmCoxoOQs46KI9VdqKC3Ly-IDS-TtNnpt7FvyCgRlqyU9DGkAKZCWg5UhHIGKlCPHk-V4TzdqIXXSI4hbj-DeCrLwoaH9DUICL9ApLUlLV6nXntwca9qFI5WSPN9cyG6NB6pdl1qhX6fRVV_il9QQavg')"></div>
+<div>
+<p class="text-white text-sm font-medium">Sensor Movimiento PIR</p>
+<p class="text-slate-500 text-xs">SKU: SEN-102</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-amber-500 font-bold text-sm">5 un.</p>
+<p class="text-amber-400/70 text-[10px]">Bajo</p>
+</div>
+</li>
+<li class="flex items-center justify-between p-3 hover:bg-surface-border/50 rounded-lg transition-colors group cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="bg-slate-700 size-10 rounded-lg bg-cover bg-center" data-alt="DVR device product image" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBpjYwkYMIMKlu75wzW5W9lBDHJ_S8hzWW_S5P2DT3cntWt8BTn9FcfWWSLrdy31HwPEYrUXrh9X6mwvqHQh6djnVlxLiGxXo4-szVAxeru_LMmoEHiG__KnQdOySI6nXmC2dLjC2y6JadsRMFEwe14ux4VUriuDHJgRgOUEmD3QZUlEQ0fQopURZwHorXEU8DwqEyMdd7Z26BhDoW_zCbPKVmBDB5pfXBbjWGxNKGhVbXRJis2qjiEpBm5v5BoIVtxvDq1IcwOkw')"></div>
+<div>
+<p class="text-white text-sm font-medium">DVR 8 Canales</p>
+<p class="text-slate-500 text-xs">SKU: DVR-800</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-amber-500 font-bold text-sm">3 un.</p>
+<p class="text-amber-400/70 text-[10px]">Bajo</p>
+</div>
+</li>
+<li class="flex items-center justify-between p-3 hover:bg-surface-border/50 rounded-lg transition-colors group cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="bg-slate-700 size-10 rounded-lg bg-cover bg-center" data-alt="Network cable roll product image" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA-oJcv98cveKXN7xZIG4uhcyKkgaZqjyJNU5yeTArCimyyL0wGnyTCpkLDnsWFl-bxRBA2TP1dfP_uDdP4k5f7Hx0Kh93CTsVK3vWOSodCsS4ISXm0sCQ2D0tbtYuwDcEUhpRIviYjBuh9Z8M2QS2oEcRtOGj9-Xuvf8sLpr6o5F4Ucz1hivcvvxqTaxhWenZOqQMh-yOtFNuIjJwU8ilBAdLjrDPTVr-STR7xRUr_bUpWyEqM1YiWTftggmLr7TZLbs-V-ZLsNQ')"></div>
+<div>
+<p class="text-white text-sm font-medium">Bobina UTP Cat5e</p>
+<p class="text-slate-500 text-xs">SKU: CAB-500</p>
+</div>
+</div>
+<div class="text-right">
+<p class="text-red-500 font-bold text-sm">1 un.</p>
+<p class="text-red-400/70 text-[10px]">Crítico</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 space-y-4">
+<h3 class="text-white font-bold text-lg px-1">Accesos Rápidos</h3>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+<button class="flex flex-col items-center justify-center p-6 bg-surface-dark border border-surface-border rounded-xl hover:bg-surface-border hover:border-primary/50 transition-all group">
+<div class="p-3 bg-primary/10 rounded-full text-primary mb-3 group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">person_add</span>
+</div>
+<span class="text-white font-medium text-sm">Nuevo Cliente</span>
+</button>
+<button class="flex flex-col items-center justify-center p-6 bg-surface-dark border border-surface-border rounded-xl hover:bg-surface-border hover:border-primary/50 transition-all group">
+<div class="p-3 bg-primary/10 rounded-full text-primary mb-3 group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">description</span>
+</div>
+<span class="text-white font-medium text-sm">Facturar</span>
+</button>
+<button class="flex flex-col items-center justify-center p-6 bg-surface-dark border border-surface-border rounded-xl hover:bg-surface-border hover:border-primary/50 transition-all group">
+<div class="p-3 bg-primary/10 rounded-full text-primary mb-3 group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">qr_code_scanner</span>
+</div>
+<span class="text-white font-medium text-sm">Escanear</span>
+</button>
+<button class="flex flex-col items-center justify-center p-6 bg-surface-dark border border-surface-border rounded-xl hover:bg-surface-border hover:border-primary/50 transition-all group">
+<div class="p-3 bg-primary/10 rounded-full text-primary mb-3 group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-2xl">inventory</span>
+</div>
+<span class="text-white font-medium text-sm">Ajuste Stock</span>
+</button>
+</div>
+</div>
+<div class="bg-surface-dark border border-surface-border rounded-xl p-5">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-white font-bold">Notificaciones</h3>
+<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">2</span>
+</div>
+<div class="space-y-4">
+<div class="flex gap-3 items-start">
+<div class="bg-amber-500/10 p-2 rounded-lg text-amber-500 mt-0.5">
+<span class="material-symbols-outlined text-lg">dns</span>
+</div>
+<div>
+<p class="text-white text-sm font-medium">Mantenimiento Servidor</p>
+<p class="text-slate-500 text-xs mt-0.5">Programado para hoy 22:00hs. El sistema estará offline por 15min.</p>
+<p class="text-slate-600 text-[10px] mt-1">Hace 2 horas</p>
+</div>
+</div>
+<div class="h-px bg-surface-border w-full"></div>
+<div class="flex gap-3 items-start">
+<div class="bg-blue-500/10 p-2 rounded-lg text-blue-500 mt-0.5">
+<span class="material-symbols-outlined text-lg">verified</span>
+</div>
+<div>
+<p class="text-white text-sm font-medium">Actualización de Precios</p>
+<p class="text-slate-500 text-xs mt-0.5">La lista de precios "Octubre 2023" se ha aplicado correctamente.</p>
+<p class="text-slate-600 text-[10px] mt-1">Ayer</p>
+</div>
+</div>
+</div>
+<button class="w-full mt-5 py-2 text-xs font-medium text-slate-400 hover:text-white border border-surface-border rounded-lg hover:bg-surface-border transition-colors">
+                                Ver historial completo
+                            </button>
+</div>
+</div>
+</div>
+<div class="h-10"></div>
+</div>
+</main>
+</div>
+
+</body></html>

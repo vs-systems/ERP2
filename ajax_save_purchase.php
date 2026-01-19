@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX Handler - Save Purchase
  */
@@ -34,9 +34,14 @@ try {
     if ($id) {
         echo json_encode(['success' => true, 'id' => $id]);
     } else {
-        echo json_encode(['success' => false, 'error' => 'La base de datos rechazó la operación sin error específico.']);
+        echo json_encode(['success' => false, 'error' => 'La base de datos rechazó³ la operació³n sin error especó­fico.']);
     }
 } catch (Exception $e) {
     error_log("AJAX Save Purchase Error: " . $e->getMessage());
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
+
+
+
+
+

@@ -46,8 +46,8 @@ class Catalog
 
     public function addProduct($data)
     {
-        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, iva_rate, brand, has_serial_number, stock_current) 
-                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :iva_rate, :brand, :has_serial_number, :stock_current)
+        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current) 
+                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current)
                 ON DUPLICATE KEY UPDATE 
                 barcode = VALUES(barcode),
                 image_url = VALUES(image_url),
@@ -58,6 +58,8 @@ class Catalog
                 brand = VALUES(brand),
                 unit_cost_usd = VALUES(unit_cost_usd),
                 unit_price_usd = VALUES(unit_price_usd),
+                price_gremio = VALUES(price_gremio),
+                price_web = VALUES(price_web),
                 iva_rate = VALUES(iva_rate),
                 has_serial_number = VALUES(has_serial_number)";
         $stmt = $this->db->prepare($sql);
@@ -72,6 +74,8 @@ class Catalog
             ':supplier_id' => $data['supplier_id'] ?? null,
             ':unit_cost_usd' => $data['unit_cost_usd'],
             ':unit_price_usd' => $data['unit_price_usd'],
+            ':price_gremio' => $data['price_gremio'] ?? null,
+            ':price_web' => $data['price_web'] ?? null,
             ':iva_rate' => $data['iva_rate'],
             ':brand' => $data['brand'] ?? '',
             ':has_serial_number' => $data['has_serial_number'] ?? 0,
@@ -92,17 +96,13 @@ class Catalog
         if (!$handle)
             return false;
 
-        // Skip header
         fgetcsv($handle, 1000, ";");
 
         $imported = 0;
         $categories = [];
-        $subcategories = [];
         $suppliers = [];
 
-        // Transaction for better performance? optional.
         while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
-            // New Format: SKU; DESCRIPCION; MARCA; COSTO; IVA %; CATEGORIA; SUBCATEGORIA; PROVEEDOR
             if (count($data) < 8)
                 continue;
 
@@ -115,7 +115,6 @@ class Catalog
             $subcatName = trim($data[6]);
             $providerName = trim($data[7]);
 
-            // 1. Resolve Category
             if (!isset($categories[$catName])) {
                 $stmt = $this->db->prepare("SELECT id FROM categories WHERE name = ?");
                 $stmt->execute([$catName]);
@@ -128,11 +127,6 @@ class Catalog
             }
             $catId = $categories[$catName] ?? null;
 
-            // 2. Resolve Subcategory (We assume simple text field in products or specific table? 
-            // For now, let's store it as text in 'subcategory' column as current addProduct supports it)
-            // If we had a table, we'd do similar logic.
-
-            // 3. Resolve Supplier/Provider
             $supplierId = null;
             if ($providerName) {
                 if (!isset($suppliers[$providerName])) {
@@ -140,9 +134,7 @@ class Catalog
                     $stmt->execute([$providerName]);
                     $id = $stmt->fetchColumn();
                     if (!$id) {
-                        // Create basic supplier
-                        $sqlProv = "INSERT INTO entities (type, name, is_enabled) VALUES ('provider', ?, 1)";
-                        $this->db->prepare($sqlProv)->execute([$providerName]);
+                        $this->db->prepare("INSERT INTO entities (type, name, is_enabled) VALUES ('provider', ?, 1)")->execute([$providerName]);
                         $id = $this->db->lastInsertId();
                     }
                     $suppliers[$providerName] = $id;
@@ -150,17 +142,18 @@ class Catalog
                 $supplierId = $suppliers[$providerName];
             }
 
-            // 4. Update/Insert Product
             $this->addProduct([
                 'sku' => $sku,
                 'barcode' => null,
                 'provider_code' => null,
                 'description' => $description,
-                'category' => $catName, // Keep storing name if schema uses text
-                'category_id' => $catId, // Also store ID if we have the col
+                'category' => $catName,
+                'category_id' => $catId,
                 'subcategory' => $subcatName,
                 'unit_cost_usd' => $cost,
-                'unit_price_usd' => $cost * 1.4, // Default markup 40% if not set? Or 0. (User wants lists)
+                'unit_price_usd' => $cost * 1.4,
+                'price_gremio' => $cost * 1.4,
+                'price_web' => $cost * 1.6,
                 'iva_rate' => $iva,
                 'brand' => $brand,
                 'supplier_id' => $supplierId,
@@ -168,56 +161,6 @@ class Catalog
                 'stock_current' => 0
             ]);
 
-            $imported++;
-        }
-        fclose($handle);
-        return $imported;
-    }
-
-    public function importEntitiesFromCsv($filePath, $type = 'client')
-    {
-        $handle = fopen($filePath, "r");
-        if (!$handle)
-            return false;
-
-        fgetcsv($handle, 1000, ";");
-
-        $imported = 0;
-        while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
-            if (count($data) < 1)
-                continue;
-
-            $sql = "INSERT INTO entities (
-                        type, tax_id, document_number, name, fantasy_name, 
-                        contact_person, email, phone, mobile, address, 
-                        delivery_address, is_enabled
-                    ) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-                    ON DUPLICATE KEY UPDATE 
-                    document_number = VALUES(document_number),
-                    name = VALUES(name),
-                    fantasy_name = VALUES(fantasy_name),
-                    contact_person = VALUES(contact_person),
-                    email = VALUES(email),
-                    phone = VALUES(phone),
-                    mobile = VALUES(mobile),
-                    address = VALUES(address),
-                    delivery_address = VALUES(delivery_address)";
-
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                $type,
-                $data[2] ?? null, // tax_id
-                $data[3] ?? null, // doc
-                $data[0] ?? 'SIN NOMBRE',
-                $data[1] ?? '',
-                $data[7] ?? '',
-                $data[4] ?? '',
-                $data[5] ?? '',
-                $data[6] ?? '',
-                $data[8] ?? '',
-                $data[9] ?? ''
-            ]);
             $imported++;
         }
         fclose($handle);

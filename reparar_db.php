@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - Database Repair Script
  */
@@ -24,21 +24,26 @@ try {
     foreach ($fixes as $sql) {
         try {
             $db->exec($sql);
-            echo "<li style='color: green;'>✅ Ejecutado: $sql</li>";
+            echo "<li style='color: green;'>âœ… Ejecutado: $sql</li>";
         } catch (PDOException $e) {
             if (strpos($e->getMessage(), 'Duplicate column name') !== false) {
-                echo "<li style='color: blue;'>ℹ️ Ya existe (ignorado): " . substr($sql, 0, 30) . "...</li>";
+                echo "<li style='color: blue;'>â„¹ï¸ Ya existe (ignorado): " . substr($sql, 0, 30) . "...</li>";
             } else {
-                echo "<li style='color: red;'>❌ Error: " . $e->getMessage() . "</li>";
+                echo "<li style='color: red;'>âŒ Error: " . $e->getMessage() . "</li>";
             }
         }
     }
     echo "</ul>";
 
-    echo "<p style='font-weight: bold;'>¡Proceso terminado! Ahora intenta importar los productos de nuevo.</p>";
+    echo "<p style='font-weight: bold;'>Â¡Proceso terminado! Ahora intenta importar los productos de nuevo.</p>";
     echo "<a href='importar.php' style='padding: 10px 20px; background: #27ae60; color: white; text-decoration: none; border-radius: 5px;'>Ir al Importador</a>";
 
 } catch (Exception $e) {
-    echo "<p style='color: red;'>Error crítico: " . $e->getMessage() . "</p>";
+    echo "<p style='color: red;'>Error cró­tico: " . $e->getMessage() . "</p>";
 }
 ?>
+
+
+
+
+

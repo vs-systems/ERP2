@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX Handler - Delete Purchase
  */
@@ -33,3 +33,8 @@ try {
         $db->rollBack();
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
+
+
+
+
+

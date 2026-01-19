@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - AJAX Product Search
  */
@@ -23,3 +23,8 @@ $results = $catalog->searchProducts($query);
 
 echo json_encode($results);
 ?>
+
+
+
+
+

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - Mass Image Update from Big Dipper
  */
@@ -13,7 +13,7 @@ $db = Vsys\Lib\Database::getInstance();
 $catalog = new Vsys\Modules\Catalogo\Catalog();
 $products = $catalog->getAllProducts();
 
-echo "<h2>Actualización Masiva de Imágenes - Big Dipper</h2>";
+echo "<h2>Actualizació³n Masiva de Imó¡genes - Big Dipper</h2>";
 echo "Escaneando productos...<br><br>";
 
 $updated = 0;
@@ -31,10 +31,10 @@ foreach ($products as $p) {
 
     // Simplificamos: asumimos que si es de Big Dipper el SKU es correcto.
     // Para no tardar milenios pingeando cada URL, podemos simplemente setearlas
-    // y el navegador las cargará si existen, o mostrará el icono si fallan.
+    // y el navegador las cargaró¡ si existen, o mostraró¡ el icono si fallan.
     // Pero para ser prolijos, el usuario puede elegir pingearlas.
 
-    // Opción rápida: Setear la URL directamente
+    // Opció³n ró¡pida: Setear la URL directamente
     $db->prepare("UPDATE products SET image_url = ? WHERE id = ?")
         ->execute([$url, $p['id']]);
 
@@ -44,6 +44,11 @@ foreach ($products as $p) {
 
 echo "<br><b>Resultado:</b><br>";
 echo "Actualizados: $updated <br>";
-echo "Ya tenían imagen (Omitidos): $skipped <br>";
+echo "Ya tenó­an imagen (Omitidos): $skipped <br>";
 
 echo "<br><a href='productos.php'>Volver a Productos</a>";
+
+
+
+
+

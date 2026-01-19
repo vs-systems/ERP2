@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
@@ -33,7 +33,12 @@ try {
         INDEX (user_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
-    echo "✅ Tablas de CRM verificadas/creadas.<br>";
+    echo "âœ… Tablas de CRM verificadas/creadas.<br>";
 } catch (Exception $e) {
-    echo "❌ ERROR: " . $e->getMessage();
+    echo "âŒ ERROR: " . $e->getMessage();
 }
+
+
+
+
+

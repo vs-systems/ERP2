@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX Handler - CRM Actions
  */
@@ -53,3 +53,8 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
+
+
+
+
+

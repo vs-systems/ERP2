@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - AJAX Handler - Send Email
  */
@@ -17,7 +17,7 @@ use Vsys\Modules\CRM\CRM;
 $data = json_decode(file_get_contents('php://input'), true);
 
 if (!isset($data['type']) || !isset($data['id'])) {
-    echo json_encode(['success' => false, 'error' => 'Parámetros incompletos']);
+    echo json_encode(['success' => false, 'error' => 'Paró¡metros incompletos']);
     exit;
 }
 
@@ -40,7 +40,7 @@ try {
         $subject = "Presupuesto VS System - " . $q['quote_number'];
         $body = "
             <h2>Hola " . htmlspecialchars($q['client_name']) . ",</h2>
-            <p>Adjuntamos la información del presupuesto solicitado.</p>
+            <p>Adjuntamos la informació³n del presupuesto solicitado.</p>
             <p><strong>Nro de Presupuesto:</strong> " . $q['quote_number'] . "</p>
             <p><strong>Total:</strong> $" . number_format($q['total_usd'], 2) . " USD / $" . number_format($q['total_ars'], 2) . " ARS</p>
             <p>Puede ver el detalle completo en el siguiente enlace:</p>
@@ -76,3 +76,8 @@ try {
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
+
+
+
+
+

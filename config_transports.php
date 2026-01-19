@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth_check.php';
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
@@ -106,8 +106,8 @@ $transports = $logistics->getTransports(false);
     <header
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" style="height: 50px;">
-            <div style="color:white; font-weight:700; font-size:1.4rem;">GESTIÓN DE <span>TRANSPORTES</span></div>
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large"style="height: 50px;">
+            <div style="color:white; font-weight:700; font-size:1.4rem;">GESTIó“N DE <span>TRANSPORTES</span></div>
         </div>
     </header>
     <div class="dashboard-container">
@@ -138,9 +138,9 @@ $transports = $logistics->getTransports(false);
                                 value="<?php echo $editData['name']; ?>" required></div>
                         <div class="input-group"><label>Contacto Principal</label><input type="text"
                                 name="contact_person" value="<?php echo $editData['contact_person']; ?>"></div>
-                        <div class="input-group"><label>Teléfono de Contacto</label><input type="tel" name="phone"
+                        <div class="input-group"><label>Teló©fono de Contacto</label><input type="tel" name="phone"
                                 value="<?php echo $editData['phone']; ?>"></div>
-                        <div class="input-group"><label>Email de Coordinación</label><input type="email" name="email"
+                        <div class="input-group"><label>Email de Coordinació³n</label><input type="email" name="email"
                                 value="<?php echo $editData['email']; ?>"></div>
                     </div>
                     <div class="is-active-check">
@@ -163,7 +163,7 @@ $transports = $logistics->getTransports(false);
                         <tr>
                             <th>Transportista</th>
                             <th>Contacto</th>
-                            <th>Teléfono</th>
+                            <th>Teló©fono</th>
                             <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
@@ -192,7 +192,7 @@ $transports = $logistics->getTransports(false);
                         <?php if (empty($transports)): ?>
                             <tr>
                                 <td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">No se han
-                                    configurado empresas de transporte aún.</td>
+                                    configurado empresas de transporte aóºn.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -203,4 +203,9 @@ $transports = $logistics->getTransports(false);
 </body>
 
 </html>
-PHP;
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Migration Script: Assign Existing Products to BIG DIPPER S.R.L.
  */
@@ -7,7 +7,7 @@ require_once __DIR__ . '/src/lib/Database.php';
 
 use Vsys\Lib\Database;
 
-echo "<h1>Asignación Masiva: BIG DIPPER S.R.L.</h1>";
+echo "<h1>Asignació³n Masiva: BIG DIPPER S.R.L.</h1>";
 
 try {
     $db = Database::getInstance();
@@ -17,7 +17,7 @@ try {
 
     if (!$supplier) {
         // If not found, create it as a fallback
-        echo "<li>Proveedor 'BIG DIPPER S.R.L.' no encontrado. Creándolo... ";
+        echo "<li>Proveedor 'BIG DIPPER S.R.L.' no encontrado. Creó¡ndolo... ";
         $db->exec("INSERT INTO entities (type, name, is_enabled) VALUES ('supplier', 'BIG DIPPER S.R.L.', 1)");
         $supplierId = $db->lastInsertId();
         echo "<span style='color:green'>ID: $supplierId</span></li>";
@@ -37,8 +37,13 @@ try {
     $count = $stmt->rowCount();
     echo "<span style='color:green'>$count productos vinculados.</span></li>";
 
-    echo "<h3>✅ Proceso completado exitosamente.</h3>";
+    echo "<h3>âœ… Proceso completado exitosamente.</h3>";
 } catch (Exception $e) {
-    echo "<h3>❌ Error: " . $e->getMessage() . "</h3>";
+    echo "<h3>âŒ Error: " . $e->getMessage() . "</h3>";
 }
 ?>
+
+
+
+
+

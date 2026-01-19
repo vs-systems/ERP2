@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - NAS Auto-Deploy Webhook
  * This script allows your NAS to automatically pull changes from GitHub.
@@ -22,8 +22,13 @@ $output = shell_exec("cd $repo_dir && git pull origin $branch 2>&1");
 echo "<pre>$output</pre>";
 
 if (strpos($output, 'Updating') !== false || strpos($output, 'Already up to date') !== false) {
-    echo "<p style='color: green;'>✅ Sync complete!</p>";
+    echo "<p style='color: green;'>âœ… Sync complete!</p>";
 } else {
-    echo "<p style='color: red;'>❌ Sync failed. Check if Git is installed on your NAS via App Central.</p>";
+    echo "<p style='color: red;'>âŒ Sync failed. Check if Git is installed on your NAS via App Central.</p>";
 }
 ?>
+
+
+
+
+

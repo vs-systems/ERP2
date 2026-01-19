@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 $sku = "NVR1104HS-W-S2";
 $url = "https://www.iuargsa.com/productos.php?q=" . urlencode($sku) . "&b=s";
 $html = file_get_contents($url);
@@ -13,3 +13,8 @@ if ($html === false) {
         echo "Image pattern not found in HTML\n";
     }
 }
+
+
+
+
+

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - Print Quotation
  */
@@ -126,7 +126,7 @@ if (!$quote)
     <div class="no-print" style="margin-bottom: 20px; text-align: center;">
         <button onclick="window.print()"
             style="padding: 10px 20px; background: #5d2fc1; color: white; border: none; border-radius: 5px; cursor: pointer;">
-            🖨️ IMPRIMIR / GUARDAR PDF
+            ðŸ–¨ï¸ IMPRIMIR / GUARDAR PDF
         </button>
     </div>
 
@@ -135,7 +135,7 @@ if (!$quote)
             <td><img src="logo_display.php?v=2" class="logo" style="width: 250px; height: auto;"></td>
             <td class="quote-info">
                 <h1>PRESUPUESTO</h1>
-                <p><strong>Nº:</strong>
+                <p><strong>NÂº:</strong>
                     <?php echo $quote['quote_number']; ?>
                 </p>
                 <p><strong>Fecha:</strong>
@@ -171,7 +171,7 @@ if (!$quote)
             <tr>
                 <th>Cant.</th>
                 <th>SKU</th>
-                <th>Descripción</th>
+                <th>Descripció³n</th>
                 <th style="text-align: right;">Unit. USD</th>
                 <th style="text-align: right;">Subtotal USD</th>
             </tr>
@@ -222,7 +222,7 @@ if (!$quote)
         </tr>
         <tr>
             <td colspan="2" style="font-size: 11px; color: #777; padding-top: 10px;">
-                Cotización BNA: $
+                Cotizació³n BNA: $
                 <?php echo number_format($quote['exchange_rate_usd'], 2); ?>
             </td>
         </tr>
@@ -236,12 +236,12 @@ if (!$quote)
 
     <div class="footer">
         <p><strong>OBSERVACIONES:</strong></p>
-        <p>Los precios en pesos están sujetos a cambios sin previo aviso según la cotización del dólar BNA Billete Venta
-            del día de pago.</p>
+        <p>Los precios en pesos estó¡n sujetos a cambios sin previo aviso segóºn la cotizació³n del dó³lar BNA Billete Venta
+            del dó­a de pago.</p>
         <p>Forma de pago:
             <?php echo $quote['payment_method'] == 'bank' ? 'Transferencia Bancaria' : 'Contado / Efectivo'; ?>
         </p>
-        <p style="text-align: center; margin-top: 30px;">¡Gracias por confiar en Vecino Seguro!</p>
+        <p style="text-align: center; margin-top: 30px;">Â¡Gracias por confiar en Vecino Seguro!</p>
     </div>
 
     <script>
@@ -253,3 +253,7 @@ if (!$quote)
 </body>
 
 </html>
+
+
+
+

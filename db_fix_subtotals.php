@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
@@ -11,7 +11,12 @@ try {
     // Fix purchases
     $db->exec("UPDATE purchases SET subtotal_usd = total_usd, subtotal_ars = total_ars WHERE subtotal_usd IS NULL OR subtotal_usd = 0;");
 
-    echo "✅ Datos heredados actualizados (subtotales sincronizados con totales).<br>";
+    echo "âœ… Datos heredados actualizados (subtotales sincronizados con totales).<br>";
 } catch (Exception $e) {
-    echo "❌ ERROR: " . $e->getMessage();
+    echo "âŒ ERROR: " . $e->getMessage();
 }
+
+
+
+
+

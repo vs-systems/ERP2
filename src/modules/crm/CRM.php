@@ -143,18 +143,22 @@ class CRM
                         'contact_person' => $ent['contact_person'],
                         'email' => $ent['email'],
                         'phone' => $ent['phone'],
-                        'status' => ($type === 'Presupuesto' || $type === 'Envío Presupuesto') ? 'Presupuestado' : 'Contactado',
-                        'notes' => 'Auto-generado desde interacción con Cliente'
+                        'status' => ($type === 'Presupuesto' || $type === 'Envó­o Presupuesto') ? 'Presupuestado' : 'Contactado',
+                        'notes' => 'Auto-generado desde interacció³n con Cliente'
                     ]);
                 } else {
                     // Update existing lead status
-                    $newStatus = ($type === 'Presupuesto' || $type === 'Envío Presupuesto') ? 'Presupuestado' : 'Contactado';
+                    $newStatus = ($type === 'Presupuesto' || $type === 'Envó­o Presupuesto') ? 'Presupuestado' : 'Contactado';
                     $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ?")->execute([$newStatus, $leadId]);
                 }
+
+                // AUTO-ASSIGN SELLER: If entity has no seller_id, assign the current user
+                $this->db->prepare("UPDATE entities SET seller_id = ? WHERE id = ? AND seller_id IS NULL AND (SELECT role FROM users WHERE id = ?) = 'Vendedor'")
+                    ->execute([$userId, $entityId, $userId]);
             }
         } elseif ($entityType === 'lead') {
             // Update existing lead status
-            $newStatus = ($type === 'Presupuesto' || $type === 'Envío Presupuesto') ? 'Presupuestado' : 'Contactado';
+            $newStatus = ($type === 'Presupuesto' || $type === 'Envó­o Presupuesto') ? 'Presupuestado' : 'Contactado';
             $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ? AND status IN ('Nuevo', 'Contactado')")->execute([$newStatus, $entityId]);
         }
 
@@ -259,3 +263,5 @@ class CRM
         }
     }
 }
+
+

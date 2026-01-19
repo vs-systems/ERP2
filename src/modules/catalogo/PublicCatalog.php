@@ -84,4 +84,50 @@ class PublicCatalog
             'products' => $webProducts
         ];
     }
+
+    /**
+     * Get products with price based on client profile (Gremio or Web).
+     * Returns prices in ARS applying IVA and exchange rate.
+     */
+    public function getProductsForProfile(string $profile)
+    {
+        $rate = $this->getExchangeRate();
+
+        // Determine which price column to use
+        $priceColumn = ($profile === 'Gremio') ? 'price_gremio' : 'price_web';
+
+        // Get Products
+        $stmt = $this->db->prepare("SELECT *, $priceColumn FROM products ORDER BY brand, description");
+        $stmt->execute();
+        $products = $stmt->fetchAll();
+
+        $profileProducts = [];
+        foreach ($products as $p) {
+            $basePriceUsd = (float) $p[$priceColumn];
+            $iva = (float) $p['iva_rate'];
+
+            // If base price is null or zero, fallback to unit_price_usd
+            if ($basePriceUsd <= 0) {
+                $basePriceUsd = (float) $p['unit_price_usd'];
+            }
+
+            // Add IVA
+            $priceUsdWithIva = $basePriceUsd * (1 + ($iva / 100));
+
+            // Convert to ARS
+            $priceArs = $priceUsdWithIva * $rate;
+
+            if ($priceArs > 0) {
+                $p['price_final_ars'] = round($priceArs, 0);
+                $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.');
+                $p['image_url'] = !empty($p['image_url']) ? $p['image_url'] : 'https://placehold.co/300x300?text=No+Image';
+                $profileProducts[] = $p;
+            }
+        }
+
+        return [
+            'rate' => $rate,
+            'products' => $profileProducts
+        ];
+    }
 }

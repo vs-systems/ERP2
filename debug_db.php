@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - Database Debugger
  */
@@ -16,25 +16,30 @@ echo "</ul>";
 try {
     $dsn = "mysql:host=" . DB_HOST . ";charset=" . DB_CHARSET;
     $pdo = new PDO($dsn, DB_USER, DB_PASS);
-    echo "<p style='color: green;'>✅ Conexión al servidor MySQL exitosa.</p>";
+    echo "<p style='color: green;'>âœ… Conexió³n al servidor MySQL exitosa.</p>";
 
     // Check if DB exists
     $stmt = $pdo->query("SHOW DATABASES LIKE '" . DB_NAME . "'");
     if ($stmt->rowCount() > 0) {
-        echo "<p style='color: green;'>✅ La base de datos <strong>" . DB_NAME . "</strong> existe.</p>";
+        echo "<p style='color: green;'>âœ… La base de datos <strong>" . DB_NAME . "</strong> existe.</p>";
 
         // Try to connect to specific DB
         $pdo->query("USE " . DB_NAME);
-        echo "<p style='color: green;'>✅ Acceso a la base de datos concedido.</p>";
+        echo "<p style='color: green;'>âœ… Acceso a la base de datos concedido.</p>";
 
         $tables = $pdo->query("SHOW TABLES");
         echo "<p>Tablas encontradas: " . $tables->rowCount() . "</p>";
     } else {
-        echo "<p style='color: red;'>❌ La base de datos <strong>" . DB_NAME . "</strong> NO existe. Por favor créala en PHPMyAdmin.</p>";
+        echo "<p style='color: red;'>âŒ La base de datos <strong>" . DB_NAME . "</strong> NO existe. Por favor cró©ala en PHPMyAdmin.</p>";
     }
 
 } catch (PDOException $e) {
-    echo "<p style='color: red;'>❌ Error de Conexión: " . $e->getMessage() . "</p>";
-    echo "<p><strong>Sugerencia:</strong> Verifica que el usuario tenga permisos 'Globales' o específicos sobre la base de datos en PHPMyAdmin (Sección 'Cuentas de Usuario' -> 'Editar Privilegios').</p>";
+    echo "<p style='color: red;'>âŒ Error de Conexió³n: " . $e->getMessage() . "</p>";
+    echo "<p><strong>Sugerencia:</strong> Verifica que el usuario tenga permisos 'Globales' o especó­ficos sobre la base de datos en PHPMyAdmin (Secció³n 'Cuentas de Usuario' -> 'Editar Privilegios').</p>";
 }
 ?>
+
+
+
+
+

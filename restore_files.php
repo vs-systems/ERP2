@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * RESTORE FILES v19 - VS System ERP
  * 2026-01-17
@@ -27,13 +27,13 @@ $menu = [
         'label' => 'CONTABILIDAD',
         'items' => [
             ['id' => 'compras', 'label' => 'Compras', 'icon' => 'fas fa-cart-arrow-down', 'href' => 'compras.php'],
-            ['id' => 'facturacion', 'label' => 'Facturación', 'icon' => 'fas fa-file-invoice', 'href' => 'facturacion.php'],
+            ['id' => 'facturacion', 'label' => 'Facturació³n', 'icon' => 'fas fa-file-invoice', 'href' => 'facturacion.php'],
             ['id' => 'analisis', 'label' => 'Análisis OP.', 'icon' => 'fas fa-chart-line', 'href' => 'analisis.php'],
         ]
     ],
     [
         'id' => 'logistica',
-        'label' => 'LOGÍSTICA',
+        'label' => 'LOGóSTICA',
         'icon' => 'fas fa-truck',
         'href' => 'logistica.php'
     ],
@@ -57,7 +57,7 @@ $menu = [
     ],
     [
         'id' => 'configuration',
-        'label' => 'CONFIGURACIÓN',
+        'label' => 'CONFIGURACIó“N',
         'icon' => 'fas fa-cogs',
         'href' => 'configuration.php'
     ]
@@ -87,7 +87,7 @@ $menu = [
         
         <div style="margin-top:2rem; padding:10px; border-top:1px solid rgba(255,255,255,0.1);">
             <a href="catalogo.php" target="_blank" class="nav-link" style="background:var(--accent-violet); border-radius:8px;">
-                <i class="fas fa-eye"></i> Catálogo Público
+                <i class="fas fa-eye"></i> Cató¡logo Póºblico
             </a>
         </div>
     </div>
@@ -120,14 +120,14 @@ require_once __DIR__ . '/src/config/config.php';
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Facturación - VS System</title>
+    <title>Facturació³n - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem;">
                 Vecino Seguro <span style="background: linear-gradient(90deg, #8b5cf6, #d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Sistemas</span>
             </div>
@@ -138,8 +138,8 @@ require_once __DIR__ . '/src/config/config.php';
         <main class="content">
             <div class="card" style="text-align: center; padding: 50px;">
                 <i class="fas fa-file-invoice" style="font-size: 5rem; color: var(--accent-violet); margin-bottom: 20px; opacity: 0.5;"></i>
-                <h1>Modulo de Facturación</h1>
-                <p style="color: #94a3b8; font-size: 1.2rem;">Este módulo se encuentra en desarrollo.</p>
+                <h1>Modulo de Facturació³n</h1>
+                <p style="color: #94a3b8; font-size: 1.2rem;">Este mó³dulo se encuentra en desarrollo.</p>
                 <div style="margin-top: 30px;">
                     <a href="index.php" class="btn-primary" style="text-decoration: none;"><i class="fas fa-home"></i> VOLVER AL INICIO</a>
                 </div>
@@ -214,16 +214,16 @@ $icon = ($type === 'client') ? 'fa-users' : 'fa-truck-loading';
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Configuración de <?php echo $title; ?> - VS System</title>
+    <title>Configuració³n de <?php echo $title; ?> - VS System</title>
     <link rel="stylesheet" href="css/style_premium.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem;">
-                VS System <span style="opacity:0.5;">/</span> Configuración
+                VS System <span style="opacity:0.5;">/</span> Configuració³n
             </div>
         </div>
     </header>
@@ -289,9 +289,9 @@ $icon = ($type === 'client') ? 'fa-users' : 'fa-truck-loading';
                             <label>Condici&oacute;n de Pago</label>
                             <select name="payment_condition">
                                 <option value="Contado" <?php echo ($entity['payment_condition'] ?? '') === 'Contado' ? 'selected' : ''; ?>>Contado</option>
-                                <option value="7 días" <?php echo ($entity['payment_condition'] ?? '') === '7 días' ? 'selected' : ''; ?>>7 días</option>
-                                <option value="15 días" <?php echo ($entity['payment_condition'] ?? '') === '15 días' ? 'selected' : ''; ?>>15 días</option>
-                                <option value="30 días" <?php echo ($entity['payment_condition'] ?? '') === '30 días' ? 'selected' : ''; ?>>30 días</option>
+                                <option value="7 dó­as" <?php echo ($entity['payment_condition'] ?? '') === '7 dó­as' ? 'selected' : ''; ?>>7 dó­as</option>
+                                <option value="15 dó­as" <?php echo ($entity['payment_condition'] ?? '') === '15 dó­as' ? 'selected' : ''; ?>>15 dó­as</option>
+                                <option value="30 dó­as" <?php echo ($entity['payment_condition'] ?? '') === '30 dó­as' ? 'selected' : ''; ?>>30 dó­as</option>
                             </select>
                         </div>
                     </div>
@@ -348,3 +348,7 @@ if (file_exists($logisticsFile)) {
 }
 
 echo "SUCCESS: ERP Navigation v19 applied.\n";
+
+
+
+

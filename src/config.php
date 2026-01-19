@@ -32,3 +32,4 @@ define('LIB_PATH', BASE_PATH . '/src/lib');
 // Timezone
 date_default_timezone_set('America/Argentina/Buenos_Aires');
 ?>
+

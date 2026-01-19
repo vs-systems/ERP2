@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - AJAX Supplier Search
  */
@@ -26,3 +26,8 @@ foreach ($results as $r) {
 }
 
 echo json_encode($finalResults);
+
+
+
+
+

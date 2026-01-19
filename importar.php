@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth_check.php';
 /**
  * Importador Centralizado - VS System ERP
@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
             }
 
             if ($count !== false) {
-                $message = "¡Éxito! Se han procesado $count registros correctamente.";
+                $message = "Â¡ó‰xito! Se han procesado $count registros correctamente.";
                 $status = "success";
             } else {
                 $message = "Error al procesar el archivo CSV.";
@@ -81,7 +81,7 @@ $providers = $catalog->getProviders();
     <header
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
             <div
                 style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);">
                 Vecino Seguro <span
@@ -108,7 +108,7 @@ $providers = $catalog->getProviders();
                 <form method="POST" enctype="multipart/form-data">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 1.5rem;">
                         <div class="form-group">
-                            <label>¿Qu&eacute; desea importar?</label>
+                            <label>Â¿Qu&eacute; desea importar?</label>
                             <select name="import_type" id="import_type" onchange="toggleProvider()"
                                 style="width: 100%; padding: 10px; background: #1e293b; color: white; border: 1px solid #334155; border-radius: 6px;">
                                 <option value="product">Cat&aacute;logo de Productos</option>
@@ -168,3 +168,7 @@ $providers = $catalog->getProviders();
 </body>
 
 </html>
+
+
+
+

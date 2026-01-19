@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - AJAX Save Quotation
  */
@@ -67,9 +67,14 @@ try {
     if ($id) {
         echo json_encode(['success' => true, 'id' => $id]);
     } else {
-        echo json_encode(['success' => false, 'error' => 'Error al guardar en la base de datos (Execute falló)']);
+        echo json_encode(['success' => false, 'error' => 'Error al guardar en la base de datos (Execute falló³)']);
     }
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Excepción: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'error' => 'Excepció³n: ' . $e->getMessage()]);
 }
 ?>
+
+
+
+
+

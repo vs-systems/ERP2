@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * AJAX Checkout Processor
  * Receives JSON order data and creates a CRM Lead.
@@ -71,3 +71,8 @@ try {
 } catch (Exception $e) {
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
+
+
+
+
+

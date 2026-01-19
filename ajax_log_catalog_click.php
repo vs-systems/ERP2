@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - AJAX Log Catalog Click
  */
@@ -25,7 +25,12 @@ try {
     $sql = "INSERT INTO crm_interactions (entity_id, entity_type, user_id, type, description, interaction_date) 
             VALUES (0, 'lead', 1, 'Consulta Web', :desc, NOW())";
     $stmt = $db->prepare($sql);
-    $stmt->execute([':desc' => "Interés público en catálogo: $sku - $desc"]);
+    $stmt->execute([':desc' => "Interó©s póºblico en cató¡logo: $sku - $desc"]);
 } catch (Exception $e) {
     // Fail silently for public logs
 }
+
+
+
+
+

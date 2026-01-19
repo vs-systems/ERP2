@@ -1,9 +1,9 @@
 <?php
+namespace Vsys\Modules\Analysis;
+
 /**
  * VS System ERP - Operations Analysis Module
  */
-
-namespace Vsys\Modules\Analysis;
 
 require_once __DIR__ . '/../../lib/Database.php';
 

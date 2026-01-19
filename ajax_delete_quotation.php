@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - AJAX Delete Quotation
  */
@@ -34,3 +34,8 @@ try {
         $db->rollBack();
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
+
+
+
+
+

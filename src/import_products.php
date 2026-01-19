@@ -74,3 +74,4 @@ while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
 fclose($handle);
 echo "Import finished. Total products processed: $imported\n";
 ?>
+

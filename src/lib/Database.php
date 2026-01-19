@@ -1,8 +1,4 @@
 <?php
-/**
- * VS System ERP - Database Library
- */
-
 namespace Vsys\Lib;
 
 use PDO;
@@ -15,7 +11,13 @@ class Database
 
     private function __construct()
     {
-        $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+        $host = defined('DB_HOST') ? DB_HOST : (getenv('DB_HOST') ?: '127.0.0.1');
+        $name = defined('DB_NAME') ? DB_NAME : (getenv('DB_NAME') ?: 'gozziar_vs_system_erp');
+        $user = defined('DB_USER') ? DB_USER : (getenv('DB_USER') ?: 'gozziar_javiergdm');
+        $pass = defined('DB_PASS') ? DB_PASS : (getenv('DB_PASS') ?: 'Andrea1910');
+        $charset = defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4';
+
+        $dsn = "mysql:host=" . $host . ";dbname=" . $name . ";charset=" . $charset;
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -23,7 +25,7 @@ class Database
         ];
 
         try {
-            $this->conn = new PDO($dsn, DB_USER, DB_PASS, $options);
+            $this->conn = new PDO($dsn, $user, $pass, $options);
         } catch (PDOException $e) {
             die("Database Connection Error: " . $e->getMessage());
         }
@@ -42,4 +44,3 @@ class Database
         return $this->conn;
     }
 }
-?>

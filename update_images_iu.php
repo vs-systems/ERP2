@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - Mass Image Update from IU Argentina
  */
@@ -16,8 +16,8 @@ $db = Vsys\Lib\Database::getInstance();
 $catalog = new Vsys\Modules\Catalogo\Catalog();
 $products = $catalog->getAllProducts();
 
-echo "<h2>Actualización de Imágenes - IU Argentina</h2>";
-echo "Este proceso es un poco más lento porque debemos consultar la web de IU para cada producto...<br><br>";
+echo "<h2>Actualizació³n de Imó¡genes - IU Argentina</h2>";
+echo "Este proceso es un poco mó¡s lento porque debemos consultar la web de IU para cada producto...<br><br>";
 
 $updated = 0;
 $skipped = 0;
@@ -32,8 +32,8 @@ foreach ($products as $p) {
     }
 
     if ($count >= $limit) {
-        echo "<br><b>Límite de procesamiento alcanzado ($limit).</b><br>";
-        echo "<a href='update_images_iu.php?limit=$limit' class='btn-primary'>Procesar 10 más</a>";
+        echo "<br><b>Ló­mite de procesamiento alcanzado ($limit).</b><br>";
+        echo "<a href='update_images_iu.php?limit=$limit' class='btn-primary'>Procesar 10 mó¡s</a>";
         break;
     }
 
@@ -56,10 +56,10 @@ foreach ($products as $p) {
         $db->prepare("UPDATE products SET image_url = ? WHERE id = ?")
             ->execute([$imageUrl, $p['id']]);
 
-        echo "✅ SKU <b>$sku</b>: Imagen encontrada y actualizada.<br>";
+        echo "âœ… SKU <b>$sku</b>: Imagen encontrada y actualizada.<br>";
         $updated++;
     } else {
-        echo "❌ SKU <b>$sku</b>: No se encontró imagen en IU Argentina.<br>";
+        echo "âŒ SKU <b>$sku</b>: No se encontró³ imagen en IU Argentina.<br>";
         $notFound++;
     }
 
@@ -71,6 +71,11 @@ foreach ($products as $p) {
 echo "<br><b>Resumen del lote:</b><br>";
 echo "- Actualizados: $updated <br>";
 echo "- No encontrados: $notFound <br>";
-echo "- Ya tenían imagen: $skipped <br>";
+echo "- Ya tenó­an imagen: $skipped <br>";
 
-echo "<br><a href='productos.php'>Volver a Productos</a> | <a href='catalogo.php'>Ver Catálogo</a>";
+echo "<br><a href='productos.php'>Volver a Productos</a> | <a href='catalogo.php'>Ver Cató¡logo</a>";
+
+
+
+
+

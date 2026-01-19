@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - FINAL REPAIR & ENHANCEMENT
  */
@@ -34,7 +34,7 @@ try {
     $db->exec("ALTER TABLE entities ADD COLUMN IF NOT EXISTS preferred_payment_method VARCHAR(100) AFTER payment_condition;");
     $db->exec("ALTER TABLE entities ADD COLUMN IF NOT EXISTS tax_id VARCHAR(50) AFTER fantasy_name;");
     $db->exec("ALTER TABLE entities ADD COLUMN IF NOT EXISTS address VARCHAR(255) AFTER tax_id;");
-    echo "✅ General schema verified.<br>";
+    echo "âœ… General schema verified.<br>";
 
     // 2. CRM REBUILD (Fresh start as requested, fixing all legacy issues)
     echo "Rebuilding CRM tables (Lead & Interactions)...<br>";
@@ -64,7 +64,7 @@ try {
         description TEXT,
         interaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
-    echo "✅ CRM tables rebuilt successfully.<br>";
+    echo "âœ… CRM tables rebuilt successfully.<br>";
 
     // 3. Traceability fields
     echo "Adding Traceability & Observations...<br>";
@@ -75,11 +75,16 @@ try {
     $db->exec("ALTER TABLE products ADD COLUMN IF NOT EXISTS has_serial_number TINYINT(1) DEFAULT 0 AFTER image_url;");
     $db->exec("ALTER TABLE quotation_items ADD COLUMN IF NOT EXISTS serial_numbers TEXT;");
     $db->exec("ALTER TABLE purchase_items ADD COLUMN IF NOT EXISTS serial_numbers TEXT;");
-    echo "✅ Traceability fields added.<br>";
+    echo "âœ… Traceability fields added.<br>";
 
-    echo "<br>🚀 🚀 **ESQUEMA REPARADO Y ACTUALIZADO** 🚀 🚀";
-    echo "<br><p>Por favor, vuelve al sistema e intenta grabar una cotización.</p>";
+    echo "<br>ðŸš€ ðŸš€ **ESQUEMA REPARADO Y ACTUALIZADO** ðŸš€ ðŸš€";
+    echo "<br><p>Por favor, vuelve al sistema e intenta grabar una cotizació³n.</p>";
 
 } catch (Exception $e) {
-    echo "<br>❌ ERROR CRÍTICO: " . $e->getMessage();
+    echo "<br>âŒ ERROR CRóTICO: " . $e->getMessage();
 }
+
+
+
+
+

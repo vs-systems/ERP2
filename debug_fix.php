@@ -1,38 +1,38 @@
-<?php
-// debug_fix.php - Diagnóstico y Limpieza de Caché
+﻿<?php
+// debug_fix.php - Diagnó³stico y Limpieza de Cachó©
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-echo "<h1>Herramienta de Diagnóstico y Limpieza</h1>";
+echo "<h1>Herramienta de Diagnó³stico y Limpieza</h1>";
 
 // 1. Intentar limpiar OPcache
-echo "<h2>1. Limpieza de Caché (OPcache)</h2>";
+echo "<h2>1. Limpieza de Cachó© (OPcache)</h2>";
 if (function_exists('opcache_reset')) {
     if (opcache_reset()) {
-        echo "<p style='color:green'>✅ Opcache reseteado correctamente.</p>";
+        echo "<p style='color:green'>âœ… Opcache reseteado correctamente.</p>";
     } else {
-        echo "<p style='color:orange'>⚠️ No se pudo resetear Opcache (quizás no está activo o restringido).</p>";
+        echo "<p style='color:orange'>âš ï¸ No se pudo resetear Opcache (quizó¡s no estó¡ activo o restringido).</p>";
     }
 } else {
-    echo "<p style='color:gray'>ℹ️ Opcache no detectado o función no disponible.</p>";
+    echo "<p style='color:gray'>â„¹ï¸ Opcache no detectado o funció³n no disponible.</p>";
 }
 
 // 2. Verificar archivo CRM.php
-echo "<h2>2. Verificación de Código: CRM.php</h2>";
+echo "<h2>2. Verificació³n de Có³digo: CRM.php</h2>";
 $crmFile = __DIR__ . '/src/modules/crm/CRM.php';
 
 if (file_exists($crmFile)) {
     echo "<p>Archivo encontrado: $crmFile</p>";
-    echo "<p>Última modificación: " . date("Y-m-d H:i:s", filemtime($crmFile)) . "</p>";
+    echo "<p>óšltima modificació³n: " . date("Y-m-d H:i:s", filemtime($crmFile)) . "</p>";
 
     // Leer contenido
     $content = file_get_contents($crmFile);
 
-    // Buscar la función
+    // Buscar la funció³n
     if (strpos($content, 'function getFunnelStats') !== false) {
-        echo "<p style='color:green'>✅ La función <strong>getFunnelStats</strong> ESTÁ en el archivo físico.</p>";
+        echo "<p style='color:green'>âœ… La funció³n <strong>getFunnelStats</strong> ESTó en el archivo fó­sico.</p>";
     } else {
-        echo "<p style='color:red'>❌ La función <strong>getFunnelStats</strong> NO está en el archivo físico. (Fallo de Git)</p>";
+        echo "<p style='color:red'>âŒ La funció³n <strong>getFunnelStats</strong> NO estó¡ en el archivo fó­sico. (Fallo de Git)</p>";
     }
 
     // Verificar clase cargada en memoria
@@ -42,29 +42,33 @@ if (file_exists($crmFile)) {
     if (class_exists('Vsys\Modules\CRM\CRM')) {
         $methods = get_class_methods('Vsys\Modules\CRM\CRM');
         if (in_array('getFunnelStats', $methods)) {
-            echo "<p style='color:green'>✅ La clase en memoria TIENE el método getFunnelStats.</p>";
+            echo "<p style='color:green'>âœ… La clase en memoria TIENE el mó©todo getFunnelStats.</p>";
         } else {
-            echo "<p style='color:red'>❌ La clase en memoria NO tiene el método (Caché vieja persistente).</p>";
-            echo "<pre>Métodos disponibles: " . print_r($methods, true) . "</pre>";
+            echo "<p style='color:red'>âŒ La clase en memoria NO tiene el mó©todo (Cachó© vieja persistente).</p>";
+            echo "<pre>Mó©todos disponibles: " . print_r($methods, true) . "</pre>";
         }
     }
 
 } else {
-    echo "<p style='color:red'>❌ Archivo CRM.php NO encontrado.</p>";
+    echo "<p style='color:red'>âŒ Archivo CRM.php NO encontrado.</p>";
 }
 
 // 3. Verificar OperationAnalysis.php
-echo "<h2>3. Verificación de Código: OperationAnalysis.php</h2>";
+echo "<h2>3. Verificació³n de Có³digo: OperationAnalysis.php</h2>";
 $analysisFile = __DIR__ . '/src/modules/analysis/OperationAnalysis.php';
 
 if (file_exists($analysisFile)) {
     $content = file_get_contents($analysisFile);
     if (strpos($content, '$result[\'margin_percent\']') !== false) {
-        echo "<p style='color:green'>✅ OperationAnalysis parece actualizado (usa estructura plana).</p>";
+        echo "<p style='color:green'>âœ… OperationAnalysis parece actualizado (usa estructura plana).</p>";
     } else {
-        echo "<p style='color:red'>❌ OperationAnalysis parece ser la versión VIEJA.</p>";
+        echo "<p style='color:red'>âŒ OperationAnalysis parece ser la versió³n VIEJA.</p>";
     }
 }
 
 echo "<hr><a href='index.php' class='btn'>Volver al Dashboard</a>";
 ?>
+
+
+
+

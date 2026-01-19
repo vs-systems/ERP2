@@ -39,8 +39,9 @@ header {
 }
 
 .logo-large {
-    height: 48px;
-    filter: drop-shadow(0 0 5px white) drop-shadow(0 0 10px rgba(99, 102, 241, 0.5));
+    height: 55px;
+    width: auto;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.2));
     transition: transform 0.3s ease;
 }
 
@@ -49,15 +50,53 @@ header {
 }
 
 .dashboard-container {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    min-height: calc(100vh - 65px);
+    display: flex;
+    min-height: calc(100vh - 80px);
 }
 
 nav.sidebar {
-    background: rgba(15, 23, 42, 0.5);
-    padding: 2rem 1.25rem;
+    width: 260px;
+    min-width: 260px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
     border-right: 1px solid var(--border-color);
+    overflow-y: auto;
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+    nav.sidebar {
+        width: 80px;
+        min-width: 80px;
+    }
+
+    .nav-link span,
+    .nav-group-label,
+    .sidebar .logo-text {
+        display: none;
+    }
+
+    main.content {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column;
+    }
+
+    nav.sidebar {
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    header {
+        padding: 0.75rem 1rem;
+    }
 }
 
 .nav-link {

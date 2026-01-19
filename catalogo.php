@@ -24,7 +24,7 @@ sort($brands);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo - Vecino Seguro</title>
+    <title>Cató¡logo - Vecino Seguro</title>
     <link rel="stylesheet" href="css/style_premium.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -195,10 +195,10 @@ sort($brands);
 <body>
     <header>
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php" alt="VS System" class="logo-large" style="height: 45px;">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large"style="height: 45px;">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.2rem;">
                 Vecino Seguro <span
-                    style="background: var(--gradient-premium); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Catálogo</span>
+                    style="background: var(--gradient-premium); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Cató¡logo</span>
             </div>
         </div>
         <div class="header-right">
@@ -210,9 +210,9 @@ sort($brands);
     </header>
 
     <div class="catalog-header">
-        <h1>Explora nuestra Tecnología</h1>
-        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Equipamiento de seguridad electrónica de
-            alta gama. Cámaras, NVRs y soluciones de videovigilancia profesional.</p>
+        <h1>Explora nuestra Tecnologó­a</h1>
+        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Equipamiento de seguridad electró³nica de
+            alta gama. Có¡maras, NVRs y soluciones de videovigilancia profesional.</p>
     </div>
 
     <main class="content" style="max-width: 1400px; margin: 0 auto; padding-top: 0;">
@@ -222,7 +222,7 @@ sort($brands);
             </div>
             <div class="filter-item">
                 <select id="filter-category" style="margin-top:0;">
-                    <option value="">Todas las Categorías</option>
+                    <option value="">Todas las Categoró­as</option>
                     <?php foreach ($categories as $cat): ?>
                         <option value="<?php echo htmlspecialchars($cat); ?>">
                             <?php echo htmlspecialchars($cat); ?>
@@ -245,7 +245,7 @@ sort($brands);
         <div id="no-results">
             <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); opacity: 0.3;"></i>
             <h3>No encontramos productos que coincidan</h3>
-            <p style="color: var(--text-muted);">Prueba con otros filtros o términos de búsqueda.</p>
+            <p style="color: var(--text-muted);">Prueba con otros filtros o tó©rminos de bóºsqueda.</p>
         </div>
 
         <div class="product-grid" id="product-grid">
@@ -276,9 +276,19 @@ sort($brands);
                     </span>
 
                     <div class="product-footer">
-                        <div class="product-price">
-                            USD
-                            <?php echo number_format($p['unit_price_usd'], 2); ?>
+                        <div class="product-price-container">
+                            <?php if (($_SESSION['user_role'] ?? '') === 'Vendedor'): ?>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="font-size: 0.7rem; color: var(--accent-blue); opacity: 0.8; text-transform: uppercase;">Precio Gremio</div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">USD <?php echo number_format($p['price_gremio'] ?: $p['unit_price_usd'], 2); ?></div>
+                                    <div style="font-size: 0.7rem; color: var(--accent-violet); opacity: 0.8; text-transform: uppercase; margin-top: 4px;">Precio Web</div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">USD <?php echo number_format($p['price_web'] ?: ($p['unit_price_usd'] * 1.2), 2); ?></div>
+                                </div>
+                            <?php else: ?>
+                                <div class="product-price">
+                                    USD <?php echo number_format($p['unit_price_usd'], 2); ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
                         <a href="https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=<?php echo urlencode("Hola! Me interesa este producto: " . $p['sku'] . " - " . $p['description']); ?>"
                             target="_blank" class="btn-whatsapp"
@@ -293,8 +303,8 @@ sort($brands);
 
     <footer
         style="text-align: center; padding: 4rem 1rem; color: var(--text-muted); border-top: 1px solid var(--border-color); margin-top: 4rem;">
-        <p>&copy; 2026 Vecino Seguro - Seguridad Electrónica by Javier Gozzi</p>
-        <p style="font-size: 0.8rem; margin-top: 10px;">Los precios están sujetos a cambios sin previo aviso.</p>
+        <p>&copy; 2026 Vecino Seguro - Seguridad Electró³nica by Javier Gozzi</p>
+        <p style="font-size: 0.8rem; margin-top: 10px;">Los precios estó¡n sujetos a cambios sin previo aviso.</p>
     </footer>
 
     <script>
@@ -342,3 +352,8 @@ sort($brands);
 </body>
 
 </html>
+
+
+
+
+

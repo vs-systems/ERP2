@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Detalle de Ticket - VS System</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=Noto+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101822",
+                        "card-dark": "#1c2530",
+                        "border-dark": "#2a3b4f",
+                        "text-secondary": "#94a3b8",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for dark mode fitting */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #101822; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a3b4f; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3e536e; 
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-hidden">
+<div class="flex h-screen w-full overflow-hidden">
+<!-- SIDEBAR -->
+<aside class="w-64 bg-[#111822] border-r border-border-dark flex-shrink-0 flex flex-col hidden md:flex">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-center bg-no-repeat bg-cover rounded-lg size-10 bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">security</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-white text-base font-bold leading-tight">VS System</h1>
+<p class="text-text-secondary text-xs font-normal">Admin Panel</p>
+</div>
+</div>
+<nav class="flex-1 px-4 flex flex-col gap-2 overflow-y-auto">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-[#1c2530] hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/20" href="#">
+<span class="material-symbols-outlined text-[20px] fill-1">confirmation_number</span>
+<span class="text-sm font-medium">Tickets</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-[#1c2530] hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="text-sm font-medium">Clientes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-[#1c2530] hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="text-sm font-medium">Inventario</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-secondary hover:bg-[#1c2530] hover:text-white transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">description</span>
+<span class="text-sm font-medium">Reportes</span>
+</a>
+</nav>
+<div class="p-4 border-t border-border-dark">
+<div class="flex items-center gap-3">
+<div class="size-9 rounded-full bg-cover bg-center" data-alt="Portrait of logged in technician" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD8mNHLcZ3Ss0rEogiDjI0IBggVqUkkv_-dA2KUY5feFK_PTMCsEizUmat84nJ7PADyf7NJeNh7OM34RVDMwk0KYVaSPBM3lSPPcKgInQo1px1C3SsLDl6yB3TEmSMqAAErjI_ml5yEGYyWUMsgKfBIzmhvSxa4JcfwRrj41Zg7ouHM0MgeTdmS4nOg4UU9389alCYnmA4DuunlmQ36oFRycTqyVrF7MLZY5POJath62m7ruopIxmHiMTn-p9pUdUa3DlO7DX-L8A');"></div>
+<div class="flex flex-col">
+<p class="text-sm font-medium text-white">Carlos M.</p>
+<p class="text-xs text-text-secondary">Técnico Senior</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- MAIN CONTENT -->
+<main class="flex-1 flex flex-col h-full relative overflow-hidden">
+<!-- HEADER AREA -->
+<header class="bg-background-dark border-b border-border-dark shrink-0">
+<!-- Breadcrumbs -->
+<div class="px-6 pt-5 pb-1">
+<div class="flex flex-wrap gap-2 items-center">
+<a class="text-text-secondary text-sm font-medium hover:text-white" href="#">Inicio</a>
+<span class="text-text-secondary text-sm font-medium">/</span>
+<a class="text-text-secondary text-sm font-medium hover:text-white" href="#">Soporte</a>
+<span class="text-text-secondary text-sm font-medium">/</span>
+<span class="text-white text-sm font-medium">Ticket #TKT-2024-893</span>
+</div>
+</div>
+<!-- Page Heading & Actions -->
+<div class="px-6 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-3">
+<h2 class="text-white text-3xl font-bold tracking-tight">Ticket #TKT-2024-893</h2>
+<span class="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-500 border border-amber-500/20">
+<span class="size-1.5 rounded-full bg-amber-500"></span>
+                                En Revisión
+                            </span>
+</div>
+<p class="text-text-secondary text-sm">Abierto el 12 Oct, 2024 por Seguridad Norte S.A.</p>
+</div>
+<div class="flex flex-wrap items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-card-dark border border-border-dark text-white text-sm font-medium hover:bg-[#253040] transition-colors">
+<span class="material-symbols-outlined text-lg">receipt_long</span>
+                            Remito Recepción
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-card-dark border border-border-dark text-white text-sm font-medium hover:bg-[#253040] transition-colors">
+<span class="material-symbols-outlined text-lg">local_shipping</span>
+                            Remito Entrega
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:bg-blue-600 transition-colors">
+<span class="material-symbols-outlined text-lg">save</span>
+                            Guardar Cambios
+                        </button>
+</div>
+</div>
+</header>
+<!-- SCROLLABLE CONTENT -->
+<div class="flex-1 overflow-y-auto p-6 scroll-smooth">
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6 max-w-[1600px] mx-auto">
+<!-- LEFT COLUMN: CONTEXT (4 cols) -->
+<div class="xl:col-span-4 flex flex-col gap-6">
+<!-- Customer Card -->
+<div class="bg-card-dark rounded-xl border border-border-dark p-5">
+<h3 class="text-white text-lg font-semibold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary">business</span>
+                                Datos del Cliente
+                            </h3>
+<div class="space-y-4">
+<div class="flex justify-between border-b border-border-dark pb-3">
+<span class="text-text-secondary text-sm">Razón Social</span>
+<span class="text-white text-sm font-medium text-right">Seguridad Norte S.A.</span>
+</div>
+<div class="flex justify-between border-b border-border-dark pb-3">
+<span class="text-text-secondary text-sm">ID Cliente</span>
+<span class="text-white text-sm font-medium text-right">C-9982</span>
+</div>
+<div class="flex justify-between border-b border-border-dark pb-3">
+<span class="text-text-secondary text-sm">Contacto</span>
+<span class="text-white text-sm font-medium text-right">Javier M. (Gerente)</span>
+</div>
+<div class="flex justify-between pt-1">
+<span class="text-text-secondary text-sm">Email</span>
+<a class="text-primary text-sm font-medium text-right hover:underline" href="mailto:soporte@segnorte.com.ar">soporte@segnorte.com.ar</a>
+</div>
+</div>
+</div>
+<!-- Product Card -->
+<div class="bg-card-dark rounded-xl border border-border-dark p-5">
+<h3 class="text-white text-lg font-semibold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary">dns</span>
+                                Equipo en Reparación
+                            </h3>
+<div class="flex items-center gap-4 mb-6 bg-background-dark p-3 rounded-lg border border-border-dark">
+<div class="bg-white rounded-md p-1 size-16 shrink-0 flex items-center justify-center">
+<img alt="Security Camera Dome 4MP Product Shot" class="w-full h-full object-contain mix-blend-multiply" data-alt="Security camera product image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6CpR8IYK9e6PC5VPHAxra5cDb5D3vgLmXqhUArvsKg72u9s3HrVPW-NQwnUaIGjGsWX7w0KF0GqkiOeZrQj2j6EZdxOtSt2bZG8hxQqLSQRUoGch422YjyCjNuaMfPvn0YmuQJ-nzOnd1qgZwJrGOwcJ0VXKhdPl-YyhCk842L9MYx8oxBvsI7Ui2KgCkUIhzNsAQGU1WKZ7pnMdbJmJiUVVzYBVmfr-aMvSK5N5YDEVu6MYX6Hx_NdI6dqkI5b5cR0rTFoYMTg"/>
+</div>
+<div>
+<p class="text-white font-bold">Cámara IP Dome 4MP</p>
+<p class="text-text-secondary text-xs">Hikvision DS-2CD</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-1">
+<label class="text-xs text-text-secondary uppercase tracking-wider font-semibold">Nro. Serie</label>
+<div class="bg-background-dark px-3 py-2 rounded text-sm text-white font-mono border border-border-dark">SN-234234-X</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="text-xs text-text-secondary uppercase tracking-wider font-semibold">Firmware</label>
+<div class="bg-background-dark px-3 py-2 rounded text-sm text-white font-mono border border-border-dark">v5.7.1</div>
+</div>
+<div class="col-span-2 flex flex-col gap-1">
+<label class="text-xs text-text-secondary uppercase tracking-wider font-semibold">Garantía</label>
+<div class="flex items-center gap-2">
+<div class="bg-green-500/10 text-green-400 px-2 py-1 rounded text-xs font-medium border border-green-500/20">
+                                            Vigente
+                                        </div>
+<span class="text-xs text-text-secondary">Vence el 12/12/2024</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- MIDDLE COLUMN: WORKSPACE (5 cols) -->
+<div class="xl:col-span-5 flex flex-col gap-6">
+<!-- Failure Description -->
+<div class="bg-card-dark rounded-xl border border-border-dark p-5">
+<h3 class="text-white text-lg font-semibold mb-3">Falla Reportada</h3>
+<div class="bg-background-dark p-4 rounded-lg border border-border-dark mb-4">
+<p class="text-slate-300 text-sm leading-relaxed">
+                                    "La cámara dejó de transmitir video luego de una tormenta eléctrica la noche del viernes. El switch PoE indica consumo, pero no hay link de datos. No enciende el led IR al tapar el sensor."
+                                </p>
+</div>
+<h4 class="text-sm font-medium text-text-secondary mb-3">Evidencia Multimedia</h4>
+<div class="grid grid-cols-4 gap-2">
+<div class="aspect-square rounded-lg bg-cover bg-center cursor-pointer hover:opacity-80 transition-opacity border border-border-dark" data-alt="Close up of circuit board with burn marks" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCYj0oRGBomlW5W6-yKRirTZe1pn9lcXClQYGK9-SCgzWsv39Nb7bnW--o9bb056lZnuwjS1Egi9LBnqYF913UK0D9KXQZ1pYgpWKlqIsK9W88s2aZ9LoR_uqGTKvLVlclyRxL3XNnoSdM4rBuFcIkvQoAGBuw14LWYylj32eCGf65eXi7niw45GPa3xlNf2WUCi_1ppYe_b0q1blKutVpMRLwg5CsgXuij6DRym4_6TXxy0lyYTRsHd97DSZV5f7E1Zb84XK0YSg');"></div>
+<div class="aspect-square rounded-lg bg-cover bg-center cursor-pointer hover:opacity-80 transition-opacity border border-border-dark" data-alt="Back of security camera showing ports" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB-wtVa_0wiUTSJJbkRIJPx5F5t3eBCqjwzpcq5rxXBGaJFj-FrPYzudMMUBy_YD9rloczptMyEavU_fcwAMTr2CDqTvYPImdBkbxFNbBK2pCsr6FYiwtPMQU1BMIBB2fEQay1kHpSFGuKeQPxm9dt_zgpIR1A6EWSqiDbTtPnAdeYlVpbGqQgxmas0GmcKivCD5-5GZF_uNbiOdhupB2fuj5YZbHt8VrGNJ010ksELy5ppdMvHVgxjt2jrvDbC-tGNbV_FKCRTyA');"></div>
+<button class="aspect-square rounded-lg border border-dashed border-border-dark bg-background-dark flex flex-col items-center justify-center gap-1 text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all group">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">add_a_photo</span>
+<span class="text-xs">Adjuntar</span>
+</button>
+</div>
+</div>
+<!-- Diagnostic & Resolution Form -->
+<div class="bg-card-dark rounded-xl border border-border-dark p-5 flex-1">
+<h3 class="text-white text-lg font-semibold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary">build</span>
+                                Diagnóstico y Resolución
+                            </h3>
+<div class="space-y-5">
+<div class="space-y-2">
+<label class="text-sm font-medium text-text-secondary">Diagnóstico Técnico</label>
+<textarea class="w-full bg-background-dark border border-border-dark rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none min-h-[100px]" placeholder="Detalle las pruebas realizadas y el fallo encontrado..."></textarea>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-2">
+<label class="text-sm font-medium text-text-secondary">Acción a Tomar</label>
+<div class="relative">
+<select class="w-full bg-background-dark border border-border-dark rounded-lg p-2.5 text-sm text-white appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+<option>Reparación de Componente</option>
+<option>Cambio Directo (RMA)</option>
+<option>Presupuestar</option>
+<option>Devolución (Sin Falla)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-text-secondary pointer-events-none text-lg">expand_more</span>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-medium text-text-secondary">Nuevo Estado</label>
+<div class="relative">
+<select class="w-full bg-background-dark border border-border-dark rounded-lg p-2.5 text-sm text-white appearance-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none">
+<option selected="" value="revision">En Revisión</option>
+<option value="waiting">En Espera de Repuesto</option>
+<option value="done">Finalizado / Para Entregar</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-2.5 text-text-secondary pointer-events-none text-lg">expand_more</span>
+</div>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-medium text-text-secondary">Notas de Resolución (Visible en Remito)</label>
+<textarea class="w-full bg-background-dark border border-border-dark rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none min-h-[80px]" placeholder="Describa la solución aplicada para el cliente..."></textarea>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: TIMELINE (3 cols) -->
+<div class="xl:col-span-3 flex flex-col gap-6">
+<div class="bg-card-dark rounded-xl border border-border-dark flex flex-col h-full">
+<div class="p-5 border-b border-border-dark flex items-center justify-between sticky top-0 bg-card-dark rounded-t-xl z-10">
+<h3 class="text-white text-lg font-semibold">Historial</h3>
+<span class="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded">5 eventos</span>
+</div>
+<div class="flex-1 overflow-y-auto p-5 relative">
+<!-- Connecting line -->
+<div class="absolute left-[39px] top-5 bottom-5 w-px bg-border-dark"></div>
+<div class="space-y-6 relative">
+<!-- Event 1 (Latest) -->
+<div class="flex gap-4">
+<div class="size-10 rounded-full bg-primary/20 border border-primary text-primary shrink-0 flex items-center justify-center z-10 relative">
+<span class="material-symbols-outlined text-sm">engineering</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-medium text-white">Inicio de Diagnóstico</p>
+<p class="text-xs text-text-secondary">Carlos M. - hace 2 horas</p>
+<p class="text-xs text-slate-400 mt-1 bg-background-dark p-2 rounded border border-border-dark">Equipo desarmado. Se detecta olor a quemado en zona de VRM.</p>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="flex gap-4">
+<div class="size-10 rounded-full bg-card-dark border border-border-dark text-text-secondary shrink-0 flex items-center justify-center z-10 relative">
+<span class="material-symbols-outlined text-sm">inventory</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-medium text-white">Equipo Recibido</p>
+<p class="text-xs text-text-secondary">Recepción - 12 Oct, 10:30 AM</p>
+<p class="text-xs text-slate-400">Ingreso con Remito #R-4021. Incluye fuente de alimentación original.</p>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="flex gap-4">
+<div class="size-10 rounded-full bg-card-dark border border-border-dark text-text-secondary shrink-0 flex items-center justify-center z-10 relative">
+<span class="material-symbols-outlined text-sm">confirmation_number</span>
+</div>
+<div class="flex flex-col gap-1">
+<p class="text-sm font-medium text-white">Ticket Creado</p>
+<p class="text-xs text-text-secondary">Portal Cliente - 12 Oct, 09:15 AM</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Add Note Footer -->
+<div class="p-4 border-t border-border-dark bg-card-dark rounded-b-xl sticky bottom-0">
+<label class="text-xs font-medium text-text-secondary mb-2 block">Agregar Nota Interna</label>
+<div class="flex gap-2">
+<input class="flex-1 bg-background-dark border border-border-dark rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-primary outline-none" placeholder="Escribir comentario..." type="text"/>
+<button class="bg-primary/10 hover:bg-primary/20 text-primary rounded-lg px-3 py-2 transition-colors">
+<span class="material-symbols-outlined text-lg">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+        // Simple script to toggle select arrow rotation on focus (visual enhancement only)
+        document.querySelectorAll('select').forEach(select => {
+            select.addEventListener('focus', () => {
+                select.nextElementSibling.classList.add('rotate-180');
+            });
+            select.addEventListener('blur', () => {
+                select.nextElementSibling.classList.remove('rotate-180');
+            });
+        });
+    </script>
+</body></html>

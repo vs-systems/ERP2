@@ -1,11 +1,11 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - Database Export Tool
  */
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
-echo "<h2>Preparando Exportación para Migración...</h2>";
+echo "<h2>Preparando Exportació³n para Migració³n...</h2>";
 
 try {
     $db = Vsys\Lib\Database::getInstance();
@@ -50,10 +50,15 @@ try {
     $filename = "vsys_migration_dump_" . date("Ymd_His") . ".sql";
     file_put_contents(__DIR__ . "/public/$filename", $dump);
 
-    echo "<br>✅ **LISTO!** Base de datos exportada con éxito.<br>";
+    echo "<br>âœ… **LISTO!** Base de datos exportada con ó©xito.<br>";
     echo "Archivo generado: <a href='$filename'>$filename</a><br>";
     echo "<p>Descarga este archivo para subirlo a WNPower.</p>";
 
 } catch (\Exception $e) {
-    echo "<br>❌ ERROR: " . $e->getMessage();
+    echo "<br>âŒ ERROR: " . $e->getMessage();
 }
+
+
+
+
+

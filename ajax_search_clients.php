@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * VS System ERP - AJAX Search Clients
  */
@@ -54,3 +54,8 @@ foreach ($leads->fetchAll() as $l) {
 }
 
 echo json_encode($finalResults);
+
+
+
+
+
