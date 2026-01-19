@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once 'auth_check.php';
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
@@ -15,193 +15,396 @@ $currentRate = $currency->getCurrentRate('oficial') ?? 850.00; // Default if API
 $today = date('d/m/y');
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html class="dark" lang="es">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuevo Presupuesto - VS System</title>
-    <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script src="js/theme_handler.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "surface-dark": "#16202e",
+                    },
+                },
+            }
+        }
+    </script>
     <style>
-        .fee-toggles {
-            display: flex;
-            gap: 20px;
-            margin: 15px 0;
-            background: var(--secondary-blue);
-            padding: 15px;
-            border-radius: 8px;
+        body {
+            font-family: 'Inter', sans-serif;
         }
 
-        .toggle-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
 
-        .toggle-item input {
-            width: auto;
-            margin: 0;
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dark ::-webkit-scrollbar-track {
+            background: #101822;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #233348;
         }
 
         .search-dropdown {
             position: absolute;
-            background: var(--primary-blue);
-            width: 100%;
-            z-index: 100;
-            border: 1px solid var(--accent-violet);
-            max-height: 200px;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-top: 4px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            max-height: 250px;
             overflow-y: auto;
-            display: none;
+        }
+
+        .dark .search-dropdown {
+            background: #16202e;
+            border-color: #233348;
+            box-shadow: none;
         }
 
         .search-item {
-            padding: 10px;
+            padding: 10px 16px;
             cursor: pointer;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .dark .search-item {
+            border-bottom-color: #233348;
+        }
+
+        .search-item:last-child {
+            border-bottom: none;
         }
 
         .search-item:hover {
-            background: var(--accent-violet);
+            background: #f8fafc;
+        }
+
+        .dark .search-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .form-input-vsys {
+            @apply w-full bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-xl text-sm dark:text-white text-slate-800 focus:ring-primary/50 focus:border-primary transition-all;
         }
     </style>
 </head>
 
-<body>
-    <header
-        style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" class="logo-large" style="height: 50px; width: auto;">
-            <div
-                style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);">
-                Vecino Seguro <span
-                    style="background: linear-gradient(90deg, #8b5cf6, #d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Sistemas</span>
-                by Javier Gozzi - 2026
-            </div>
-        </div>
-        <div class="header-info" style="color: #cbd5e1; font-size: 1rem;">
-            Dólar BNA (Venta): <strong id="current-rate-display" style="color: var(--accent-violet);">$
-                <?php echo $currentRate; ?></strong>
-        </div>
-    </header>
-
-    <div class="dashboard-container">
+<body
+    class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white antialiased overflow-hidden transition-colors duration-300">
+    <div class="flex h-screen w-full">
         <?php include 'sidebar.php'; ?>
 
-        <main class="content">
-            <div class="card">
-                <h2>Cerrar Presupuesto: <?php echo $quoteNumber; ?></h2>
-                <div class="grid-3">
-                    <div style="position: relative;">
-                        <label>Cliente (Buscar por nombre o CUIT)</label>
-                        <input type="text" id="client-search" placeholder="Buscar cliente..." autocomplete="off">
-                        <input type="hidden" id="selected-client-id" value="1">
-                        <div id="client-results" class="search-dropdown" style="display: none;"></div>
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- Header -->
+            <header
+                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary/20 p-2 rounded-lg text-primary">
+                        <span class="material-symbols-outlined text-2xl">description</span>
                     </div>
-                    <div>
-                        <label>Nombre / Razón Social</label>
-                        <input type="text" id="client-name-display" readonly>
-                    </div>
-                    <div>
-                        <label>CUIT / CUIL</label>
-                        <input type="text" id="client-tax-display" readonly>
+                    <div class="flex flex-col">
+                        <h2
+                            class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight leading-none">
+                            Nuevo Presupuesto</h2>
+                        <span class="text-[10px] text-primary font-bold tracking-widest uppercase mt-1">Nº
+                            <?php echo $quoteNumber; ?></span>
                     </div>
                 </div>
-                <div class="grid-3" style="margin-top: 1rem;">
-                    <div>
-                        <label>Dirección</label>
-                        <input type="text" id="client-address-display" readonly>
-                    </div>
-                    <div style="display: flex; gap: 20px; align-items: center; padding-top: 25px;">
-                        <label class="toggle-item">
-                            <input type="checkbox" id="is-bank"> Transf. Bancaria (+3%)
-                        </label>
-                        <label class="toggle-item">
-                            <input type="checkbox" id="is-retention"> Agente de Retención (+7%)
-                        </label>
-                        <label class="toggle-item">
-                            <input type="checkbox" id="with-iva" checked> ¿Venta con IVA?
-                        </label>
+                <div class="flex items-center gap-4">
+                    <div class="bg-primary/10 px-4 py-2 rounded-xl border border-primary/20">
+                        <span
+                            class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest block">Dólar
+                            BNA (Venta)</span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-primary">$</span>
+                            <input type="number" step="0.01" id="bcra-reference" value="<?php echo $currentRate; ?>"
+                                class="w-16 bg-transparent border-none p-0 text-sm font-bold focus:ring-0 text-primary">
+                        </div>
                     </div>
                 </div>
+            </header>
 
-                <div class="product-search-bar card" style="margin-top: 1.5rem; position: relative;">
-                    <h3><i class="fas fa-search"></i> Agregar Productos</h3>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="product-search"
-                            placeholder="Buscar por SKU (Ej: CY-NVR), nombre, marca..." style="flex: 1;">
-                    </div>
-                    <div id="search-results" class="search-dropdown" style="top: 100%;"></div>
-                </div>
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-6 scroll-smooth">
+                <div class="max-w-[1400px] mx-auto space-y-6">
 
-                <div class="table-responsive" style="margin-top: 1.5rem;">
-                    <table class="table-compact" id="quote-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 80px;">Cant.</th>
-                                <th>SKU</th>
-                                <th>Descripción</th>
-                                <th style="text-align: right; width: 120px;">Unit. USD</th>
-                                <th style="text-align: right; width: 120px;">Unit. ARS</th>
-                                <th style="text-align: center; width: 80px;">IVA</th>
-                                <th style="text-align: right; width: 130px;">Total USD</th>
-                                <th style="text-align: center; width: 50px;"></th>
-                            </tr>
-                        </thead>
-                        <tbody id="quote-items">
-                            <!-- Items placeholder -->
-                        </tbody>
-                    </table>
-                </div>
+                    <!-- Client & Settings Selection -->
+                    <div
+                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none transition-colors">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                            <!-- Search -->
+                            <div class="md:col-span-12 lg:col-span-4 relative">
+                                <label
+                                    class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Buscar
+                                    Cliente (Nombre o CUIT)</label>
+                                <div class="relative">
+                                    <span
+                                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                                    <input type="text" id="client-search" placeholder="Escriba para buscar..."
+                                        autocomplete="off" class="form-input-vsys pl-10 h-12">
+                                    <input type="hidden" id="selected-client-id" value="1">
+                                    <div id="client-results" class="search-dropdown" style="display: none;"></div>
+                                </div>
+                            </div>
 
-                <div style="margin-top: 1.5rem;">
-                    <label style="color: var(--text-muted); font-size: 0.9rem;"><i class="fas fa-comment-alt"></i>
-                        Observaciones / Referencias Internas</label>
-                    <textarea id="quote-observations"
-                        placeholder="Ej: Referencia Orden de Compra #1234, Entrega pactada para el viernes..."
-                        style="width: 100%; height: 80px; background: rgba(255,255,255,0.05); border: 1px solid var(--accent-violet); border-radius: 8px; color: white; padding: 10px; font-family: inherit; margin-top: 5px;"></textarea>
-                </div>
+                            <!-- Info -->
+                            <div class="md:col-span-6 lg:col-span-4">
+                                <label
+                                    class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Nombre
+                                    / Razón Social</label>
+                                <input type="text" id="client-name-display" readonly
+                                    class="form-input-vsys h-12 bg-slate-100/50 dark:bg-[#101822]/50 font-bold">
+                            </div>
 
-                <div class="footer-summary grid-3" style="margin-top: 1.5rem;">
-                    <div>
-                        <p>Subtotal USD: <span id="total-neto-usd">0.00</span></p>
-                        <p>IVA USD: <span id="total-iva-usd">0.00</span></p>
-                        <h3 style="color: var(--accent-violet);">Total USD: <span id="total-general-usd">0.00</span>
-                        </h3>
-                    </div>
-                    <div>
-                        <p>Cotización BNA: <input type="number" step="0.01" id="bcra-reference"
-                                value="<?php echo $currentRate; ?>"
-                                style="width: 100px; background: rgba(255,255,255,0.05); border: 1px solid var(--accent-violet); border-radius: 4px; color: white; padding: 2px 5px; text-align: center; font-weight: bold;">
-                        </p>
-                        <h3 style="color: #27ae60;">Total ARS: $ <span id="total-general-ars">0.00</span></h3>
-                    </div>
-                    <div style="text-align: right; display: flex; flex-direction: column; gap: 10px;">
-                        <button class="btn-primary" onclick="saveQuotation()"><i class="fas fa-save"></i> GRABAR Y
-                            PDF</button>
-                        <button class="btn-primary" style="background: #25d366;" onclick="sendWhatsApp()"><i
-                                class="fab fa-whatsapp"></i> ENVIAR WHATSAPP</button>
-                    </div>
-                </div>
+                            <div class="md:col-span-6 lg:col-span-4">
+                                <label
+                                    class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">CUIT
+                                    / CUIL</label>
+                                <input type="text" id="client-tax-display" readonly
+                                    class="form-input-vsys h-12 bg-slate-100/50 dark:bg-[#101822]/50 font-mono">
+                            </div>
 
-                <div class="leyenda" style="margin-top: 2rem; font-size: 0.8rem; color: var(--text-muted);">
-                    Leyenda final: Cotización válida por 48hs sujeto a cambio de cotización y stock.
+                            <div
+                                class="md:col-span-12 lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-slate-100 dark:border-[#233348]">
+                                <div class="space-y-4">
+                                    <label
+                                        class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Opciones
+                                        de Cotización</label>
+                                    <div class="flex flex-wrap gap-4">
+                                        <label class="flex items-center gap-3 cursor-pointer group">
+                                            <input type="checkbox" id="is-bank"
+                                                class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary shadow-sm transition-all bg-white dark:bg-[#101822]">
+                                            <div class="flex flex-col">
+                                                <span class="text-xs font-bold dark:text-white text-slate-800">Transf.
+                                                    Bancaria</span>
+                                                <span
+                                                    class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">(+3%)</span>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center gap-3 cursor-pointer group">
+                                            <input type="checkbox" id="is-retention"
+                                                class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary shadow-sm transition-all bg-white dark:bg-[#101822]">
+                                            <div class="flex flex-col">
+                                                <span class="text-xs font-bold dark:text-white text-slate-800">Agente
+                                                    Retención</span>
+                                                <span
+                                                    class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">(+7%)</span>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center gap-3 cursor-pointer group">
+                                            <input type="checkbox" id="with-iva" checked
+                                                class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary shadow-sm transition-all bg-white dark:bg-[#101822]">
+                                            <div class="flex flex-col">
+                                                <span class="text-xs font-bold dark:text-white text-slate-800">Venta con
+                                                    IVA</span>
+                                                <span
+                                                    class="text-[10px] text-primary font-bold uppercase tracking-tighter">Discriminado</span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <label
+                                        class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Dirección
+                                        de Entrega</label>
+                                    <input type="text" id="client-address-display" readonly
+                                        class="form-input-vsys h-12 bg-slate-100/50 dark:bg-[#101822]/50">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Search -->
+                    <div
+                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none transition-colors relative h-fit sticky top-0 z-20">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="material-symbols-outlined text-primary">add_shopping_cart</span>
+                            <h3 class="font-bold text-sm dark:text-white text-slate-800 uppercase tracking-tight">
+                                Agregar Productos</h3>
+                        </div>
+                        <div class="relative">
+                            <span
+                                class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">inventory_2</span>
+                            <input type="text" id="product-search"
+                                placeholder="SKU, Nombre, Marca o Descripción del producto..." autocomplete="off"
+                                class="form-input-vsys pl-10 h-12">
+                            <div id="search-results" class="search-dropdown" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div
+                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-xl dark:shadow-none transition-colors">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left" id="quote-table">
+                                <thead
+                                    class="bg-slate-50 dark:bg-[#101822]/50 border-b border-slate-200 dark:border-[#233348]">
+                                    <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                                        <th class="px-6 py-4 w-24 text-center">Cant.</th>
+                                        <th class="px-6 py-4">Producto</th>
+                                        <th class="px-6 py-4 text-right">Unit. USD</th>
+                                        <th class="px-6 py-4 text-right">Unit. ARS</th>
+                                        <th class="px-6 py-4 text-center">IVA</th>
+                                        <th class="px-6 py-4 text-right">Total USD</th>
+                                        <th class="px-6 py-4 text-center w-16"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="quote-items" class="divide-y divide-slate-100 dark:divide-[#233348]">
+                                    <!-- Items injection -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div id="empty-state" class="p-12 flex flex-col items-center justify-center text-center">
+                            <div
+                                class="w-16 h-16 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center text-slate-400 mb-4">
+                                <span class="material-symbols-outlined text-3xl">shopping_basket</span>
+                            </div>
+                            <h4 class="text-sm font-bold dark:text-slate-400 text-slate-500 uppercase tracking-widest">
+                                Presupuesto Vacío</h4>
+                            <p class="text-[11px] text-slate-400 mt-1">Busque productos arriba para comenzar a cotizar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Controls & Summary -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Observations -->
+                        <div class="lg:col-span-7">
+                            <div
+                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none h-full">
+                                <label
+                                    class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 ml-1 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">notes</span> Observaciones /
+                                    Referencias Internas
+                                </label>
+                                <textarea id="quote-observations"
+                                    placeholder="Ej: Referencia Orden de Compra #1234, Entrega pactada para el viernes..."
+                                    class="w-full bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-xl text-sm dark:text-white text-slate-800 focus:ring-primary/50 focus:border-primary transition-all p-4 h-32 resize-none"></textarea>
+                                <p class="text-[10px] text-slate-400 mt-3 italic leading-relaxed">
+                                    Leyenda final: Cotización válida por 48hs sujeto a cambio de cotización y stock.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Summary -->
+                        <div class="lg:col-span-5">
+                            <div
+                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none h-full flex flex-col">
+                                <h3
+                                    class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-100 dark:border-[#233348] pb-4">
+                                    Resumen de Totales</h3>
+
+                                <div class="space-y-4 flex-1">
+                                    <div class="flex justify-between items-center text-sm font-medium">
+                                        <span class="text-slate-500">Subtotal Neto:</span>
+                                        <div class="flex items-center gap-1.5 font-mono">
+                                            <span class="text-slate-400">USD</span>
+                                            <span id="total-neto-usd" class="dark:text-white text-slate-800">0.00</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm font-medium">
+                                        <span class="text-slate-500">I.V.A.:</span>
+                                        <div class="flex items-center gap-1.5 font-mono">
+                                            <span class="text-slate-400">USD</span>
+                                            <span id="total-iva-usd"
+                                                class="dark:text-white text-slate-800 font-bold">0.00</span>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="pt-4 mt-2 border-t border-slate-100 dark:border-[#233348] flex justify-between items-end">
+                                        <div class="flex flex-col">
+                                            <span
+                                                class="text-[10px] font-bold text-primary uppercase tracking-widest">Total
+                                                General</span>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="text-lg font-mono font-bold text-primary">USD</span>
+                                                <span id="total-general-usd"
+                                                    class="text-3xl font-mono font-black text-primary tracking-tighter">0.00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-green-500/10 border border-green-500/20 p-4 rounded-xl flex justify-between items-center mt-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-green-500 p-1.5 rounded-lg text-white">
+                                                <span class="material-symbols-outlined text-lg">payments</span>
+                                            </div>
+                                            <span
+                                                class="text-xs font-bold text-green-600 dark:text-green-400 tracking-tight">Equivalente
+                                                Pesos</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <span
+                                                class="text-[10px] block font-bold text-green-500/70 uppercase tracking-tighter">ARS</span>
+                                            <span id="total-general-ars"
+                                                class="text-xl font-mono font-black text-green-600 dark:text-green-400 tracking-tighter">0,00</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3 mt-8">
+                                    <button onclick="saveQuotation()"
+                                        class="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95 group">
+                                        <span
+                                            class="material-symbols-outlined text-sm group-hover:rotate-12 transition-transform">picture_as_pdf</span>
+                                        GRABAR Y PDF
+                                    </button>
+                                    <button onclick="sendWhatsApp()"
+                                        class="flex items-center justify-center gap-2 bg-[#25d366] hover:bg-[#1ebe57] text-white font-bold py-4 rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-green-500/20 transition-all active:scale-95 group">
+                                        <span
+                                            class="material-symbols-outlined text-sm group-hover:scale-110 transition-transform">chat_bubble</span>
+                                        WHATSAPP
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
+    <!-- JS Logic Re-integrated -->
     <script>
         let bnaRate = <?php echo $currentRate; ?>;
         let items = [];
         let searchTimeout;
 
-        // Client Search Logic
         const clientSearch = document.getElementById('client-search');
         const clientResults = document.getElementById('client-results');
-        const productSearch = document.getElementById('product-search'); // Define productSearch here
-        const productResults = document.getElementById('search-results'); // Define productResults here
+        const productSearch = document.getElementById('product-search');
+        const productResults = document.getElementById('search-results');
 
+        // Client Search Logic
         clientSearch.addEventListener('input', function () {
             const query = this.value;
             if (query.length < 2) {
@@ -217,8 +420,13 @@ $today = date('d/m/y');
                         data.forEach(client => {
                             const div = document.createElement('div');
                             div.className = 'search-item';
-                            const contact = client.contact_person ? ` | <span style="color:#818cf8">${client.contact_person}</span>` : '';
-                            div.innerHTML = `<strong>${client.name}</strong>${contact}<br><small>${client.tax_id || client.document_number || 'S/D'}</small>`;
+                            div.innerHTML = `
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-sm dark:text-white text-slate-800">${client.name}</span>
+                                    <span class="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded uppercase">${client.tax_id || 'S/D'}</span>
+                                </div>
+                                <div class="text-[10px] text-slate-500 mt-1 italic">${client.contact_person || ''}</div>
+                            `;
                             div.onclick = () => selectClient(client);
                             clientResults.appendChild(div);
                         });
@@ -235,32 +443,19 @@ $today = date('d/m/y');
             document.getElementById('client-name-display').value = client.name;
             document.getElementById('client-tax-display').value = client.tax_id;
             document.getElementById('client-address-display').value = client.address;
-
-            // Auto-check retention if client is agent
             document.getElementById('is-retention').checked = (client.is_retention_agent == 1);
-
-            // Auto-check bank if preferred (search matches "transferencia" or "banco")
             const pref = (client.preferred_payment_method || '').toLowerCase();
             document.getElementById('is-bank').checked = (pref.includes('transferencia') || pref.includes('banco') || pref.includes('deposito'));
-
             clientResults.style.display = 'none';
-            renderTable(); // Re-render to apply potential retention changes
+            renderTable();
         }
 
-        // Close dropdowns on click outside
-        document.addEventListener('click', function (e) {
-            if (e.target !== clientSearch && !clientResults.contains(e.target)) clientResults.style.display = 'none';
-            if (e.target !== productSearch && !productResults.contains(e.target)) productResults.style.display = 'none';
-        });
-
-        // Búsqueda de productos en tiempo real
-        document.getElementById('product-search').addEventListener('input', function (e) {
+        // Product Search Logic
+        productSearch.addEventListener('input', function (e) {
             clearTimeout(searchTimeout);
             const query = e.target.value;
-            const dropdown = document.getElementById('search-results');
-
             if (query.length < 2) {
-                dropdown.style.display = 'none';
+                productResults.style.display = 'none';
                 return;
             }
 
@@ -268,19 +463,25 @@ $today = date('d/m/y');
                 fetch(`ajax_search_products.php?q=${query}`)
                     .then(res => res.json())
                     .then(data => {
-                        dropdown.innerHTML = '';
+                        productResults.innerHTML = '';
                         if (data.length > 0) {
-                            dropdown.style.display = 'block';
+                            productResults.style.display = 'block';
                             data.forEach(prod => {
                                 const div = document.createElement('div');
                                 div.className = 'search-item';
                                 const priceARS = (parseFloat(prod.unit_price_usd) * bnaRate).toLocaleString('es-AR', { minimumFractionDigits: 2 });
-                                div.innerHTML = `<strong>${prod.sku}</strong> - ${prod.description} (${prod.brand}) - <span style="color:var(--accent-violet)">USD ${prod.unit_price_usd}</span> | <span style="color:#27ae60">ARS ${priceARS}</span>`;
+                                div.innerHTML = `
+                                    <div class="flex justify-between">
+                                        <span class="font-bold text-sm dark:text-white text-slate-800">${prod.sku}</span>
+                                        <span class="font-bold text-primary font-mono text-sm">USD ${prod.unit_price_usd}</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 mt-0.5">${prod.description} (${prod.brand})</div>
+                                `;
                                 div.onclick = () => addItem(prod);
-                                dropdown.appendChild(div);
+                                productResults.appendChild(div);
                             });
                         } else {
-                            dropdown.style.display = 'none';
+                            productResults.style.display = 'none';
                         }
                     });
             }, 300);
@@ -300,45 +501,57 @@ $today = date('d/m/y');
                     qty: 1
                 });
             }
-            document.getElementById('product-search').value = '';
-            document.getElementById('search-results').style.display = 'none';
+            productSearch.value = '';
+            productResults.style.display = 'none';
             renderTable();
         }
 
         function renderTable() {
             const tbody = document.getElementById('quote-items');
+            const emptyState = document.getElementById('empty-state');
             tbody.innerHTML = '';
+
+            if (items.length === 0) {
+                emptyState.style.display = 'flex';
+                calculateTotals();
+                return;
+            }
+            emptyState.style.display = 'none';
 
             const isRetention = document.getElementById('is-retention').checked;
             const isBank = document.getElementById('is-bank').checked;
-            const withIva = document.getElementById('with-iva').checked;
 
             items.forEach((item, index) => {
-                // Calculate adjusted unit price for this row (Sequential)
                 let adjustedUnitPrice = item.price;
                 if (isRetention) adjustedUnitPrice *= 1.07;
                 if (isBank) adjustedUnitPrice *= 1.03;
 
                 const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors";
                 tr.innerHTML = `
-                    <td><input type="number" class="qty-input" value="${item.qty}" min="1" onchange="updateQty(${index}, this.value)" style="width: 60px; background: rgba(255,255,255,0.05); border: 1px solid var(--accent-violet); border-radius: 4px; color: white;"></td>
-                    <td>${item.sku}</td>
-                    <td style="font-size: 0.9rem;">${item.desc}</td>
-                    <td style="text-align: right;">
+                    <td class="px-6 py-4 text-center">
+                        <input type="number" value="${item.qty}" min="1" onchange="updateQty(${index}, this.value)" 
+                            class="w-16 h-10 text-center bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-lg text-sm dark:text-white font-bold focus:ring-primary/30">
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-sm dark:text-white text-slate-800">${item.sku}</div>
+                        <div class="text-[10px] text-slate-500 line-clamp-1 max-w-xs uppercase font-medium mt-1">${item.desc}</div>
+                    </td>
+                    <td class="px-6 py-4 text-right">
                         <input type="number" step="0.01" value="${adjustedUnitPrice.toFixed(2)}" 
                             onchange="updatePrice(${index}, this.value, 'usd')" 
-                            style="width: 100px; text-align: right; background: rgba(255,255,255,0.05); border: 1px solid var(--accent-violet); border-radius: 4px; color: var(--accent-blue); font-weight: 600;">
+                            class="w-24 h-10 text-right bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-lg text-sm text-primary font-mono font-bold focus:ring-primary/30">
                     </td>
-                    <td style="text-align: right;">
-                        <input type="number" step="0.01" value="${(adjustedUnitPrice * bnaRate).toFixed(2)}" 
-                            onchange="updatePrice(${index}, this.value, 'ars')" 
-                            style="width: 110px; text-align: right; background: rgba(255,255,255,0.05); border: 1px solid #27ae60; border-radius: 4px; color: #10b981; font-weight: 600;">
+                    <td class="px-6 py-4 text-right">
+                        <div class="text-sm dark:text-white/80 text-slate-500 font-mono font-medium">$ ${(adjustedUnitPrice * bnaRate).toFixed(2)}</div>
                     </td>
-                    <td style="text-align: center;">${item.iva}%</td>
-                    <td style="text-align: right; font-weight: 700;">$ ${(adjustedUnitPrice * item.qty).toFixed(2)}</td>
-                    <td style="text-align: center;">
-                        <button class="btn-primary" onclick="removeItem(${index})" style="padding: 5px 10px; background: rgba(255,0,0,0.2);">
-                            <i class="fas fa-trash"></i>
+                    <td class="px-6 py-4 text-center font-bold text-slate-400 text-[11px] uppercase">${item.iva}%</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="text-sm font-bold dark:text-white text-slate-800 font-mono">$ ${(adjustedUnitPrice * item.qty).toFixed(2)}</div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="removeItem(${index})" class="p-2 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-500/10 transition-all">
+                            <span class="material-symbols-outlined text-lg">delete</span>
                         </button>
                     </td>
                 `;
@@ -357,12 +570,8 @@ $today = date('d/m/y');
             const isRetention = document.getElementById('is-retention').checked;
             const isBank = document.getElementById('is-bank').checked;
 
-            // If ARS, convert back to USD first
-            if (unit === 'ars') {
-                enteredPrice = enteredPrice / bnaRate;
-            }
+            if (unit === 'ars') enteredPrice = enteredPrice / bnaRate;
 
-            // Reverse adjustments to get the base price
             let basePrice = enteredPrice;
             if (isBank) basePrice /= 1.03;
             if (isRetention) basePrice /= 1.07;
@@ -390,17 +599,14 @@ $today = date('d/m/y');
 
                 let lineTotal = adjustedPrice * item.qty;
                 subtotal += lineTotal;
-
-                if (withIva) {
-                    totalIva += (lineTotal * (item.iva / 100));
-                }
+                if (withIva) totalIva += (lineTotal * (item.iva / 100));
             });
 
             document.getElementById('total-neto-usd').innerText = subtotal.toFixed(2);
             document.getElementById('total-iva-usd').innerText = totalIva.toFixed(2);
             const totalGeneral = subtotal + totalIva;
             document.getElementById('total-general-usd').innerText = totalGeneral.toFixed(2);
-            document.getElementById('total-general-ars').innerText = (totalGeneral * bnaRate).toLocaleString('es-AR');
+            document.getElementById('total-general-ars').innerText = (totalGeneral * bnaRate).toLocaleString('es-AR', { minimumFractionDigits: 2 });
         }
 
         document.getElementById('is-retention').addEventListener('change', renderTable);
@@ -409,6 +615,12 @@ $today = date('d/m/y');
         document.getElementById('bcra-reference').addEventListener('change', function () {
             bnaRate = parseFloat(this.value) || 0;
             renderTable();
+        });
+
+        // Click outside to close dropdowns
+        document.addEventListener('click', function (e) {
+            if (e.target !== clientSearch && !clientResults.contains(e.target)) clientResults.style.display = 'none';
+            if (e.target !== productSearch && !productResults.contains(e.target)) productResults.style.display = 'none';
         });
 
         function saveQuotation() {
@@ -440,16 +652,8 @@ $today = date('d/m/y');
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) {
-                        // Log to CRM
                         logCrmInteraction(data.client_id, 'Email/PDF', `Generó presupuesto ${data.quote_number}`);
-
-                        // Try to open PDF immediately to avoid popup blockers
-                        const pdfWindow = window.open('imprimir_cotizacion.php?id=' + res.id, '_blank');
-                        if (!pdfWindow) {
-                            alert('Presupuesto guardado, pero el bloqueador de popups impidió abrir el PDF. Puede encontrarlo en el historial.');
-                        } else {
-                            alert('Presupuesto guardado correctamente.');
-                        }
+                        window.open('imprimir_cotizacion.php?id=' + res.id, '_blank');
                         location.reload();
                     } else {
                         alert('Error: ' + res.error);
@@ -458,11 +662,7 @@ $today = date('d/m/y');
         }
 
         function sendWhatsApp() {
-            if (items.length === 0) {
-                alert('Agregue productos primero.');
-                return;
-            }
-
+            if (items.length === 0) { alert('Agregue productos primero.'); return; }
             const clientName = document.getElementById('client-name-display').value || 'Cliente';
             const clientId = document.getElementById('selected-client-id').value;
             const quoteNo = '<?php echo $quoteNumber; ?>';
@@ -471,7 +671,6 @@ $today = date('d/m/y');
 
             let text = `*Presupuesto VS System - ${quoteNo}*\n`;
             text += `Hola *${clientName}*, aquí tienes la cotización solicitada:\n\n`;
-
             items.forEach(i => {
                 const isRetention = document.getElementById('is-retention').checked;
                 const isBank = document.getElementById('is-bank').checked;
@@ -480,27 +679,22 @@ $today = date('d/m/y');
                 if (isBank) p *= 1.03;
                 text += `- ${i.qty}x ${i.desc} (*$${p.toFixed(2)}*)\n`;
             });
-
-            text += `\n*TOTAL USD: $${totalUSD}*\n`;
-            text += `*TOTAL ARS: $${totalARS}*\n\n`;
-            text += `_Cotización BNA: ${bnaRate}_\n\n`;
-            text += `Válido por 48hs o hasta agotar stock.`;
-
-            // Log to CRM
+            text += `\n*TOTAL USD: $${totalUSD}*\n*TOTAL ARS: $${totalARS}*\n\n_Cotización BNA: ${bnaRate}_`;
             logCrmInteraction(clientId, 'WhatsApp', `Envió presupuesto ${quoteNo} por WhatsApp`);
-
-            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-            window.open(url, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
         }
 
         function logCrmInteraction(entityId, type, desc) {
-            if (!entityId || entityId == "1") return; // Don't log for generic client
+            if (!entityId || entityId == "1") return;
             fetch('ajax_log_crm.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ entity_id: entityId, type: type, description: desc })
             });
         }
+
+        // Initialize table
+        renderTable();
     </script>
 </body>
 

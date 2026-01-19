@@ -1,8 +1,5 @@
-<?php
+﻿<?php
 require_once 'auth_check.php';
-/**
- * VS System ERP - Gestión de Clientes
- */
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/clientes/Client.php';
@@ -28,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_entity'])) {
         'address' => $_POST['address'],
         'delivery_address' => $_POST['delivery_address'],
         'default_voucher' => $_POST['default_voucher_type'] ?? 'Factura',
-        'tax_category' => $_POST['tax_category'] ?? 'No Aplica', // Default if empty
+        'tax_category' => $_POST['tax_category'] ?? 'No Aplica',
         'is_enabled' => isset($_POST['is_enabled']) ? 1 : 0,
         'retention' => isset($_POST['is_retention_agent']) ? 1 : 0,
         'payment_condition' => $_POST['payment_condition'],
@@ -50,150 +47,185 @@ $db = Vsys\Lib\Database::getInstance();
 $clients = $db->query($sql)->fetchAll();
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html class="dark" lang="es">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Clientes - VS System</title>
-    <link rel="stylesheet" href="css/style_premium.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="js/entity-format.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script src="js/theme_handler.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "surface-dark": "#16202e",
+                    },
+                },
+            }
+        }
+    </script>
     <style>
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 2rem;
+        body {
+            font-family: 'Inter', sans-serif;
         }
 
-        .form-group {
-            display: flex;
-            flex-direction: column;
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
 
-        .form-group label {
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #818cf8;
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
 
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 10px;
-            border-radius: 6px;
-            background: #1e293b;
-            color: #fff;
-            border: 1px solid #334155;
+        .dark ::-webkit-scrollbar-track {
+            background: #101822;
         }
 
-        .btn-edit {
-            background: #ca8a04;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        .dark ::-webkit-scrollbar-thumb {
+            background: #233348;
         }
     </style>
 </head>
 
-<body>
-    <header
-        style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=1" alt="VS System" class="logo-large" style="height: 50px; width: auto;">
-            <div
-                style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);">
-                Vecino Seguro <span
-                    style="background: linear-gradient(90deg, #8b5cf6, #d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Sistemas</span>
-                by Javier Gozzi - 2026
-            </div>
-        </div>
-        <div class="header-right" style="color: #cbd5e1;">
-            <span class="user-badge"><i class="fas fa-user-circle"></i> Admin</span>
-        </div>
-    </header>
-
-    <div class="dashboard-container">
+<body
+    class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white antialiased overflow-hidden transition-colors duration-300">
+    <div class="flex h-screen w-full">
         <?php include 'sidebar.php'; ?>
 
-        <main class="content">
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- Header -->
+            <header
+                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary/20 p-2 rounded-lg text-primary">
+                        <span class="material-symbols-outlined text-2xl">badge</span>
+                    </div>
+                    <h2 class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">Directorio de
+                        Clientes</h2>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="config_entities.php?type=client"
+                        class="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-sm">person_add</span> NUEVO CLIENTE
+                    </a>
+                </div>
+            </header>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
-                <h1>Directorios de Clientes</h1>
-                <a href="config_entities.php?type=client" class="btn-primary"
-                    style="background:var(--accent-violet); text-decoration:none;">
-                    <i class="fas fa-plus"></i> NUEVO CLIENTE
-                </a>
-            </div>
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto p-6 scroll-smooth">
+                <div class="max-w-[1400px] mx-auto space-y-6">
 
-            <div class="card" style="margin-top: 2rem;">
-                <h3><i class="fas fa-list-alt"></i> Listado de Clientes</h3>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre / Raz&oacute;n Social</th>
-                                <th>CUIT / DNI</th>
-                                <th>Contacto</th>
-                                <th>Cat. Fiscal</th>
-                                <th>Email / Tel</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($clients as $c): ?>
-                                <tr style="<?php echo !$c['is_enabled'] ? 'opacity: 0.5' : ''; ?>">
-                                    <td>
-                                        <strong>
-                                            <?php echo $c['name']; ?>
-                                        </strong><br>
-                                        <small style="color: #818cf8;">
-                                            <?php echo $c['fantasy_name']; ?>
-                                        </small>
-                                    </td>
-                                    <td>
-                                        <?php echo $c['tax_id']; ?><br>
-                                        <small>
-                                            <?php echo $c['document_number']; ?>
-                                        </small>
-                                    </td>
-                                    <td>
-                                        <?php echo $c['contact_person']; ?>
-                                    </td>
-                                    <td><span class="badge"
-                                            style="background: rgba(139, 92, 246, 0.2);"><?php echo $c['tax_category']; ?></span>
-                                    </td>
-                                    <td>
-                                        <?php echo $c['email']; ?><br>
-                                        <small>
-                                            <?php echo $c['mobile'] ?: $c['phone']; ?>
-                                        </small>
-                                    </td>
-                                    <td>
-                                        <?php if ($c['is_enabled']): ?>
-                                            <span style="color: #10b981">ACTIVO</span>
-                                        <?php else: ?>
-                                            <span style="color: #ef4444">INACTIVO</span>
-                                        <?php endif; ?>
-                                    </td>
-                                    <td>
-                                        <a href="config_entities.php?type=client&edit=<?php echo $c['id']; ?>"
-                                            class="btn-edit" style="text-decoration:none;">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                    <?php if ($message): ?>
+                        <div
+                            class="flex items-center gap-3 p-4 rounded-2xl border <?php echo $status === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-500' : 'bg-red-500/10 border-red-500/20 text-red-500'; ?> animate-in fade-in slide-in-from-top-4 duration-300">
+                            <span
+                                class="material-symbols-outlined"><?php echo $status === 'success' ? 'check_circle' : 'error'; ?></span>
+                            <span class="text-sm font-bold uppercase tracking-widest"><?php echo $message; ?></span>
+                        </div>
+                    <?php endif; ?>
+
+                    <div
+                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-xl dark:shadow-none transition-colors">
+                        <div
+                            class="p-6 border-b border-slate-100 dark:border-[#233348] flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-slate-400">group</span>
+                                <h3
+                                    class="font-bold text-slate-500 dark:text-slate-400 uppercase text-xs tracking-widest">
+                                    Listado de Clientesregistrados</h3>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="bg-slate-100 dark:bg-white/5 py-1 px-3 rounded-full text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                                    Total: <?php echo count($clients); ?>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead
+                                    class="bg-slate-50 dark:bg-[#101822]/50 border-b border-slate-200 dark:border-[#233348]">
+                                    <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                                        <th class="px-6 py-4">Nombre / Razón Social</th>
+                                        <th class="px-6 py-4">CUIT / DNI</th>
+                                        <th class="px-6 py-4">Contacto</th>
+                                        <th class="px-6 py-4">Cat. Fiscal</th>
+                                        <th class="px-6 py-4">Email / Tel</th>
+                                        <th class="px-6 py-4 text-center">Estado</th>
+                                        <th class="px-6 py-4 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-[#233348]">
+                                    <?php foreach ($clients as $c): ?>
+                                        <tr
+                                            class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group <?php echo !$c['is_enabled'] ? 'opacity-60' : ''; ?>">
+                                            <td class="px-6 py-5">
+                                                <div class="font-bold text-sm dark:text-white text-slate-800">
+                                                    <?php echo $c['name']; ?></div>
+                                                <div class="text-[11px] text-slate-500 font-medium">
+                                                    <?php echo $c['fantasy_name']; ?></div>
+                                            </td>
+                                            <td class="px-6 py-5">
+                                                <div class="text-sm dark:text-white text-slate-800 font-mono">
+                                                    <?php echo $c['tax_id']; ?></div>
+                                                <div class="text-[11px] text-slate-500"><?php echo $c['document_number']; ?>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-5">
+                                                <div class="text-sm dark:text-white text-slate-800 font-medium">
+                                                    <?php echo $c['contact_person']; ?></div>
+                                            </td>
+                                            <td class="px-6 py-5">
+                                                <span
+                                                    class="text-[10px] font-bold py-1 px-2 rounded-lg bg-primary/10 text-primary border border-primary/20">
+                                                    <?php echo $c['tax_category']; ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-5">
+                                                <div class="text-sm dark:text-white text-slate-800">
+                                                    <?php echo $c['email']; ?></div>
+                                                <div
+                                                    class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                                                    <?php echo $c['mobile'] ?: $c['phone']; ?></div>
+                                            </td>
+                                            <td class="px-6 py-5 text-center">
+                                                <span
+                                                    class="text-[10px] font-bold uppercase py-1 px-2 rounded-full <?php echo $c['is_enabled'] ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'; ?>">
+                                                    <?php echo $c['is_enabled'] ? 'Activo' : 'Inactivo'; ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-5 text-center">
+                                                <div class="flex items-center justify-center gap-2">
+                                                    <a href="config_entities.php?id=<?php echo $c['id']; ?>&type=client"
+                                                        class="p-2 rounded-lg hover:bg-primary/10 text-slate-400 hover:text-primary transition-all shadow-sm"
+                                                        title="Editar Cliente">
+                                                        <span class="material-symbols-outlined text-[18px]">edit</span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-    </div>
-
-    </main>
+        </main>
     </div>
 </body>
 
