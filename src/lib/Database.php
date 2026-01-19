@@ -11,11 +11,18 @@ class Database
 
     private function __construct()
     {
-        $host = defined('DB_HOST') ? DB_HOST : (getenv('DB_HOST') ?: '127.0.0.1');
-        $name = defined('DB_NAME') ? DB_NAME : (getenv('DB_NAME') ?: 'gozziar_vs_system_erp');
-        $user = defined('DB_USER') ? DB_USER : (getenv('DB_USER') ?: 'gozziar_javiergdm');
-        $pass = defined('DB_PASS') ? DB_PASS : (getenv('DB_PASS') ?: 'Andrea1910');
-        $charset = defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4';
+        $configPath = dirname(__DIR__) . '/config/config.php';
+        $config = file_exists($configPath) ? require $configPath : [];
+
+        $host = $config['db']['host'] ?? (defined('DB_HOST') ? DB_HOST : (getenv('DB_HOST') ?: 'localhost'));
+        $name = $config['db']['name'] ?? (defined('DB_NAME') ? DB_NAME : (getenv('DB_NAME') ?: ''));
+        $user = $config['db']['user'] ?? (defined('DB_USER') ? DB_USER : (getenv('DB_USER') ?: ''));
+        $pass = $config['db']['pass'] ?? (defined('DB_PASS') ? DB_PASS : (getenv('DB_PASS') ?: ''));
+        $charset = $config['db']['charset'] ?? (defined('DB_CHARSET') ? DB_CHARSET : 'utf8mb4');
+
+        if (empty($name) || empty($user)) {
+            die("Database Configuration Error: Config file not found or incomplete. Check src/config/config.php");
+        }
 
         $dsn = "mysql:host=" . $host . ";dbname=" . $name . ";charset=" . $charset;
         $options = [
