@@ -1,64 +1,95 @@
 ﻿<?php
 /**
- * Migration: Create Users Table & Update Entities
+ * VS System ERP - Multitenancy Migration Script (REUSED FILENAME)
+ * This script prepares the DB for Multiple Companies.
  */
-
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 
-use Vsys\Lib\Database;
+$db = Vsys\Lib\Database::getInstance();
 
 try {
-    $db = Database::getInstance();
-    echo "<h1>Database Migration - Users & Entities</h1>";
+    $db->beginTransaction();
 
-    // 1. Create Users Table
-    $sqlUsers = "CREATE TABLE IF NOT EXISTS `users` (
-        `id` INT AUTO_INCREMENT PRIMARY KEY,
-        `entity_id` INT NULL COMMENT 'Link to entities (for sellers or clients)',
-        `username` VARCHAR(50) NOT NULL UNIQUE,
-        `password_hash` VARCHAR(255) NOT NULL,
-        `role` ENUM('Admin', 'Vendedor', 'Contabilidad', 'Deposito', 'Compras', 'Marketing', 'Sistemas', 'Cliente', 'Invitado') NOT NULL,
-        `status` ENUM('Active', 'Inactive', 'Pending') DEFAULT 'Active',
-        `last_login` DATETIME NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+    echo "<h1>Database Migration - Multitenancy</h1>";
 
-    $db->exec($sqlUsers);
-    echo "Table 'users' created or already exists.<br>";
+    echo "<p>Creating 'companies' table...</p>";
+    $db->exec("CREATE TABLE IF NOT EXISTS companies (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(200) NOT NULL,
+        tax_id VARCHAR(20) UNIQUE,
+        email VARCHAR(100),
+        status ENUM('active', 'inactive') DEFAULT 'active',
+        settings JSON DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
 
-    // 2. Update Entities (Clients/Suppliers/Sellers)
-    $entityCols = $db->query("DESCRIBE entities")->fetchAll(PDO::FETCH_COLUMN);
-
-    // Seller assignment
-    if (!in_array('seller_id', $entityCols)) {
-        $db->exec("ALTER TABLE entities ADD COLUMN seller_id INT NULL AFTER is_enabled");
-        echo "Column 'seller_id' added to 'entities'.<br>";
+    // Create Default Company (Original Owner)
+    $stmt = $db->query("SELECT id FROM companies LIMIT 1");
+    if (!$stmt->fetch()) {
+        echo "<p>Inserting default company...</p>";
+        $db->exec("INSERT INTO companies (name, tax_id) VALUES ('Vecino Seguro ERP', '30-11111111-9')");
+        $companyId = $db->lastInsertId();
+    } else {
+        $companyId = 1;
     }
 
-    // Client profile
-    if (!in_array('client_profile', $entityCols)) {
-        $db->exec("ALTER TABLE entities ADD COLUMN client_profile ENUM('Gremio', 'Web', 'ML', 'Otro') DEFAULT 'Otro' AFTER seller_id");
-        echo "Column 'client_profile' added to 'entities'.<br>";
+    $tablesToMigrate = [
+        'users',
+        'exchange_rates',
+        'categories',
+        'products',
+        'product_serials',
+        'entities',
+        'supplier_prices',
+        'quotations',
+        'quotation_items',
+        'price_analysis',
+        'price_analysis_items',
+        'purchase_orders',
+        'price_lists',
+        'transport_companies',
+        'permissions'
+    ];
+
+    foreach ($tablesToMigrate as $table) {
+        $check = $db->query("SHOW TABLES LIKE '$table'");
+        if (!$check->fetch()) {
+            echo "<p>Skipping missing table: $table</p>";
+            continue;
+        }
+
+        echo "<p>Migrating table: $table...</p>";
+
+        // Check if column exists
+        $columns = $db->query("SHOW COLUMNS FROM $table LIKE 'company_id'")->fetch();
+        if (!$columns) {
+            $db->exec("ALTER TABLE $table ADD COLUMN company_id INT NOT NULL DEFAULT $companyId AFTER id");
+            $db->exec("ALTER TABLE $table ADD INDEX idx_company_id (company_id)");
+        }
     }
 
-    // Verification status (for clients)
-    if (!in_array('is_verified', $entityCols)) {
-        $db->exec("ALTER TABLE entities ADD COLUMN is_verified BOOLEAN DEFAULT 0 AFTER client_profile");
-        echo "Column 'is_verified' added to 'entities'.<br>";
+    // Special case: Update unique index for products (sku per company)
+    echo "<p>Updating products SKU unique index...</p>";
+    try {
+        $db->exec("ALTER TABLE products DROP INDEX sku");
+    } catch (Exception $e) { /* ignore if not exists */
     }
+    $db->exec("ALTER TABLE products ADD UNIQUE KEY uk_sku_company (sku, company_id)");
 
-    // 3. Create initial Admin user if none exists
-    $count = $db->query("SELECT COUNT(*) FROM users")->fetchColumn();
-    if ($count == 0) {
-        $adminPass = password_hash('Andrea1910@', PASSWORD_DEFAULT);
-        $db->prepare("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)")
-            ->execute(['admin', $adminPass, 'Admin']);
-        echo "Default admin user created (admin / Andrea1910@).<br>";
+    // Special case: users (username per company)
+    echo "<p>Updating users username unique index...</p>";
+    try {
+        $db->exec("ALTER TABLE users DROP INDEX username");
+    } catch (Exception $e) { /* ignore if not exists */
     }
+    $db->exec("ALTER TABLE users ADD UNIQUE KEY uk_username_company (username, company_id)");
 
-    echo "<h2>Migration completed successfully.</h2>";
+    $db->commit();
+    echo "<h2>Migration completed successfully!</h2>";
 
 } catch (Exception $e) {
-    echo "<h2 style='color:red'>Migration Error: " . $e->getMessage() . "</h2>";
+    if ($db->inTransaction())
+        $db->rollBack();
+    echo "<h2 style='color:red;'>ERROR: " . $e->getMessage() . "</h2>";
 }
