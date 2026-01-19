@@ -194,7 +194,8 @@ sort($brands);
                             class="text-[10px] font-bold text-[#136dec] uppercase tracking-widest mb-1"><?php echo $p['brand']; ?></span>
                         <h3
                             class="text-white font-bold text-sm leading-snug line-clamp-2 mb-2 group-hover:text-[#136dec] transition-colors">
-                            <?php echo $p['description']; ?></h3>
+                            <?php echo $p['description']; ?>
+                        </h3>
                         <p class="text-slate-500 text-[10px] mb-4"><?php echo $p['sku']; ?></p>
 
                         <div class="mt-auto flex items-center justify-between gap-2 pt-4 border-t border-[#233348]">
@@ -204,9 +205,13 @@ sort($brands);
                                     <?php echo number_format($p['price_final_usd'], 2); ?></span>
                             </div>
                             <button onclick='addToCart(<?php echo json_encode($p); ?>)'
-                                class="bg-accent-green hover:bg-emerald-600 text-black px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-emerald-500/10">
-                                <span class="material-symbols-outlined text-lg">whatsapp</span>
-                                <span class="text-xs font-bold uppercase">Consultar</span>
+                                class="bg-[#10b981] hover:bg-[#059669] text-white px-6 py-2.5 rounded-full flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-[#10b981]/20 group/btn relative overflow-hidden">
+                                <span class="material-symbols-outlined text-[20px]">whatsapp</span>
+                                <span
+                                    class="text-[10px] font-extrabold uppercase tracking-widest relative z-10">Consultar</span>
+                                <div
+                                    class="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300">
+                                </div>
                             </button>
                         </div>
                     </div>

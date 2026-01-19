@@ -7,6 +7,7 @@ namespace Vsys\Modules\Cotizador;
 
 use Vsys\Lib\Database;
 use Vsys\Lib\BCRAClient;
+use Vsys\Lib\Logger;
 
 class Cotizador
 {
@@ -135,12 +136,20 @@ class Cotizador
             ]);
         }
 
+        if ($quotationId) {
+            Logger::event('QUOTE_CREATE', 'quotation', $quotationId, [
+                'number' => $data['quote_number'],
+                'total' => $data['total_usd'],
+                'client_id' => $data['client_id']
+            ]);
+        }
+
         return $quotationId;
     }
 
     public function getQuotation($id)
     {
-        $stmt = $this->db->prepare("SELECT q.*, e.name as client_name, e.tax_id, e.address, e.email as client_email, e.phone, u.full_name as seller_name 
+        $stmt = $this->db->prepare("SELECT q.*, e.name as client_name, e.tax_id, e.address, e.email as client_email, e.phone, e.preferred_transport, u.full_name as seller_name 
                                     FROM quotations q 
                                     JOIN entities e ON q.client_id = e.id 
                                     JOIN users u ON q.user_id = u.id 

@@ -6,6 +6,7 @@
 namespace Vsys\Modules\Catalogo;
 
 use Vsys\Lib\Database;
+use Vsys\Lib\Logger;
 
 class Catalog
 {
@@ -20,7 +21,7 @@ class Catalog
 
     public function getAllProducts()
     {
-        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.company_id = ? ORDER BY p.description ASC");
+        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.company_id = ? ORDER BY (p.stock_current > 0) DESC, p.description ASC");
         $stmt->execute([$this->company_id]);
         return $stmt->fetchAll();
     }
@@ -49,8 +50,8 @@ class Catalog
 
     public function addProduct($data)
     {
-        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current, company_id) 
-                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current, :company_id)
+        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current, stock_min, stock_transit, stock_incoming, incoming_date, company_id) 
+                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current, :stock_min, :stock_transit, :stock_incoming, :incoming_date, :company_id)
                 ON DUPLICATE KEY UPDATE 
                 barcode = VALUES(barcode),
                 image_url = VALUES(image_url),
@@ -64,7 +65,12 @@ class Catalog
                 price_gremio = VALUES(price_gremio),
                 price_web = VALUES(price_web),
                 iva_rate = VALUES(iva_rate),
-                has_serial_number = VALUES(has_serial_number)";
+                has_serial_number = VALUES(has_serial_number),
+                stock_current = VALUES(stock_current),
+                stock_min = VALUES(stock_min),
+                stock_transit = VALUES(stock_transit),
+                stock_incoming = VALUES(stock_incoming),
+                incoming_date = VALUES(incoming_date)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':sku' => $data['sku'],
@@ -83,8 +89,22 @@ class Catalog
             ':brand' => $data['brand'] ?? '',
             ':has_serial_number' => $data['has_serial_number'] ?? 0,
             ':stock_current' => $data['stock_current'] ?? 0,
+            ':stock_min' => $data['stock_min'] ?? 0,
+            ':stock_transit' => $data['stock_transit'] ?? 0,
+            ':stock_incoming' => $data['stock_incoming'] ?? 0,
+            ':incoming_date' => $data['incoming_date'] ?? null,
             ':company_id' => $this->company_id
         ]);
+
+        if ($success) {
+            Logger::event($p ? 'PRODUCT_UPDATE' : 'PRODUCT_CREATE', 'product', null, [
+                'sku' => $data['sku'],
+                'description' => $data['description'],
+                'cost' => $data['unit_cost_usd']
+            ]);
+        }
+
+        return $success;
     }
 
     public function getCategories()

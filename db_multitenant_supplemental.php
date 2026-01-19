@@ -21,7 +21,9 @@ try {
         'logistics_remitos',
         'purchases',
         'purchase_items',
-        'operation_documents'
+        'operation_documents',
+        'entities',
+        'products'
     ];
 
     echo "Starting supplemental migration...\n";
@@ -43,7 +45,57 @@ try {
         } else {
             echo "Table $table already has company_id.\n";
         }
+
+        // Specific change for 'entities' table: add 'preferred_transport'
+        if ($table === 'entities') {
+            $preferredTransportColumn = $db->query("SHOW COLUMNS FROM $table LIKE 'preferred_transport'")->fetch();
+            if (!$preferredTransportColumn) {
+                echo "Adding preferred_transport to $table...\n";
+                $db->exec("ALTER TABLE $table ADD COLUMN preferred_transport VARCHAR(100) AFTER preferred_payment_method");
+            } else {
+                echo "Table $table already has preferred_transport.\n";
+            }
+        }
+
+        // Specific change for 'products' table: add stock management columns
+        if ($table === 'products') {
+            $stockCols = [
+                "stock_min INT DEFAULT 0 AFTER stock_current",
+                "stock_transit INT DEFAULT 0 AFTER stock_min",
+                "stock_incoming INT DEFAULT 0 AFTER stock_transit",
+                "incoming_date DATE NULL AFTER stock_incoming"
+            ];
+            foreach ($stockCols as $sCol) {
+                $sColName = explode(" ", $sCol)[0];
+                $checkS = $db->query("SHOW COLUMNS FROM $table LIKE '$sColName'")->fetch();
+                if (!$checkS) {
+                    echo "Adding $sColName to $table...\n";
+                    $db->exec("ALTER TABLE $table ADD COLUMN $sCol");
+                } else {
+                    echo "Column $sColName already exists in $table.\n";
+                }
+            }
+        }
     }
+
+    // 2. Create System Logs Table
+    echo "<li>Creando tabla de Logs de Sistema... ";
+    $db->exec("CREATE TABLE IF NOT EXISTS system_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY, 
+        user_id INT NOT NULL, 
+        company_id INT NOT NULL, 
+        action VARCHAR(255) NOT NULL, 
+        entity_type VARCHAR(100), 
+        entity_id INT, 
+        details TEXT, 
+        ip_address VARCHAR(45),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+        FOREIGN KEY (user_id) REFERENCES users(id),
+        INDEX idx_logs_company (company_id),
+        INDEX idx_logs_user (user_id),
+        INDEX idx_logs_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "<span style='color:green'>OK</span></li>";
 
     echo "Supplemental migration completed successfully!\n";
 

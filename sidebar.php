@@ -14,7 +14,7 @@ $userName = $_SESSION['username'] ?? 'Usuario';
 $userRole = $_SESSION['role'] ?? 'Invitado';
 
 $menu = [
-    ['id' => 'index', 'href' => 'index.php', 'icon' => 'dashboard', 'label' => 'Inicio'],
+    ['id' => 'dashboard', 'href' => 'dashboard.php', 'icon' => 'dashboard', 'label' => 'Dashboard'],
     [
         'id' => 'group_ventas',
         'label' => 'Ventas',
@@ -23,6 +23,8 @@ $menu = [
             ['id' => 'presupuestos', 'href' => 'presupuestos.php', 'icon' => 'history', 'label' => 'Historial', 'perm' => 'quotes'],
             ['id' => 'cotizador', 'href' => 'cotizador.php', 'icon' => 'add_shopping_cart', 'label' => 'Generar Cotiz.', 'perm' => 'quotes'],
             ['id' => 'productos', 'href' => 'productos.php', 'icon' => 'inventory_2', 'label' => 'Productos/Stock', 'perm' => 'catalog'],
+            ['id' => 'imprimir_lista_precios', 'href' => 'imprimir_lista_precios.php', 'icon' => 'lists', 'label' => 'Lista de Precios', 'perm' => 'catalog'],
+            ['id' => 'config_productos_masivos', 'href' => 'config_productos_masivos.php', 'icon' => 'auto_fix_high', 'label' => 'Acciones Masivas', 'perm' => 'catalog'],
         ]
     ],
     [
@@ -31,8 +33,8 @@ $menu = [
         'icon' => 'payments',
         'items' => [
             ['id' => 'compras', 'href' => 'compras.php', 'icon' => 'shopping_cart_checkout', 'label' => 'Compras', 'perm' => 'purchases'],
-            ['id' => 'facturacion', 'href' => 'facturacion.php', 'icon' => 'description', 'label' => 'Facturación', 'perm' => 'sales'],
-            ['id' => 'analizador', 'href' => 'analizador.php', 'icon' => 'query_stats', 'label' => 'Análisis OP.', 'perm' => 'sales'],
+            ['id' => 'facturacion', 'href' => 'facturacion.php', 'icon' => 'description', 'label' => 'Facturaci&oacute;n', 'perm' => 'sales'],
+            ['id' => 'analizador', 'href' => 'analizador.php', 'icon' => 'query_stats', 'label' => 'An&aacute;lisis OP.', 'perm' => 'sales'],
         ]
     ],
     ['id' => 'crm', 'href' => 'crm.php', 'icon' => 'group', 'label' => 'CRM', 'perm' => 'clients'],
@@ -41,15 +43,15 @@ $menu = [
     ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores', 'perm' => 'suppliers'],
     [
         'id' => 'group_config',
-        'label' => 'Configuración',
+        'label' => 'Configuraci&oacute;n',
         'icon' => 'settings',
         'perm' => 'admin',
         'items' => [
             ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'tune', 'label' => 'General'],
             ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios'],
             ['id' => 'config_precios', 'href' => 'config_precios.php', 'icon' => 'universal_currency_alt', 'label' => 'Precios'],
-            ['id' => 'config_transports', 'href' => 'config_transports.php', 'icon' => 'local_shipping_filled', 'label' => 'Transportes'],
-            ['id' => 'importar', 'href' => 'importar.php', 'icon' => 'upload_file', 'label' => 'Carga Masiva'],
+            ['id' => 'config_transports', 'href' => 'config_transports.php', 'icon' => 'local_shipping', 'label' => 'Transportes'],
+            ['id' => 'importar', 'href' => 'importar.php', 'icon' => 'upload_file', 'label' => 'Carga Inicial CSV'],
         ]
     ],
 ];
@@ -142,7 +144,7 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
                         class="menu-group-content space-y-1 mt-1 ml-4 border-l border-slate-200 dark:border-[#233348] pl-2 <?php echo $isAnyChildActive ? 'expanded' : ''; ?>">
                         <?php foreach ($visibleItems as $item): ?>
                             <a href="<?php echo $item['href']; ?>"
-                                class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
+                                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
                                 <span class="material-symbols-outlined text-[18px]"><?php echo $item['icon']; ?></span>
                                 <span class="text-sm font-medium"><?php echo $item['label']; ?></span>
                             </a>

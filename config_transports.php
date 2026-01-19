@@ -201,7 +201,8 @@ $transports = $logistics->getTransports(false);
                                                 class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                                                 <td class="px-6 py-5">
                                                     <div class="font-bold dark:text-white text-slate-800">
-                                                        <?php echo $t['name']; ?></div>
+                                                        <?php echo $t['name']; ?>
+                                                    </div>
                                                     <div class="text-xs text-slate-500"><?php echo $t['email']; ?></div>
                                                 </td>
                                                 <td class="px-6 py-5">
