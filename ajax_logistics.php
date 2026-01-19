@@ -4,6 +4,7 @@
  */
 header('Content-Type: application/json');
 require_once __DIR__ . '/src/config/config.php';
+require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/logistica/Logistics.php';
 
 use Vsys\Modules\Logistica\Logistics;
@@ -39,10 +40,38 @@ try {
             echo json_encode(['success' => (bool) $remito, 'remito_number' => $remito]);
             break;
 
+        case 'upload_payment':
+            $quoteNumber = $_POST['quote_number'];
+            if (!empty($_FILES['payment_proof']['name'])) {
+                $uploadDir = __DIR__ . '/data/uploads/payments/';
+                if (!is_dir($uploadDir))
+                    mkdir($uploadDir, 0777, true);
+
+                $fileName = 'PAY_' . $quoteNumber . '_' . time() . '_' . $_FILES['payment_proof']['name'];
+                $dest = $uploadDir . $fileName;
+
+                if (move_uploaded_file($_FILES['payment_proof']['tmp_name'], $dest)) {
+                    // 1. Attach document
+                    $logistics->attachDocument($quoteNumber, 'quotation', 'Payment Proof', 'data/uploads/payments/' . $fileName, 'Comprobante de pago subido.');
+
+                    // 2. Update status in quotations table
+                    $db = Vsys\Lib\Database::getInstance();
+                    $stmt = $db->prepare("UPDATE quotations SET payment_status = 'Pagado', is_confirmed = 1 WHERE quote_number = ?");
+                    $stmt->execute([$quoteNumber]);
+
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Error al guardar el archivo.']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'error' => 'No se recibió ningún archivo.']);
+            }
+            break;
+
         case 'upload_guide':
             $quoteNumber = $_POST['quote_number'];
             if (!empty($_FILES['guide_photo']['name'])) {
-                $uploadDir = __DIR__ . '/uploads/guides/';
+                $uploadDir = __DIR__ . '/data/uploads/guides/';
                 if (!is_dir($uploadDir))
                     mkdir($uploadDir, 0777, true);
 
@@ -51,7 +80,7 @@ try {
 
                 if (move_uploaded_file($_FILES['guide_photo']['tmp_name'], $dest)) {
                     // Log the document
-                    $logistics->attachDocument($quoteNumber, 'quotation', 'Shipping Guide', 'uploads/guides/' . $fileName, 'Guó­a de transporte subida.');
+                    $logistics->attachDocument($quoteNumber, 'quotation', 'Shipping Guide', 'data/uploads/guides/' . $fileName, 'Guía de transporte subida.');
                     // Update phase to Entregado
                     $logistics->updateOrderPhase($quoteNumber, 'Entregado');
                     echo json_encode(['success' => true]);
@@ -59,18 +88,13 @@ try {
                     echo json_encode(['success' => false, 'error' => 'Error al guardar el archivo.']);
                 }
             } else {
-                echo json_encode(['success' => false, 'error' => 'No se recibió³ ningóºn archivo.']);
+                echo json_encode(['success' => false, 'error' => 'No se recibió ningún archivo.']);
             }
             break;
 
         default:
-            echo json_encode(['success' => false, 'error' => 'Acció³n no vó¡lida']);
+            echo json_encode(['success' => false, 'error' => 'Acción no válida']);
     }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
-
-
-
-
-
