@@ -47,6 +47,8 @@ $menu = [
         'icon' => 'settings',
         'perm' => 'admin',
         'items' => [
+            ['id' => 'admin_logs', 'href' => 'admin_logs.php', 'icon' => 'history_edu', 'label' => 'Auditoría'],
+            ['id' => 'config_reset', 'href' => 'config_reset.php', 'icon' => 'reset_settings', 'label' => 'Reset Módulos'],
             ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'tune', 'label' => 'General'],
             ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios'],
             ['id' => 'config_precios', 'href' => 'config_precios.php', 'icon' => 'universal_currency_alt', 'label' => 'Precios'],
@@ -232,7 +234,8 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
                     ?>
                     <div class="pt-2">
                         <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                            <?php echo $section['label']; ?></p>
+                            <?php echo $section['label']; ?>
+                        </p>
                         <div class="space-y-1">
                             <?php foreach ($visibleItems as $item): ?>
                                 <a href="<?php echo $item['href']; ?>"

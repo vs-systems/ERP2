@@ -40,6 +40,15 @@ class PriceList
     }
 
     /**
+     * Update name for a specific list
+     */
+    public function updatePriceList($id, $name, $margin)
+    {
+        $stmt = $this->db->prepare("UPDATE price_lists SET name = ?, margin_percent = ?, updated_at = NOW() WHERE id = ? AND company_id = ?");
+        return $stmt->execute([$name, (float) $margin, $id, $this->company_id]);
+    }
+
+    /**
      * Calculate price based on cost and target list
      */
     public function calculatePrice($cost, $listId)

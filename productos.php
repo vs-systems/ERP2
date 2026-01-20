@@ -143,9 +143,18 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                         <th class="px-6 py-4 text-center">Mín.</th>
                                         <th class="px-6 py-4 text-center">Tránsito</th>
                                         <th class="px-6 py-4 text-center">Ingresar</th>
-                                        <th class="px-6 py-4 text-right bg-primary/5 dark:bg-primary/5 text-primary">
+                                        <th
+                                            class="px-6 py-4 text-right bg-blue-50/50 dark:bg-primary/5 uppercase tracking-tighter text-[10px] font-black text-primary">
                                             Costo USD</th>
-                                        <th class="px-6 py-4 text-right">Gremio</th>
+                                        <th
+                                            class="px-6 py-4 text-right bg-slate-50/50 dark:bg-white/5 uppercase tracking-tighter text-[10px] font-black text-slate-500">
+                                            Costo ARS</th>
+                                        <th
+                                            class="px-6 py-4 text-right uppercase tracking-tighter text-[10px] font-black text-slate-500">
+                                            Gremio USD</th>
+                                        <th
+                                            class="px-6 py-4 text-right bg-slate-50/50 dark:bg-white/5 uppercase tracking-tighter text-[10px] font-black text-slate-500">
+                                            Gremio ARS</th>
                                         <th class="px-6 py-4 text-center">Acciones</th>
                                     </tr>
                                 </thead>
@@ -201,16 +210,19 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                             <td class="px-6 py-5 text-center text-[11px] font-bold text-slate-500">
                                                 <?php echo $p['stock_min'] ?? 0; ?>
                                             </td>
-                                            <td class="px-6 py-5 text-center text-[11px] font-bold <?php echo $p['stock_transit'] > 0 ? 'text-blue-500' : 'text-slate-400'; ?>">
+                                            <td
+                                                class="px-6 py-5 text-center text-[11px] font-bold <?php echo $p['stock_transit'] > 0 ? 'text-blue-500' : 'text-slate-400'; ?>">
                                                 <?php echo $p['stock_transit'] ?? 0; ?>
                                             </td>
                                             <td class="px-6 py-5 text-center group/stock relative">
                                                 <div class="flex flex-col items-center">
-                                                    <span class="text-[11px] font-bold <?php echo $p['stock_incoming'] > 0 ? 'text-purple-500' : 'text-slate-400'; ?>">
+                                                    <span
+                                                        class="text-[11px] font-bold <?php echo $p['stock_incoming'] > 0 ? 'text-purple-500' : 'text-slate-400'; ?>">
                                                         <?php echo $p['stock_incoming'] ?? 0; ?>
                                                     </span>
                                                     <?php if ($p['incoming_date']): ?>
-                                                        <span class="text-[9px] text-slate-500 opacity-60"><?php echo date('d/m', strtotime($p['incoming_date'])); ?></span>
+                                                        <span
+                                                            class="text-[9px] text-slate-500 opacity-60"><?php echo date('d/m', strtotime($p['incoming_date'])); ?></span>
                                                     <?php endif; ?>
                                                 </div>
                                             </td>
@@ -218,9 +230,16 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                                 class="px-6 py-5 text-right font-mono font-bold text-primary bg-primary/5 group-hover:bg-primary/10 transition-colors">
                                                 $ <?php echo number_format($cost, 2); ?>
                                             </td>
-                                            <td
-                                                class="px-6 py-5 text-right font-mono text-xs dark:text-slate-300 text-slate-600">
-                                                $ <?php echo number_format($priceGremio, 2); ?>
+                                            <td class="px-6 py-5 text-right bg-slate-50/30 dark:bg-white/5">
+                                                <span class="text-[10px] font-mono font-bold text-slate-400 italic">ARS</span>
+                                                <span class="text-xs font-mono font-bold text-slate-500"><?php echo number_format($cost * $usdRate, 0, ',', '.'); ?></span>
+                                            </td>
+                                            <td class="px-6 py-5 text-right">
+                                                <span class="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">$ <?php echo number_format($priceGremio, 2); ?></span>
+                                            </td>
+                                            <td class="px-6 py-5 text-right bg-slate-50/30 dark:bg-white/5">
+                                                <span class="text-[10px] font-mono font-bold text-slate-400 italic">ARS</span>
+                                                <span class="text-xs font-mono font-bold text-slate-500"><?php echo number_format($priceGremio * $usdRate, 0, ',', '.'); ?></span>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="flex items-center justify-center gap-1">

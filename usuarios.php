@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'];
     $role = $_POST['role'];
     $status = $_POST['status'];
+    $discount_cap = $_POST['discount_cap'] ?? 0;
 
     // Process permissions array to JSON
     $perms = isset($_POST['perms']) ? json_encode($_POST['perms']) : json_encode([]);
@@ -39,18 +40,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update
             if (!empty($password)) {
                 $hashed = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $db->prepare("UPDATE users SET username = ?, password_hash = ?, role = ?, status = ?, permissions = ? WHERE id = ? AND company_id = ?");
-                $stmt->execute([$username, $hashed, $role, $status, $perms, $id, $_SESSION['company_id']]);
+                $stmt = $db->prepare("UPDATE users SET username = ?, password_hash = ?, role = ?, status = ?, permissions = ?, discount_cap = ? WHERE id = ? AND company_id = ?");
+                $stmt->execute([$username, $hashed, $role, $status, $perms, $discount_cap, $id, $_SESSION['company_id']]);
             } else {
-                $stmt = $db->prepare("UPDATE users SET username = ?, role = ?, status = ?, permissions = ? WHERE id = ? AND company_id = ?");
-                $stmt->execute([$username, $role, $status, $perms, $id, $_SESSION['company_id']]);
+                $stmt = $db->prepare("UPDATE users SET username = ?, role = ?, status = ?, permissions = ?, discount_cap = ? WHERE id = ? AND company_id = ?");
+                $stmt->execute([$username, $role, $status, $perms, $discount_cap, $id, $_SESSION['company_id']]);
             }
             $message = "Usuario actualizado correctamente.";
         } else {
             // Create
             $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $db->prepare("INSERT INTO users (username, password_hash, role, status, permissions, company_id) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$username, $hashed, $role, $status, $perms, $_SESSION['company_id']]);
+            $stmt = $db->prepare("INSERT INTO users (username, password_hash, role, status, permissions, company_id, discount_cap) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$username, $hashed, $role, $status, $perms, $_SESSION['company_id'], $discount_cap]);
             $message = "Usuario creado correctamente.";
         }
     } catch (Exception $e) {
@@ -151,7 +152,8 @@ $availablePerms = [
                 <div class="flex items-center gap-4 lg:hidden">
                     <button onclick="toggleVsysMobileMenu()" class="dark:text-white text-slate-800"><span
                             class="material-symbols-outlined">menu</span></button>
-                    <span class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">VS System</span>
+                    <span class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">VS
+                        System</span>
                 </div>
                 <div class="flex items-center gap-3">
                     <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
@@ -230,6 +232,14 @@ $availablePerms = [
                                         </div>
                                     </div>
 
+                                    <div>
+                                        <label
+                                            class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Tope
+                                            de Descuento (%)</label>
+                                        <input type="number" step="0.1" name="discount_cap"
+                                            value="<?php echo $editUser['discount_cap'] ?? '0'; ?>" class="form-input">
+                                    </div>
+
                                     <!-- Permissions Matrix -->
                                     <div class="space-y-3">
                                         <label
@@ -273,6 +283,7 @@ $availablePerms = [
                                         class="bg-slate-50 dark:bg-[#101822]/50 border-b border-slate-200 dark:border-[#233348]">
                                         <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
                                             <th class="px-6 py-4">Usuario / Rol</th>
+                                            <th class="px-6 py-4">Tope Desc.</th>
                                             <th class="px-6 py-4">Permisos</th>
                                             <th class="px-6 py-4 text-center">Estado</th>
                                             <th class="px-6 py-4 text-center">Acciones</th>
@@ -295,6 +306,10 @@ $availablePerms = [
                                                         class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                                                         <?php echo $u['role']; ?>
                                                     </div>
+                                                </td>
+                                                <td class="px-6 py-5">
+                                                    <span
+                                                        class="text-sm font-bold text-orange-500 font-mono"><?php echo $u['discount_cap'] ?? '0'; ?>%</span>
                                                 </td>
                                                 <td class="px-6 py-5">
                                                     <div class="flex flex-wrap gap-1">

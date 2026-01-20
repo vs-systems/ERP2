@@ -17,7 +17,7 @@ use Vsys\Lib\BCRAClient;
 $catalog = new Catalog();
 $priceListModule = new PriceList();
 $bcra = new BCRAClient();
-$dolar = $bcra->getUSD();
+$dolar = $bcra->getCurrentRate();
 
 $listName = $_GET['list'] ?? 'Gremio';
 $lists = $priceListModule->getAll();
@@ -155,7 +155,8 @@ ksort($grouped);
                             <h2 class="text-xl font-black text-slate-800 dark:text-white uppercase leading-none mb-2">
                                 Lista: <?php echo $listName; ?></h2>
                             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Emisión:
-                                <?php echo date('d/m/Y'); ?> | Validez 24hs</p>
+                                <?php echo date('d/m/Y'); ?> | Validez 24hs
+                            </p>
                         </div>
                     </div>
 
@@ -164,7 +165,8 @@ ksort($grouped);
                             <div class="category-block">
                                 <h3
                                     class="bg-slate-50 dark:bg-white/5 border-l-4 border-primary px-4 py-2 text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest mb-4">
-                                    <?php echo $category; ?></h3>
+                                    <?php echo $category; ?>
+                                </h3>
                                 <div class="overflow-x-auto">
                                     <table class="w-full text-left border-collapse">
                                         <thead>
@@ -220,10 +222,12 @@ ksort($grouped);
                                                         <?php endif; ?>
                                                     </td>
                                                     <td class="py-3 px-2 font-black text-primary text-[10px]">
-                                                        <?php echo $item['sku']; ?></td>
+                                                        <?php echo $item['sku']; ?>
+                                                    </td>
                                                     <td
                                                         class="py-3 px-2 font-medium text-[11px] text-slate-600 dark:text-slate-300 max-w-xs leading-relaxed">
-                                                        <?php echo $item['description']; ?></td>
+                                                        <?php echo $item['description']; ?>
+                                                    </td>
                                                     <td class="py-3 px-2 text-center">
                                                         <?php if ($item['stock_current'] > 0): ?>
                                                             <span
@@ -235,15 +239,20 @@ ksort($grouped);
                                                     </td>
                                                     <td
                                                         class="py-3 px-2 font-bold text-right text-slate-700 dark:text-slate-200">
-                                                        <?php echo number_format($unit_usd, 2); ?></td>
+                                                        <?php echo number_format($unit_usd, 2); ?>
+                                                    </td>
                                                     <td class="py-3 px-2 text-center font-bold text-slate-400 text-[10px]">
-                                                        <?php echo $iva_rate; ?>%</td>
+                                                        <?php echo $iva_rate; ?>%
+                                                    </td>
                                                     <td class="py-3 px-2 font-black text-right text-slate-900 dark:text-white">
-                                                        <?php echo number_format($final_usd, 2); ?></td>
+                                                        <?php echo number_format($final_usd, 2); ?>
+                                                    </td>
                                                     <td class="py-3 px-2 font-bold text-right text-slate-500 italic">
-                                                        <?php echo number_format($unit_ars, 0, ',', '.'); ?></td>
+                                                        <?php echo number_format($unit_ars, 0, ',', '.'); ?>
+                                                    </td>
                                                     <td class="py-3 px-2 font-black text-right text-primary text-xs italic">
-                                                        <?php echo number_format($final_ars, 0, ',', '.'); ?></td>
+                                                        <?php echo number_format($final_ars, 0, ',', '.'); ?>
+                                                    </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>

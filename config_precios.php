@@ -12,11 +12,11 @@ $messageType = 'success';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        if (isset($_POST['update_margins'])) {
-            foreach ($_POST['margins'] as $id => $margin) {
-                $priceListModule->updateMargin($id, $margin);
+        if (isset($_POST['update_lists'])) {
+            foreach ($_POST['lists'] as $id => $data) {
+                $priceListModule->updatePriceList($id, $data['name'], $data['margin']);
             }
-            $message = "Márgenes actualizados correctamente.";
+            $message = "Configuración de listas actualizada correctamente.";
         }
     } catch (Exception $e) {
         $message = "Error: " . $e->getMessage();
@@ -130,17 +130,16 @@ $lists = $priceListModule->getAll();
                                     <?php foreach ($lists as $list): ?>
                                         <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                                             <td class="px-6 py-5">
-                                                <div
-                                                    class="font-bold dark:text-white text-slate-800 group-hover:text-primary transition-colors">
-                                                    <?php echo $list['name']; ?>
-                                                </div>
+                                                <input type="text" name="lists[<?php echo $list['id']; ?>][name]"
+                                                    value="<?php echo htmlspecialchars($list['name']); ?>"
+                                                    class="bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-lg px-3 py-1.5 text-sm w-full font-bold focus:ring-primary focus:border-primary transition-all">
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="flex items-center gap-2">
                                                     <input type="number" step="0.01"
-                                                        name="margins[<?php echo $list['id']; ?>]"
+                                                        name="lists[<?php echo $list['id']; ?>][margin]"
                                                         value="<?php echo $list['margin_percent']; ?>"
-                                                        class="bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-lg px-3 py-1.5 text-sm w-24 focus:ring-primary focus:border-primary transition-all">
+                                                        class="bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-lg px-3 py-1.5 text-sm w-24 focus:ring-primary focus:border-primary transition-all text-center">
                                                     <span class="text-slate-400 font-bold">%</span>
                                                 </div>
                                             </td>
@@ -163,7 +162,7 @@ $lists = $priceListModule->getAll();
 
                         <div
                             class="p-6 bg-slate-50 dark:bg-[#101822]/30 border-t border-slate-100 dark:border-[#233348] flex justify-end">
-                            <button type="submit" name="update_margins"
+                            <button type="submit" name="update_lists"
                                 class="bg-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center gap-2">
                                 <span class="material-symbols-outlined text-sm">save</span> Guardar Cambios
                             </button>

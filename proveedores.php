@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_entity'])) {
 }
 
 // Get all suppliers
-$sql = "SELECT * FROM entities WHERE (type = 'supplier' OR type = 'provider') AND company_id = ? ORDER BY name ASC";
+$sql = "SELECT * FROM entities WHERE (type = 'supplier' OR type = 'provider') AND company_id = ? ORDER BY is_enabled DESC, name ASC";
 $db = Vsys\Lib\Database::getInstance();
 $stmt = $db->prepare($sql);
 $stmt->execute([$_SESSION['company_id']]);
