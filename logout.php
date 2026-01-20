@@ -17,6 +17,6 @@ if (isset($_COOKIE[session_name()])) {
 // Destroy the session
 session_destroy();
 
-// Redirect to login page
-header("Location: login.php");
+// Redirect to main website
+header("Location: https://www.vecinoseguro.com");
 exit;

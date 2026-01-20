@@ -62,7 +62,7 @@
 
         <div class="max-w-6xl w-full text-center z-10 space-y-12 py-20">
             <div class="flex flex-col items-center gap-6">
-                <img src="https://vecinoseguro.com.ar/Logos/VSLogo.png" alt="VS Logo" class="h-24 drop-shadow-2xl">
+                <img src="logo_display.php" alt="VS Logo" class="h-24 drop-shadow-2xl">
                 <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-gradient">
                     Vecinos Seguros Sistemas
                 </h1>
@@ -112,7 +112,7 @@
 
             <!-- Action Buttons -->
             <div class="flex flex-col md:flex-row gap-6 justify-center pt-8">
-                <a href="catalogo_publico.php"
+                <a href="catalogo_publico.php" target="_blank"
                     class="bg-white text-black px-12 py-5 rounded-full font-black text-lg hover:bg-slate-200 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-white/5">
                     ABRIR CATÁLOGO PÚBLICO
                 </a>
@@ -123,6 +123,23 @@
             </div>
         </div>
     </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 border-t border-white/5 text-center space-y-4">
+        <p class="text-slate-500 font-bold tracking-widest text-xs uppercase">VS Sistemas by Javier Gozzi</p>
+        <div class="flex items-center justify-center gap-6">
+            <a href="https://wa.me/5492235772165" target="_blank"
+                class="flex items-center gap-2 text-slate-400 hover:text-green-500 transition-colors">
+                <span class="material-symbols-outlined text-sm">chat</span> +54 9 223 577-2165
+            </a>
+            <a href="mailto:vecinoseguro0@gmail.com"
+                class="flex items-center gap-2 text-slate-400 hover:text-blue-500 transition-colors">
+                <span class="material-symbols-outlined text-sm">mail</span> vecinoseguro0@gmail.com
+            </a>
+        </div>
+        <p class="text-[10px] text-slate-600 font-medium">Soft exclusivo para Gremio de la Seguridad Electronica y
+            afines.</p>
+    </footer>
 
     <!-- Google Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
