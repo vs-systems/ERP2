@@ -71,6 +71,12 @@ $quotes = $cot->getAllQuotations(100);
             <!-- Header -->
             <header
                 class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
+                <div class="flex items-center gap-4 lg:hidden">
+                    <button onclick="toggleVsysMobileMenu()" class="dark:text-white text-slate-800"><span
+                            class="material-symbols-outlined">menu</span></button>
+                    <span class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">VS
+                        System</span>
+                </div>
                 <div class="flex items-center gap-3">
                     <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
                         <span class="material-symbols-outlined text-2xl">history</span>

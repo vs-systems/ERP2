@@ -85,6 +85,12 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
             <!-- Header -->
             <header
                 class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
+                <div class="flex items-center gap-4 lg:hidden">
+                    <button onclick="toggleVsysMobileMenu()" class="dark:text-white text-slate-800"><span
+                            class="material-symbols-outlined">menu</span></button>
+                    <span class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">VS
+                        System</span>
+                </div>
                 <div class="flex items-center gap-3">
                     <div class="bg-primary/20 p-2 rounded-lg text-primary">
                         <span class="material-symbols-outlined text-2xl">inventory_2</span>
@@ -186,7 +192,8 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                             <td class="px-6 py-5 text-center">
                                                 <div class="flex flex-col items-center">
                                                     <div class="text-lg font-black <?php echo $stockColor; ?>">
-                                                        <?php echo $stock; ?></div>
+                                                        <?php echo $stock; ?>
+                                                    </div>
                                                     <div
                                                         class="flex gap-2 text-[9px] font-bold uppercase tracking-tighter text-slate-500 mt-1">
                                                         <span title="Stock en Tránsito"

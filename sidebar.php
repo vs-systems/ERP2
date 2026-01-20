@@ -73,7 +73,7 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
     }
 
     .menu-group-content.expanded {
-        max-height: 500px;
+        max-height: 1000px;
     }
 
     .chevron-icon {
@@ -94,7 +94,7 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
     rel="stylesheet" />
 
 <aside
-    class="hidden md:flex flex-col w-64 h-full bg-[#101822] border-r border-[#233348] flex-shrink-0 overflow-y-auto transition-colors duration-300 dark:bg-[#101822] bg-white border-slate-200 dark:border-[#233348]">
+    class="hidden lg:flex flex-col w-64 h-full bg-[#101822] border-r border-[#233348] flex-shrink-0 overflow-y-auto transition-colors duration-300 dark:bg-[#101822] bg-white border-slate-200 dark:border-[#233348]">
     <div class="p-6 flex items-center gap-3">
         <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec] flex items-center justify-center">
             <span class="material-symbols-outlined text-2xl">shield</span>
@@ -198,20 +198,90 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
     </div>
 </aside>
 
+<!-- Mobile Sidebar (Drawer) -->
+<div id="vsys_mobile_sidebar" class="fixed inset-0 z-[100] hidden">
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleVsysMobileMenu()"></div>
+
+    <!-- Sidebar Content -->
+    <aside
+        class="absolute left-0 top-0 bottom-0 w-[280px] bg-white dark:bg-[#101822] shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
+        <div class="p-6 flex items-center justify-between border-b border-slate-100 dark:border-[#233348]">
+            <div class="flex items-center gap-3">
+                <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
+                    <span class="material-symbols-outlined text-2xl">shield</span>
+                </div>
+                <h1 class="dark:text-white text-slate-800 text-lg font-bold">VS System</h1>
+            </div>
+            <button onclick="toggleVsysMobileMenu()" class="text-slate-400">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <nav class="flex-1 px-4 py-6 overflow-y-auto space-y-1">
+            <?php foreach ($menu as $section): ?>
+                <?php
+                if (isset($section['perm']) && !$userAuth->hasPermission($section['perm']))
+                    continue;
+                if (isset($section['items'])):
+                    $visibleItems = array_filter($section['items'], function ($item) use ($userAuth) {
+                        return !isset($item['perm']) || $userAuth->hasPermission($item['perm']);
+                    });
+                    if (empty($visibleItems))
+                        continue;
+                    ?>
+                    <div class="pt-2">
+                        <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                            <?php echo $section['label']; ?></p>
+                        <div class="space-y-1">
+                            <?php foreach ($visibleItems as $item): ?>
+                                <a href="<?php echo $item['href']; ?>"
+                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white' : 'text-slate-400 hover:text-[#136dec] dark:hover:bg-[#233348]'; ?>">
+                                    <span class="material-symbols-outlined text-[20px]"><?php echo $item['icon']; ?></span>
+                                    <span class="text-sm font-medium"><?php echo $item['label']; ?></span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <a href="<?php echo $section['href']; ?>"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all <?php echo ($currentPage === $section['id']) ? 'bg-[#136dec] text-white' : 'text-slate-400 hover:text-[#136dec] dark:hover:bg-[#233348]'; ?>">
+                        <span class="material-symbols-outlined text-[20px]"><?php echo $section['icon']; ?></span>
+                        <span class="text-sm font-medium"><?php echo $section['label']; ?></span>
+                    </a>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100 dark:border-[#233348]">
+            <a href="logout.php"
+                class="flex items-center gap-3 px-3 py-3 rounded-xl bg-red-500/10 text-red-500 font-bold justify-center">
+                <span class="material-symbols-outlined text-[18px]">logout</span>
+                <span class="text-xs uppercase tracking-widest">Cerrar Sesión</span>
+            </a>
+        </div>
+    </aside>
+</div>
+
 <script>
+    function toggleVsysMobileMenu() {
+        const sidebar = document.getElementById('vsys_mobile_sidebar');
+        if (sidebar) sidebar.classList.toggle('hidden');
+    }
+
     function toggleMenuGroup(groupId) {
         const content = document.getElementById('content-' + groupId);
         const chevron = document.getElementById('chevron-' + groupId);
 
-        content.classList.toggle('expanded');
-        chevron.classList.toggle('rotate-180');
+        if (content) content.classList.toggle('expanded');
+        if (chevron) chevron.classList.toggle('rotate-180');
 
-        // Guardar estado en localStorage
-        const isExpanded = content.classList.contains('expanded');
-        localStorage.setItem('menu_' + groupId, isExpanded ? '1' : '0');
+        if (content) {
+            const isExpanded = content.classList.contains('expanded');
+            localStorage.setItem('menu_' + groupId, isExpanded ? '1' : '0');
+        }
     }
 
-    // Restaurar estado al cargar
     document.addEventListener('DOMContentLoaded', () => {
         const groups = ['group_ventas', 'group_contabilidad', 'group_config'];
         groups.forEach(id => {
@@ -219,10 +289,9 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
             const content = document.getElementById('content-' + id);
             const chevron = document.getElementById('chevron-' + id);
 
-            // Si el estado es 1 o si hay un hijo activo dentro
-            if (state === '1' || content.classList.contains('expanded')) {
+            if (content && (state === '1' || content.classList.contains('expanded'))) {
                 content.classList.add('expanded');
-                chevron.classList.add('rotate-180');
+                if (chevron) chevron.classList.add('rotate-180');
             }
         });
     });

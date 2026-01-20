@@ -34,23 +34,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Process permissions array to JSON
     $perms = isset($_POST['perms']) ? json_encode($_POST['perms']) : json_encode([]);
 
-    if ($id) {
-        // Update
-        if (!empty($password)) {
-            $hashed = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $db->prepare("UPDATE users SET username = ?, password_hash = ?, role = ?, status = ?, permissions = ? WHERE id = ? AND company_id = ?");
-            $stmt->execute([$username, $hashed, $role, $status, $perms, $id, $_SESSION['company_id']]);
+    try {
+        if ($id) {
+            // Update
+            if (!empty($password)) {
+                $hashed = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $db->prepare("UPDATE users SET username = ?, password_hash = ?, role = ?, status = ?, permissions = ? WHERE id = ? AND company_id = ?");
+                $stmt->execute([$username, $hashed, $role, $status, $perms, $id, $_SESSION['company_id']]);
+            } else {
+                $stmt = $db->prepare("UPDATE users SET username = ?, role = ?, status = ?, permissions = ? WHERE id = ? AND company_id = ?");
+                $stmt->execute([$username, $role, $status, $perms, $id, $_SESSION['company_id']]);
+            }
+            $message = "Usuario actualizado correctamente.";
         } else {
-            $stmt = $db->prepare("UPDATE users SET username = ?, role = ?, status = ?, permissions = ? WHERE id = ? AND company_id = ?");
-            $stmt->execute([$username, $role, $status, $perms, $id, $_SESSION['company_id']]);
+            // Create
+            $hashed = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $db->prepare("INSERT INTO users (username, password_hash, role, status, permissions, company_id) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$username, $hashed, $role, $status, $perms, $_SESSION['company_id']]);
+            $message = "Usuario creado correctamente.";
         }
-        $message = "Usuario actualizado correctamente.";
-    } else {
-        // Create
-        $hashed = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $db->prepare("INSERT INTO users (username, password_hash, role, status, permissions, company_id) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$username, $hashed, $role, $status, $perms, $_SESSION['company_id']]);
-        $message = "Usuario creado correctamente.";
+    } catch (Exception $e) {
+        $message = "Error al guardar: " . $e->getMessage();
+        $messageType = "error";
     }
 
     $_SESSION['user_message'] = $message;
@@ -142,7 +147,12 @@ $availablePerms = [
         <main class="flex-1 flex flex-col h-full overflow-hidden relative">
             <!-- Header -->
             <header
-                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 transition-colors duration-300">
+                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
+                <div class="flex items-center gap-4 lg:hidden">
+                    <button onclick="toggleVsysMobileMenu()" class="dark:text-white text-slate-800"><span
+                            class="material-symbols-outlined">menu</span></button>
+                    <span class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">VS System</span>
+                </div>
                 <div class="flex items-center gap-3">
                     <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
                         <span class="material-symbols-outlined text-2xl">manage_accounts</span>
