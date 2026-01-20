@@ -8,16 +8,20 @@ require_once __DIR__ . '/src/modules/clientes/Client.php';
 
 use Vsys\Modules\Clientes\Client;
 
+if (session_status() === PHP_SESSION_NONE)
+    session_start();
+
 header('Content-Type: application/json');
 
 $query = isset($_GET['q']) ? trim($_GET['q']) : '';
+$cid = $_SESSION['company_id'] ?? 1; // Fallback to 1 for safety
 
 if (strlen($query) < 2) {
     echo json_encode([]);
     exit;
 }
 
-$clientMod = new Client();
+$clientMod = new Client($cid);
 $results = $clientMod->searchClients($query, 'all');
 
 // Transform and add 'origin' field
@@ -39,7 +43,7 @@ foreach ($results as $r) {
 $db = Vsys\Lib\Database::getInstance();
 $q = "%" . strtolower($query) . "%";
 $leads = $db->prepare("SELECT id, name, tax_id, address FROM crm_leads WHERE (LOWER(name) LIKE ? OR LOWER(tax_id) LIKE ?) AND company_id = ? LIMIT 10");
-$leads->execute([$q, $q, $_SESSION['company_id']]);
+$leads->execute([$q, $q, $cid]);
 foreach ($leads->fetchAll() as $l) {
     $finalResults[] = [
         'id' => $l['id'],

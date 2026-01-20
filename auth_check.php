@@ -26,6 +26,7 @@ if (!$userAuth->isLoggedIn()) {
         $_SESSION['user_id'] = 1;
         $_SESSION['username'] = 'admin';
         $_SESSION['role'] = 'Admin';
+        $_SESSION['company_id'] = 1;
 
         // Refresh object state
         $userAuth = new User();
