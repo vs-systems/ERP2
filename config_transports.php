@@ -1,5 +1,6 @@
 ﻿<?php
-require_once 'auth_check.php';
+header("Location: configuration.php?tab=transportes");
+exit;
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/logistica/Logistics.php';

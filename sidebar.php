@@ -42,19 +42,11 @@ $menu = [
     ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'badge', 'label' => 'Clientes', 'perm' => 'clients'],
     ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores', 'perm' => 'suppliers'],
     [
-        'id' => 'group_config',
-        'label' => 'Configuraci&oacute;n',
+        'id' => 'configuration',
+        'href' => 'configuration.php',
         'icon' => 'settings',
-        'perm' => 'admin',
-        'items' => [
-            ['id' => 'admin_logs', 'href' => 'admin_logs.php', 'icon' => 'history_edu', 'label' => 'Auditoría'],
-            ['id' => 'config_reset', 'href' => 'config_reset.php', 'icon' => 'reset_settings', 'label' => 'Reset Módulos'],
-            ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'tune', 'label' => 'General'],
-            ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios'],
-            ['id' => 'config_precios', 'href' => 'config_precios.php', 'icon' => 'universal_currency_alt', 'label' => 'Precios'],
-            ['id' => 'config_transports', 'href' => 'config_transports.php', 'icon' => 'local_shipping', 'label' => 'Transportes'],
-            ['id' => 'importar', 'href' => 'importar.php', 'icon' => 'upload_file', 'label' => 'Carga Inicial CSV'],
-        ]
+        'label' => 'Configuraci&oacute;n',
+        'perm' => 'admin'
     ],
 ];
 
