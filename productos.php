@@ -139,11 +139,13 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                     <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
                                         <th class="px-6 py-4">Información del Producto</th>
                                         <th class="px-6 py-4">Rubro / Marca</th>
-                                        <th class="px-6 py-4 text-center">Stock</th>
+                                        <th class="px-6 py-4 text-center">Stock Actual</th>
+                                        <th class="px-6 py-4 text-center">Mín.</th>
+                                        <th class="px-6 py-4 text-center">Tránsito</th>
+                                        <th class="px-6 py-4 text-center">Ingresar</th>
                                         <th class="px-6 py-4 text-right bg-primary/5 dark:bg-primary/5 text-primary">
                                             Costo USD</th>
                                         <th class="px-6 py-4 text-right">Gremio</th>
-                                        <th class="px-6 py-4 text-right">IVA</th>
                                         <th class="px-6 py-4 text-center">Acciones</th>
                                     </tr>
                                 </thead>
@@ -189,20 +191,27 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                                     <?php echo $p['brand'] ?: 'VS System'; ?>
                                                 </div>
                                             </td>
-                                            <td class="px-6 py-5 text-center">
+                                            <td class="px-6 py-5">
                                                 <div class="flex flex-col items-center">
                                                     <div class="text-lg font-black <?php echo $stockColor; ?>">
                                                         <?php echo $stock; ?>
                                                     </div>
-                                                    <div
-                                                        class="flex gap-2 text-[9px] font-bold uppercase tracking-tighter text-slate-500 mt-1">
-                                                        <span title="Stock en Tránsito"
-                                                            class="<?php echo $p['stock_transit'] > 0 ? 'text-blue-500' : ''; ?>">T:
-                                                            <?php echo $p['stock_transit'] ?? 0; ?></span>
-                                                        <span title="Por Ingresar"
-                                                            class="<?php echo $p['stock_incoming'] > 0 ? 'text-purple-500' : ''; ?>">I:
-                                                            <?php echo $p['stock_incoming'] ?? 0; ?></span>
-                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-5 text-center text-[11px] font-bold text-slate-500">
+                                                <?php echo $p['stock_min'] ?? 0; ?>
+                                            </td>
+                                            <td class="px-6 py-5 text-center text-[11px] font-bold <?php echo $p['stock_transit'] > 0 ? 'text-blue-500' : 'text-slate-400'; ?>">
+                                                <?php echo $p['stock_transit'] ?? 0; ?>
+                                            </td>
+                                            <td class="px-6 py-5 text-center group/stock relative">
+                                                <div class="flex flex-col items-center">
+                                                    <span class="text-[11px] font-bold <?php echo $p['stock_incoming'] > 0 ? 'text-purple-500' : 'text-slate-400'; ?>">
+                                                        <?php echo $p['stock_incoming'] ?? 0; ?>
+                                                    </span>
+                                                    <?php if ($p['incoming_date']): ?>
+                                                        <span class="text-[9px] text-slate-500 opacity-60"><?php echo date('d/m', strtotime($p['incoming_date'])); ?></span>
+                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                             <td
@@ -212,12 +221,6 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                             <td
                                                 class="px-6 py-5 text-right font-mono text-xs dark:text-slate-300 text-slate-600">
                                                 $ <?php echo number_format($priceGremio, 2); ?>
-                                            </td>
-                                            <td class="px-6 py-5 text-center">
-                                                <span
-                                                    class="inline-flex px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/10 text-[10px] font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/5">
-                                                    <?php echo $p['iva_rate']; ?>%
-                                                </span>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="flex items-center justify-center gap-1">

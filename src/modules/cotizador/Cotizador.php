@@ -23,26 +23,26 @@ class Cotizador
     /**
      * Generate unique quote number: VS-COT-YYYY-MM-DD-NUMBER_VERSION
      */
-    public function generateQuoteNumber($clientId)
+    public function generateQuoteNumber()
     {
-        $dateStr = date('Y-m-d');
-        $prefix = "VS-COT-" . $dateStr . "-";
+        $yearMonth = date('Y-m');
+        $prefix = "VS-" . $yearMonth . "-";
 
-        // Get the last number used today to avoid collisions even if records were deleted
+        // Reset monthly: find max number for this month
         $stmt = $this->db->prepare("SELECT quote_number FROM quotations WHERE quote_number LIKE :prefix AND company_id = :cid ORDER BY id DESC LIMIT 1");
         $stmt->execute(['prefix' => $prefix . '%', 'cid' => $this->company_id]);
         $lastQuote = $stmt->fetch();
 
         if ($lastQuote) {
             $parts = explode('-', $lastQuote['quote_number']);
-            $lastPart = end($parts); // e.g. 0001_01
+            $lastPart = end($parts); // e.g. 001_01
             $num = (int) explode('_', $lastPart)[0];
             $nextNum = $num + 1;
         } else {
             $nextNum = 1;
         }
 
-        $numberPart = str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+        $numberPart = str_pad($nextNum, 3, '0', STR_PAD_LEFT);
         return $prefix . $numberPart . "_01";
     }
 
@@ -137,6 +137,14 @@ class Cotizador
         }
 
         if ($quotationId) {
+            // CRM Automation: Move lead to 'Presupuestado'
+            try {
+                $stmtLead = $this->db->prepare("UPDATE leads SET status = 'Presupuestado', updated_at = NOW() WHERE entity_id = ? AND company_id = ?");
+                $stmtLead->execute([$data['client_id'], $this->company_id]);
+            } catch (\Exception $e) {
+                // Non-critical, just log it
+            }
+
             Logger::event('QUOTE_CREATE', 'quotation', $quotationId, [
                 'number' => $data['quote_number'],
                 'total' => $data['total_usd'],

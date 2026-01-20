@@ -222,29 +222,30 @@ class CRM
     }
 
     /**
-     * Move lead to next/prev stage
+     * Delete a lead
      */
-    public function moveLead($id, $direction)
+    public function deleteLead($id)
     {
-        $statuses = ['Nuevo', 'Contactado', 'Presupuestado', 'Ganado', 'Perdido'];
+        $stmt = $this->db->prepare("DELETE FROM crm_leads WHERE id = ? AND company_id = ?");
+        return $stmt->execute([$id, $this->company_id]);
+    }
 
-        $stmt = $this->db->prepare("SELECT status FROM crm_leads WHERE id = ? AND company_id = ?");
-        $stmt->execute([$id, $this->company_id]);
-        $current = $stmt->fetchColumn();
-
-        if (!$current)
-            return false;
-
-        $idx = array_search($current, $statuses);
-        if ($direction === 'next' && $idx < count($statuses) - 1)
-            $idx++;
-        elseif ($direction === 'prev' && $idx > 0)
-            $idx--;
-        else
-            return true; // No movement possible but ok
-
+    /**
+     * Move lead to specific status (Manual or Auto)
+     */
+    public function moveLeadToStatus($id, $status)
+    {
         $stmt = $this->db->prepare("UPDATE crm_leads SET status = ?, updated_at = NOW() WHERE id = ? AND company_id = ?");
-        return $stmt->execute([$statuses[$idx], $id, $this->company_id]);
+        return $stmt->execute([$status, $id, $this->company_id]);
+    }
+
+    /**
+     * Reset CRM (Delete all leads for this company)
+     */
+    public function resetCRM()
+    {
+        $stmt = $this->db->prepare("DELETE FROM crm_leads WHERE company_id = ?");
+        return $stmt->execute([$this->company_id]);
     }
     /**
      * Get Sales Funnel Stats (30 Days)

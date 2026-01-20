@@ -365,10 +365,19 @@ if ($userRole === 'Vendedor') {
                     data: [
                         <?php echo $stats['total_sales']; ?>,
                         <?php echo $stats['total_purchases']; ?>,
-                        <?php echo ($stats['total_sales'] - $stats['total_purchases']); ?>
+                        <?php $margin = ($stats['total_sales'] - $stats['total_purchases']);
+                        echo $margin; ?>
                     ],
-                    backgroundColor: ['rgba(19, 109, 236, 0.6)', 'rgba(239, 68, 68, 0.6)', 'rgba(16, 185, 129, 0.6)'],
-                    borderColor: ['#136dec', '#ef4444', '#10b981'],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.6)', // Green for sales
+                        'rgba(234, 179, 8, 0.6)', // Dark yellow for purchases
+                        '<?php echo $margin < 0 ? "rgba(220, 38, 38, 0.7)" : "rgba(13, 148, 136, 0.7)"; ?>' // Dark red if <0, Dark Teal if >0
+                    ],
+                    borderColor: [
+                        '#10b981',
+                        '#ca8a04',
+                        '<?php echo $margin < 0 ? "#991b1b" : "#0d9488"; ?>'
+                    ],
                     borderWidth: 2,
                     borderRadius: 8,
                 }]
