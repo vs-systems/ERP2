@@ -31,6 +31,7 @@ class User
             $this->user_id = $_SESSION['user_id'];
             $this->username = $_SESSION['username'];
             $this->role = $_SESSION['role'];
+            $this->full_name = $_SESSION['full_name'] ?? $_SESSION['username'];
             $this->entity_id = $_SESSION['entity_id'] ?? null;
         }
     }
@@ -48,6 +49,7 @@ class User
         if ($user && password_verify($password, $user['password_hash'])) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
+            $_SESSION['full_name'] = $user['full_name'] ?? $user['username'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['entity_id'] = $user['entity_id'] ?? null;
 

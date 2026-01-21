@@ -10,11 +10,11 @@ if (!isset($userAuth)) {
     $userAuth = new \Vsys\Lib\User();
 }
 
-$userName = $_SESSION['user_name'] ?? 'Usuario';
+$userName = $_SESSION['full_name'] ?? ($_SESSION['user_name'] ?? 'Usuario');
 $userRole = $_SESSION['role'] ?? 'Invitado';
 
 $menu = [
-    ['id' => 'index', 'href' => 'index.php', 'icon' => 'dashboard', 'label' => 'Inicio'],
+    ['id' => 'index', 'href' => 'dashboard.php', 'icon' => 'dashboard', 'label' => 'Inicio'],
     [
         'label' => 'Ventas',
         'icon' => 'receipt_long',
