@@ -11,6 +11,12 @@ class Database
 
     private function __construct()
     {
+        // Load config if exists
+        $configPath = dirname(__DIR__) . '/config/config.php';
+        if (file_exists($configPath)) {
+            require_once $configPath;
+        }
+
         $host = defined('DB_HOST') ? DB_HOST : (getenv('DB_HOST') ?: '127.0.0.1');
         $name = defined('DB_NAME') ? DB_NAME : (getenv('DB_NAME') ?: 'gozziar_vs_system_erp');
         $user = defined('DB_USER') ? DB_USER : (getenv('DB_USER') ?: 'gozziar_javiergdm');
