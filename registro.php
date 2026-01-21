@@ -54,6 +54,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
 
         if ($clientModule->saveClient($data)) {
+            // Sincronizar con CRM
+            try {
+                require_once __DIR__ . '/src/modules/crm/CRM.php';
+                $crm = new \Vsys\Modules\CRM\CRM();
+                $crm->saveLead([
+                    'name' => $name,
+                    'contact_person' => $_POST['contact'] ?? $name,
+                    'email' => $email,
+                    'phone' => $_POST['mobile'] ?? '',
+                    'status' => 'Nuevo',
+                    'notes' => 'Solicitud de alta desde Portal Web.'
+                ]);
+            } catch (Exception $e) {
+                // Registro silencioso en logs si falla el CRM
+            }
+
             // Notify admin or sales?
             $message = "Solicitud enviada con éxito. Un vendedor verificará sus datos y recibirá un correo con su clave de acceso.";
             $status = "success";

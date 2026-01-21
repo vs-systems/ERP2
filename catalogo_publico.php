@@ -115,10 +115,13 @@ sort($brands);
         </div>
 
         <div class="flex items-center gap-6">
-            <div class="hidden md:flex gap-6 text-sm font-medium text-slate-400">
-                <a href="#" class="hover:text-white transition-colors">Seguridad</a>
-                <a href="#" class="hover:text-white transition-colors">Automatización</a>
-                <a href="#" class="hover:text-white transition-colors">Redes</a>
+            <div
+                class="hidden md:flex gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-tighter overflow-hidden max-w-[400px]">
+                <?php foreach (array_slice($brands, 0, 6) as $b): ?>
+                    <a href="#"
+                        onclick="document.getElementById('brandFilter').value='<?php echo strtolower($b); ?>'; filterProducts(); return false;"
+                        class="hover:text-[#136dec] transition-colors whitespace-nowrap"><?php echo $b; ?></a>
+                <?php endforeach; ?>
             </div>
             <div class="h-6 w-px bg-slate-800 mx-2"></div>
             <button class="relative text-white hover:text-[#136dec] transition-colors" onclick="toggleCart()">
@@ -194,7 +197,8 @@ sort($brands);
                             class="text-[10px] font-bold text-[#136dec] uppercase tracking-widest mb-1"><?php echo $p['brand']; ?></span>
                         <h3
                             class="text-white font-bold text-sm leading-snug line-clamp-2 mb-2 group-hover:text-[#136dec] transition-colors">
-                            <?php echo $p['description']; ?></h3>
+                            <?php echo $p['description']; ?>
+                        </h3>
                         <p class="text-slate-500 text-[10px] mb-4"><?php echo $p['sku']; ?></p>
 
                         <div class="mt-auto flex items-center justify-between gap-2 pt-4 border-t border-[#233348]">
@@ -205,8 +209,8 @@ sort($brands);
                             </div>
                             <button onclick='addToCart(<?php echo json_encode($p); ?>)'
                                 class="bg-accent-green hover:bg-emerald-600 text-black px-4 py-2.5 rounded-xl flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-emerald-500/10">
-                                <span class="material-symbols-outlined text-lg">whatsapp</span>
-                                <span class="text-xs font-bold uppercase">Consultar</span>
+                                <span class="material-symbols-outlined text-lg">add_shopping_cart</span>
+                                <span class="text-xs font-bold uppercase">Agregar</span>
                             </button>
                         </div>
                     </div>

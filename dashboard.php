@@ -18,6 +18,10 @@ $stats = ['total_sales' => 0, 'pending_collections' => 0, 'total_purchases' => 0
 $sellerStats = ['total' => 0, 'converted' => 0];
 $shipStats = [];
 
+// Get current exchange rate for display
+$db = \Vsys\Lib\Database::getInstance();
+$exchangeRate = $db->query("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1")->fetchColumn() ?: 1250.00;
+
 if ($userRole === 'Vendedor') {
     $sellerDash = new \Vsys\Modules\Dashboard\SellerDashboard($userId);
     $sellerStats = $sellerDash->getEfficiencyStats() ?: $sellerStats;
@@ -117,9 +121,11 @@ if ($userRole === 'Vendedor') {
 
                 <div class="flex items-center gap-4 ml-auto">
                     <div class="flex flex-col items-end mr-2">
+                        <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                            USD Oficial: <span class="text-sm font-black">$<?php echo number_format($exchangeRate, 2, ',', '.'); ?></span>
+                        </span>
                         <span
-                            class="text-xs text-slate-500 uppercase font-bold tracking-tighter"><?php echo date('d M, Y'); ?></span>
-                        <span class="text-[10px] text-[#136dec] font-medium"><?php echo $userRole; ?> session</span>
+                            class="text-[9px] text-slate-500 uppercase font-bold tracking-tighter"><?php echo date('d M, Y'); ?> - <?php echo $userRole; ?></span>
                     </div>
                     <div class="h-8 w-px bg-[#233348]"></div>
                     <button class="text-slate-400 hover:text-white transition-colors relative">
@@ -332,7 +338,7 @@ if ($userRole === 'Vendedor') {
                                                 </span>
                                             </td>
                                             <td class="px-6 py-4 text-center">
-                                                <a href="analisys.php?id=<?php echo $r['id']; ?>"
+                                                <a href="analisis.php?id=<?php echo $r['id']; ?>"
                                                     class="p-1.5 text-slate-400 hover:text-[#136dec] transition-colors">
                                                     <span class="material-symbols-outlined text-xl">monitoring</span>
                                                 </a>

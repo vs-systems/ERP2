@@ -16,8 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $db = Database::getInstance();
     $username = $_POST['username']; // For clients, this is usually their CUIT
 
-    $user = $db->prepare("SELECT u.*, e.email FROM users u LEFT JOIN entities e ON u.entity_id = e.id WHERE u.username = ?")->execute([$username]);
-    $user = $db->query("SELECT u.*, e.email FROM users u LEFT JOIN entities e ON u.entity_id = e.id WHERE u.username = '$username'")->fetch();
+    $stmt = $db->prepare("SELECT u.*, e.email FROM users u LEFT JOIN entities e ON u.entity_id = e.id WHERE u.username = ?");
+    $stmt->execute([$username]);
+    $user = $stmt->fetch();
 
     if ($user && $user['email']) {
         // In a real scenario, we'd generate a token. For now, we'll send a temporary password or a simple "Check your email"
