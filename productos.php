@@ -85,12 +85,6 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
             <!-- Header -->
             <header
                 class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
-                <div class="flex items-center gap-4 lg:hidden">
-                    <button onclick="toggleVsysMobileMenu()" class="dark:text-white text-slate-800"><span
-                            class="material-symbols-outlined">menu</span></button>
-                    <span class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">VS
-                        System</span>
-                </div>
                 <div class="flex items-center gap-3">
                     <div class="bg-primary/20 p-2 rounded-lg text-primary">
                         <span class="material-symbols-outlined text-2xl">inventory_2</span>
@@ -139,22 +133,13 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                     <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-widest">
                                         <th class="px-6 py-4">Información del Producto</th>
                                         <th class="px-6 py-4">Rubro / Marca</th>
-                                        <th class="px-6 py-4 text-center">Stock Actual</th>
-                                        <th class="px-6 py-4 text-center">Mín.</th>
-                                        <th class="px-6 py-4 text-center">Tránsito</th>
-                                        <th class="px-6 py-4 text-center">Ingresar</th>
-                                        <th
-                                            class="px-6 py-4 text-right bg-blue-50/50 dark:bg-primary/5 uppercase tracking-tighter text-[10px] font-black text-primary">
+                                        <th class="px-6 py-4 text-right bg-primary/5 dark:bg-primary/5 text-primary">
                                             Costo USD</th>
-                                        <th
-                                            class="px-6 py-4 text-right bg-slate-50/50 dark:bg-white/5 uppercase tracking-tighter text-[10px] font-black text-slate-500">
-                                            Costo ARS</th>
-                                        <th
-                                            class="px-6 py-4 text-right uppercase tracking-tighter text-[10px] font-black text-slate-500">
-                                            Gremio USD</th>
-                                        <th
-                                            class="px-6 py-4 text-right bg-slate-50/50 dark:bg-white/5 uppercase tracking-tighter text-[10px] font-black text-slate-500">
-                                            Gremio ARS</th>
+                                        <th class="px-6 py-4 text-right">Gremio (+<?php echo (int) $gremioMargin; ?>%)
+                                        </th>
+                                        <th class="px-6 py-4 text-right">Web (+<?php echo (int) $webMargin; ?>%)</th>
+                                        <th class="px-6 py-4 text-right">ML (+<?php echo (int) $mlMargin; ?>%)</th>
+                                        <th class="px-6 py-4 text-center">IVA</th>
                                         <th class="px-6 py-4 text-center">Acciones</th>
                                     </tr>
                                 </thead>
@@ -162,17 +147,8 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                     <?php foreach ($products as $p):
                                         $cost = $p['unit_cost_usd'];
                                         $priceGremio = $cost * (1 + ($gremioMargin / 100));
-
-                                        // Stock status
-                                        $stock = $p['stock_current'] ?? 0;
-                                        $min = $p['stock_min'] ?? 0;
-                                        $stockColor = 'text-slate-400';
-                                        if ($stock <= 0)
-                                            $stockColor = 'text-red-500';
-                                        elseif ($stock <= $min)
-                                            $stockColor = 'text-amber-500';
-                                        else
-                                            $stockColor = 'text-emerald-500';
+                                        $priceWeb = $cost * (1 + ($webMargin / 100));
+                                        $priceML = $cost * (1 + ($mlMargin / 100));
                                         ?>
                                         <tr class="product-row hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group"
                                             data-sku="<?php echo strtolower($p['sku']); ?>"
@@ -200,49 +176,30 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
                                                     <?php echo $p['brand'] ?: 'VS System'; ?>
                                                 </div>
                                             </td>
-                                            <td class="px-6 py-5">
-                                                <div class="flex flex-col items-center">
-                                                    <div class="text-lg font-black <?php echo $stockColor; ?>">
-                                                        <?php echo $stock; ?>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-5 text-center text-[11px] font-bold text-slate-500">
-                                                <?php echo $p['stock_min'] ?? 0; ?>
-                                            </td>
-                                            <td
-                                                class="px-6 py-5 text-center text-[11px] font-bold <?php echo $p['stock_transit'] > 0 ? 'text-blue-500' : 'text-slate-400'; ?>">
-                                                <?php echo $p['stock_transit'] ?? 0; ?>
-                                            </td>
-                                            <td class="px-6 py-5 text-center group/stock relative">
-                                                <div class="flex flex-col items-center">
-                                                    <span
-                                                        class="text-[11px] font-bold <?php echo $p['stock_incoming'] > 0 ? 'text-purple-500' : 'text-slate-400'; ?>">
-                                                        <?php echo $p['stock_incoming'] ?? 0; ?>
-                                                    </span>
-                                                    <?php if ($p['incoming_date']): ?>
-                                                        <span
-                                                            class="text-[9px] text-slate-500 opacity-60"><?php echo date('d/m', strtotime($p['incoming_date'])); ?></span>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </td>
                                             <td
                                                 class="px-6 py-5 text-right font-mono font-bold text-primary bg-primary/5 group-hover:bg-primary/10 transition-colors">
                                                 $ <?php echo number_format($cost, 2); ?>
                                             </td>
-                                            <td class="px-6 py-5 text-right bg-slate-50/30 dark:bg-white/5">
-                                                <span class="text-[10px] font-mono font-bold text-slate-400 italic">ARS</span>
-                                                <span class="text-xs font-mono font-bold text-slate-500"><?php echo number_format($cost * $usdRate, 0, ',', '.'); ?></span>
+                                            <td
+                                                class="px-6 py-5 text-right font-mono text-xs dark:text-slate-300 text-slate-600">
+                                                $ <?php echo number_format($priceGremio, 2); ?>
                                             </td>
-                                            <td class="px-6 py-5 text-right">
-                                                <span class="text-xs font-mono font-bold text-slate-600 dark:text-slate-400">$ <?php echo number_format($priceGremio, 2); ?></span>
+                                            <td
+                                                class="px-6 py-5 text-right font-mono text-xs dark:text-slate-300 text-slate-600">
+                                                $ <?php echo number_format($priceWeb, 2); ?>
                                             </td>
-                                            <td class="px-6 py-5 text-right bg-slate-50/30 dark:bg-white/5">
-                                                <span class="text-[10px] font-mono font-bold text-slate-400 italic">ARS</span>
-                                                <span class="text-xs font-mono font-bold text-slate-500"><?php echo number_format($priceGremio * $usdRate, 0, ',', '.'); ?></span>
+                                            <td
+                                                class="px-6 py-5 text-right font-mono text-xs dark:text-slate-300 text-slate-600">
+                                                $ <?php echo number_format($priceML, 2); ?>
+                                            </td>
+                                            <td class="px-6 py-5 text-center">
+                                                <span
+                                                    class="inline-flex px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/10 text-[10px] font-bold text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/5">
+                                                    <?php echo $p['iva_rate']; ?>%
+                                                </span>
                                             </td>
                                             <td class="px-6 py-5">
-                                                <div class="flex items-center justify-center gap-1">
+                                                <div class="flex items-center justify-center">
                                                     <a href="config_productos_add.php?sku=<?php echo urlencode($p['sku']); ?>"
                                                         class="p-2 rounded-lg hover:bg-primary/10 text-slate-400 hover:text-primary transition-all"
                                                         title="Editar Producto">

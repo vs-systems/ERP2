@@ -15,13 +15,11 @@ class User
     private $username;
     private $role;
     private $entity_id;
-    private $permissions;
-    private $company_id;
 
     public function __construct()
     {
         $this->db = Database::getInstance();
-        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+        if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         $this->loadFromSession();
@@ -34,25 +32,7 @@ class User
             $this->username = $_SESSION['username'];
             $this->role = $_SESSION['role'];
             $this->entity_id = $_SESSION['entity_id'] ?? null;
-            $this->company_id = $_SESSION['company_id'] ?? null;
-            $this->permissions = json_decode($_SESSION['permissions'] ?? '[]', true);
         }
-    }
-
-    /**
-     * Check if user has modular permission
-     */
-    public function hasPermission($permission)
-    {
-        // Admin always has all permissions
-        if ($this->role === 'admin' || $this->role === 'Admin') {
-            return true;
-        }
-
-        if (!$this->permissions)
-            return false;
-
-        return in_array($permission, $this->permissions);
     }
 
     /**
@@ -60,6 +40,7 @@ class User
      */
     public function login($username, $password)
     {
+        // Using 'status' and 'password_hash' to match actual schema
         $stmt = $this->db->prepare("SELECT * FROM users WHERE username = :u AND status = 'Active'");
         $stmt->execute([':u' => $username]);
         $user = $stmt->fetch();
@@ -69,8 +50,6 @@ class User
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['entity_id'] = $user['entity_id'] ?? null;
-            $_SESSION['company_id'] = $user['company_id'] ?? null;
-            $_SESSION['permissions'] = $user['permissions'] ?? '[]';
 
             $this->loadFromSession();
 
@@ -83,7 +62,7 @@ class User
 
     public function logout()
     {
-        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+        if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         session_destroy();
@@ -108,11 +87,6 @@ class User
     public function getEntityId()
     {
         return $this->entity_id;
-    }
-
-    public function getCompanyId()
-    {
-        return $this->company_id;
     }
 
     /**

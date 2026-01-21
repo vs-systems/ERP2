@@ -1,6 +1,4 @@
 <?php
-if (session_status() === PHP_SESSION_NONE)
-    session_start();
 /**
  * VS System ERP - Public Catalog
  */
@@ -9,40 +7,8 @@ require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/catalogo/Catalog.php';
 
 use Vsys\Modules\Catalogo\Catalog;
-use Vsys\Modules\Config\PriceList;
-
-require_once __DIR__ . '/src/modules/config/PriceList.php';
 
 $catalog = new Catalog();
-$priceListModule = new PriceList(1); // Default company_id 1 for public
-$allLists = $priceListModule->getAll();
-
-// Identify target price list
-$targetListName = 'WEB Final ARS';
-$isLoggedIn = isset($_SESSION['user_id']);
-if ($isLoggedIn) {
-    $targetListName = 'Gremio';
-}
-
-$targetList = null;
-foreach ($allLists as $l) {
-    if (stripos($l['name'], $targetListName) !== false) {
-        $targetList = $l;
-        break;
-    }
-}
-
-// If not found, fallback to first list
-if (!$targetList && !empty($allLists)) {
-    $targetList = $allLists[0];
-}
-
-// Fetch current BNA Rate
-$currentRate = 1000; // Fallback
-$stmt = Vsys\Lib\Database::getInstance()->prepare("SELECT rate_buy FROM exchange_rates WHERE currency_to = 'ARS' ORDER BY created_at DESC LIMIT 1");
-$stmt->execute();
-$currentRate = $stmt->fetchColumn() ?: 1000;
-
 $allProducts = $catalog->getAllProducts();
 $categories = $catalog->getCategories();
 
@@ -229,7 +195,7 @@ sort($brands);
 <body>
     <header>
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=2" alt="VS System" class="logo-large" style="height: 45px;">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large"style="height: 45px;">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.2rem;">
                 Vecino Seguro <span
                     style="background: var(--gradient-premium); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Cató¡logo</span>
@@ -244,18 +210,9 @@ sort($brands);
     </header>
 
     <div class="catalog-header">
-        <h1>Explora nuestra Tecnología</h1>
-        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto; margin-bottom: 1.5rem;">Equipamiento de
-            seguridad electrónica de alta gama. Cámaras, NVRs y soluciones de videovigilancia profesional.</p>
-
-        <?php if (!$isLoggedIn): ?>
-            <div class="registration-invite" style="margin-top: 2rem;">
-                <a href="gremio_registro.php" class="btn-primary"
-                    style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); padding: 12px 25px; border-radius: 99px; text-decoration: none; font-weight: 700; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);">
-                    <i class="fas fa-tools"></i> ¿SOS INSTALADOR? REGISTRATE AQUÍ PARA PRECIOS GREMIO
-                </a>
-            </div>
-        <?php endif; ?>
+        <h1>Explora nuestra Tecnologó­a</h1>
+        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Equipamiento de seguridad electró³nica de
+            alta gama. Có¡maras, NVRs y soluciones de videovigilancia profesional.</p>
     </div>
 
     <main class="content" style="max-width: 1400px; margin: 0 auto; padding-top: 0;">
@@ -320,37 +277,20 @@ sort($brands);
 
                     <div class="product-footer">
                         <div class="product-price-container">
-                            <?php
-                            $base_price = $p['unit_price_usd'] ?: 0;
-                            $margin = $targetList['margin_percent'] ?? 0;
-                            $price_usd = $base_price * (1 + ($margin / 100));
-                            $price_ars = $price_usd * $currentRate;
-                            ?>
-
-                            <?php if ($isLoggedIn): ?>
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <div
-                                        style="font-size: 0.7rem; color: #10b981; font-weight: 700; text-transform: uppercase;">
-                                        Precio Gremio</div>
-                                    <div class="product-price" style="color: #10b981;">
-                                        USD <?php echo number_format($price_usd, 2); ?>
-                                    </div>
-                                    <div style="font-size: 0.6rem; color: var(--text-muted);">ARS
-                                        <?php echo number_format($price_ars, 0, ',', '.'); ?>
-                                    </div>
+                            <?php if (($_SESSION['user_role'] ?? '') === 'Vendedor'): ?>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="font-size: 0.7rem; color: var(--accent-blue); opacity: 0.8; text-transform: uppercase;">Precio Gremio</div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">USD <?php echo number_format($p['price_gremio'] ?: $p['unit_price_usd'], 2); ?></div>
+                                    <div style="font-size: 0.7rem; color: var(--accent-violet); opacity: 0.8; text-transform: uppercase; margin-top: 4px;">Precio Web</div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">USD <?php echo number_format($p['price_web'] ?: ($p['unit_price_usd'] * 1.2), 2); ?></div>
                                 </div>
                             <?php else: ?>
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <div class="product-price">
-                                        $<?php echo number_format($price_ars, 0, ',', '.'); ?>
-                                    </div>
-                                    <div
-                                        style="font-size: 0.65rem; color: #3b82f6; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
-                                        Publico Final IVA Inc.</div>
+                                <div class="product-price">
+                                    USD <?php echo number_format($p['unit_price_usd'], 2); ?>
                                 </div>
                             <?php endif; ?>
                         </div>
-                        <a href="https://wa.me/5491100000000?text=<?php echo urlencode("Hola! Me interesa este producto: " . $p['sku'] . " - " . $p['description']); ?>"
+                        <a href="https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=<?php echo urlencode("Hola! Me interesa este producto: " . $p['sku'] . " - " . $p['description']); ?>"
                             target="_blank" class="btn-whatsapp"
                             onclick="logClick('<?php echo addslashes($p['sku']); ?>', '<?php echo addslashes($p['description']); ?>')">
                             <i class="fab fa-whatsapp"></i> Consultar
@@ -412,3 +352,8 @@ sort($brands);
 </body>
 
 </html>
+
+
+
+
+

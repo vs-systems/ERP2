@@ -42,11 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_entity'])) {
 }
 
 // Get all suppliers
-$sql = "SELECT * FROM entities WHERE (type = 'supplier' OR type = 'provider') AND company_id = ? ORDER BY is_enabled DESC, name ASC";
+$sql = "SELECT * FROM entities WHERE type = 'supplier' OR type = 'provider' ORDER BY name ASC";
 $db = Vsys\Lib\Database::getInstance();
-$stmt = $db->prepare($sql);
-$stmt->execute([$_SESSION['company_id']]);
-$suppliers = $stmt->fetchAll();
+$suppliers = $db->query($sql)->fetchAll();
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="es">
@@ -177,23 +175,19 @@ $suppliers = $stmt->fetchAll();
                                             class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group <?php echo !$s['is_enabled'] ? 'opacity-60' : ''; ?>">
                                             <td class="px-6 py-5">
                                                 <div class="font-bold text-sm dark:text-white text-slate-800">
-                                                    <?php echo $s['name']; ?>
-                                                </div>
+                                                    <?php echo $s['name']; ?></div>
                                                 <div class="text-[11px] text-slate-500 font-medium">
-                                                    <?php echo $s['fantasy_name']; ?>
-                                                </div>
+                                                    <?php echo $s['fantasy_name']; ?></div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800 font-mono">
-                                                    <?php echo $s['tax_id']; ?>
-                                                </div>
+                                                    <?php echo $s['tax_id']; ?></div>
                                                 <div class="text-[11px] text-slate-500"><?php echo $s['document_number']; ?>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800 font-medium">
-                                                    <?php echo $s['contact_person']; ?>
-                                                </div>
+                                                    <?php echo $s['contact_person']; ?></div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <span
@@ -203,12 +197,10 @@ $suppliers = $stmt->fetchAll();
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800">
-                                                    <?php echo $s['email']; ?>
-                                                </div>
+                                                    <?php echo $s['email']; ?></div>
                                                 <div
                                                     class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
-                                                    <?php echo $s['mobile'] ?: $s['phone']; ?>
-                                                </div>
+                                                    <?php echo $s['mobile'] ?: $s['phone']; ?></div>
                                             </td>
                                             <td class="px-6 py-5 text-center">
                                                 <span

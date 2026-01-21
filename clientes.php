@@ -42,11 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_entity'])) {
 }
 
 // Get all clients
-$sql = "SELECT * FROM entities WHERE type = 'client' AND company_id = ? ORDER BY name ASC";
+$sql = "SELECT * FROM entities WHERE type = 'client' ORDER BY name ASC";
 $db = Vsys\Lib\Database::getInstance();
-$stmt = $db->prepare($sql);
-$stmt->execute([$_SESSION['company_id']]);
-$clients = $stmt->fetchAll();
+$clients = $db->query($sql)->fetchAll();
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="es">
@@ -177,23 +175,19 @@ $clients = $stmt->fetchAll();
                                             class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group <?php echo !$c['is_enabled'] ? 'opacity-60' : ''; ?>">
                                             <td class="px-6 py-5">
                                                 <div class="font-bold text-sm dark:text-white text-slate-800">
-                                                    <?php echo $c['name']; ?>
-                                                </div>
+                                                    <?php echo $c['name']; ?></div>
                                                 <div class="text-[11px] text-slate-500 font-medium">
-                                                    <?php echo $c['fantasy_name']; ?>
-                                                </div>
+                                                    <?php echo $c['fantasy_name']; ?></div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800 font-mono">
-                                                    <?php echo $c['tax_id']; ?>
-                                                </div>
+                                                    <?php echo $c['tax_id']; ?></div>
                                                 <div class="text-[11px] text-slate-500"><?php echo $c['document_number']; ?>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800 font-medium">
-                                                    <?php echo $c['contact_person']; ?>
-                                                </div>
+                                                    <?php echo $c['contact_person']; ?></div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <span
@@ -203,12 +197,10 @@ $clients = $stmt->fetchAll();
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800">
-                                                    <?php echo $c['email']; ?>
-                                                </div>
+                                                    <?php echo $c['email']; ?></div>
                                                 <div
                                                     class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
-                                                    <?php echo $c['mobile'] ?: $c['phone']; ?>
-                                                </div>
+                                                    <?php echo $c['mobile'] ?: $c['phone']; ?></div>
                                             </td>
                                             <td class="px-6 py-5 text-center">
                                                 <span
@@ -223,14 +215,6 @@ $clients = $stmt->fetchAll();
                                                         title="Editar Cliente">
                                                         <span class="material-symbols-outlined text-[18px]">edit</span>
                                                     </a>
-                                                    <?php if (($_SESSION['role'] ?? '') === 'Admin' || ($_SESSION['role'] ?? '') === 'admin'): ?>
-                                                        <button
-                                                            onclick="deleteClient(<?php echo $c['id']; ?>, '<?php echo addslashes($c['name']); ?>')"
-                                                            class="p-2 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all shadow-sm"
-                                                            title="Eliminar Cliente">
-                                                            <span class="material-symbols-outlined text-[18px]">delete</span>
-                                                        </button>
-                                                    <?php endif; ?>
                                                 </div>
                                             </td>
                                         </tr>
@@ -243,32 +227,6 @@ $clients = $stmt->fetchAll();
             </div>
         </main>
     </div>
-
-    <script>
-        async function deleteClient(id, name) {
-            if (!confirm(`¿Está seguro de eliminar al cliente "${name}"? Esta acción no se puede deshacer.`)) return;
-
-            try {
-                const res = await fetch('ajax_delete_entity.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        id: id
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            } catch (e) {
-                alert('Error de conexión al intentar eliminar.');
-            }
-        }
-    </script>
 </body>
 
 </html>

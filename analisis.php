@@ -1,7 +1,7 @@
 ﻿<?php
 require_once 'auth_check.php';
 /**
- * VS System ERP - Análisis de Operaciones (Rediseño Premium)
+ * VS System ERP - Análisis de Operaciones
  */
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
@@ -21,370 +21,279 @@ if ($quotationId) {
 }
 ?>
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de Operación - VS System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet" />
-    <script src="js/theme_handler.js"></script>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <title>Análisis de Operació³n - VS System</title>
+    <link rel="stylesheet" href="css/style_premium.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#136dec",
-                        "background-dark": "#101822",
-                        "surface-dark": "#16202e",
-                        "surface-border": "#233348",
-                    },
-                    fontFamily: {
-                        "display": ["Inter", "sans-serif"]
-                    },
-                },
-            },
-        }
-    </script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
+        .metric-big {
+            font-size: 2.5rem;
+            font-weight: 800;
         }
 
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        .metric-label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: #101822;
+        .profit-positive {
+            color: #10b981;
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #233348;
-            border-radius: 3px;
+        .profit-negative {
+            color: #ef4444;
         }
 
-        .glass-card {
-            background: rgba(22, 32, 46, 0.8);
-            backdrop-filter: blur(8px);
+        .profit-neutral {
+            color: #f59e0b;
         }
 
-        .gradient-text {
-            background: linear-gradient(90deg, #136dec, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .cost-breakdown {
+            margin-top: 1rem;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
     </style>
 </head>
 
-<body
-    class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white antialiased overflow-hidden transition-colors duration-300">
-    <div class="flex h-screen w-full">
-        <!-- Sidebar Inclusion -->
+<body>
+    <header
+        style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <a href="index.php" style="text-decoration:none;">
+                <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
+            </a>
+            <div
+                style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);">
+                Vecino Seguro <span
+                    style="background: linear-gradient(90deg, #8b5cf6, #d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Sistemas</span>
+                by Javier Gozzi - 2026
+            </div>
+        </div>
+        <div class="header-right" style="color: #cbd5e1;">
+            <span class="user-badge"><i class="fas fa-user-circle"></i> Admin</span>
+        </div>
+    </header>
+
+    <div class="dashboard-container">
         <?php include 'sidebar.php'; ?>
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
-            <!-- Top Header -->
-            <header
-                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
-                <div class="flex items-center gap-3">
-                    <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
-                        <span class="material-symbols-outlined text-2xl">query_stats</span>
+        <main class="content">
+            <?php if (!$quotationId): ?>
+                <div class="card" style="text-align: center; padding: 50px;">
+                    <h3><i class="fas fa-search-dollar"></i> Seleccione una Cotizació³n</h3>
+                    <p>Ingrese el ID de la cotizació³n para ver su Análisis de rentabilidad.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="number" name="id" placeholder="ID Cotizació³n"
+                            style="padding: 10px; width: 150px; border-radius: 6px; border: 1px solid var(--accent-violet); background: #1e293b; color: white;">
+                        <button type="submit" class="btn-primary">BUSCAR</button>
                     </div>
-                    <h2 class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">Análisis de
-                        Rentabilidad</h2>
+                    </form>
                 </div>
-            </header>
 
-            <div class="flex-1 overflow-y-auto p-6 space-y-8">
-                <div class="max-w-7xl mx-auto space-y-8">
+                <div class="card" style="margin-top: 2rem;">
+                    <h3><i class="fas fa-history"></i> &Uacute;ltimas Operaciones Disponibles</h3>
+                    <div class="table-responsive">
+                        <table class="table-compact">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Cliente</th>
+                                    <th>Fecha</th>
+                                    <th>Monto (USD)</th>
+                                    <th style="text-align: center;">Acci&oacute;n</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                $db = Vsys\Lib\Database::getInstance();
+                                $recentOps = $db->query("SELECT q.id, q.quote_number, q.created_at, q.subtotal_usd, e.name as client_name 
+                                                         FROM quotations q 
+                                                         JOIN entities e ON q.client_id = e.id 
+                                                         ORDER BY q.id DESC LIMIT 10")->fetchAll();
+                                foreach ($recentOps as $op):
+                                    ?>
+                                    <tr>
+                                        <td>#<?php echo $op['quote_number']; ?></td>
+                                        <td><?php echo $op['client_name']; ?></td>
+                                        <td><?php echo date('d/m/Y', strtotime($op['created_at'])); ?></td>
+                                        <td>$ <?php echo number_format($op['subtotal_usd'], 2); ?></td>
+                                        <td style="text-align: center;">
+                                            <a href="analisis.php?id=<?php echo $op['id']; ?>" class="btn-primary"
+                                                style="padding: 5px 10px; font-size: 0.8rem;">
+                                                ANALIZAR <i class="fas fa-arrow-right"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            <?php elseif (isset($error)): ?>
+                <div class="alert alert-error"><?php echo $error; ?></div>
+            <?php else: ?>
 
-                    <?php if (!$quotationId): ?>
-                        <div
-                            class="glass-card border border-slate-200 dark:border-[#233348] p-12 rounded-3xl text-center space-y-6">
-                            <div
-                                class="bg-primary/10 size-20 rounded-full flex items-center justify-center mx-auto text-primary">
-                                <span class="material-symbols-outlined text-4xl">search_check</span>
-                            </div>
-                            <h3 class="text-2xl font-extrabold tracking-tight">Seleccione una Cotización</h3>
-                            <p class="text-slate-500 max-w-md mx-auto">Ingrese el número de cotización para visualizar el
-                                desglose detallado de costos y márgenes de ganancia.</p>
-
-                            <form method="GET" class="flex items-center justify-center gap-2 max-w-sm mx-auto">
-                                <input type="number" name="id" placeholder="ID de Cotización" required
-                                    class="flex-1 bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-xl px-4 py-3 text-sm focus:ring-primary focus:border-primary">
-                                <button type="submit"
-                                    class="bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all">BUSCAR</button>
-                            </form>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div>
+                            <h1>An&aacute;lisis de Rentabilidad #<?php echo $analysis['quote_number']; ?></h1>
+                            <p style="color: #94a3b8;">Cliente: <strong><?php echo $analysis['client_name']; ?></strong> |
+                                Fecha: <?php echo $analysis['date']; ?></p>
                         </div>
+                        <div style="text-align: right;">
+                            <span class="badge" style="font-size: 1rem; background: rgba(139, 92, 246, 0.2);">Margen:
+                                <?php echo number_format($analysis['margin_percent'], 2); ?>%</span>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="grid-3" style="margin-top: 2rem;">
+                    <!-- Revenue -->
+                    <div class="card"
+                        style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(99, 102, 241, 0.1)); border: 1px solid rgba(99, 102, 241, 0.3);">
+                        <div class="metric-label">Ingresos Totales (Neto)</div>
+                        <div class="metric-big" style="color: #a5b4fc;">$
+                            <?php echo number_format($analysis['total_revenue'], 2); ?>
+                        </div>
+                        <small>Facturació³n proyectada sin IVA</small>
+                    </div>
+
+                    <!-- Cost -->
+                    <div class="card"
+                        style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(239, 68, 68, 0.1)); border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <div class="metric-label">Costo Mercaderó­a (CMV)</div>
+                        <div class="metric-big" style="color: #fca5a5;">$
+                            <?php echo number_format($analysis['total_cost'], 2); ?>
+                        </div>
+                        <small>Costo de reposició³n estimado</small>
+                    </div>
+
+                    <!-- Profit -->
+                    <div class="card"
+                        style="background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(16, 185, 129, 0.1)); border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <div class="metric-label">Utilidad Bruta</div>
                         <div
-                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-3xl overflow-hidden">
-                            <div
-                                class="p-6 border-b border-slate-200 dark:border-[#233348] flex items-center justify-between">
-                                <h3 class="font-bold text-sm uppercase tracking-widest text-slate-500">Últimas Operaciones
-                                </h3>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="w-full text-left">
-                                    <thead
-                                        class="bg-slate-50 dark:bg-[#101822]/50 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                            class="metric-big <?php echo $analysis['profit'] >= 0 ? 'profit-positive' : 'profit-negative'; ?>">
+                            $ <?php echo number_format($analysis['profit'], 2); ?>
+                        </div>
+                        <small>Ganancia neta de la operació³n</small>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 2rem;">
+                    <div class="card">
+                        <h3>Desglose de Productos</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th style="text-align: right;">Venta Unit</th>
+                                        <th style="text-align: right;">Costo Unit</th>
+                                        <th style="text-align: right;">Utilidad</th>
+                                        <th style="text-align: center;">% Margen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($analysis['items'] as $item):
+                                        $margin = ($item['unit_price'] > 0) ? (($item['unit_price'] - $item['unit_cost']) / $item['unit_price']) * 100 : 0;
+                                        ?>
                                         <tr>
-                                            <th class="px-6 py-4">Referencia</th>
-                                            <th class="px-6 py-4">Cliente</th>
-                                            <th class="px-6 py-4">Fecha</th>
-                                            <th class="px-6 py-4 text-right">Monto (USD)</th>
-                                            <th class="px-6 py-4 text-center">Acción</th>
+                                            <td><strong><?php echo $item['sku']; ?></strong><br><small><?php echo $item['description']; ?></small>
+                                            </td>
+                                            <td style="text-align: right;">$
+                                                <?php echo number_format($item['unit_price'], 2); ?>
+                                            </td>
+                                            <td style="text-align: right;">$ <?php echo number_format($item['unit_cost'], 2); ?>
+                                            </td>
+                                            <td style="text-align: right; color: #10b981;">$
+                                                <?php echo number_format(($item['unit_price'] - $item['unit_cost']) * $item['qty'], 2); ?>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                <span class="badge"
+                                                    style="background: <?php echo $margin < 20 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'; ?>; color: <?php echo $margin < 20 ? '#ef4444' : '#10b981'; ?>;">
+                                                    <?php echo number_format($margin, 1); ?>%
+                                                </span>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100 dark:divide-[#233348]">
-                                        <?php
-                                        $db = Vsys\Lib\Database::getInstance();
-                                        $recentOps = $db->prepare("SELECT q.id, q.quote_number, q.created_at, q.subtotal_usd, e.name as client_name 
-                                                                 FROM quotations q 
-                                                                 JOIN entities e ON q.client_id = e.id 
-                                                                 WHERE q.company_id = ?
-                                                                 ORDER BY q.id DESC LIMIT 10");
-                                        $recentOps->execute([$_SESSION['company_id']]);
-                                        foreach ($recentOps->fetchAll() as $op): ?>
-                                            <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
-                                                <td class="px-6 py-4 font-bold text-primary">#<?php echo $op['quote_number']; ?>
-                                                </td>
-                                                <td class="px-6 py-4 font-medium"><?php echo $op['client_name']; ?></td>
-                                                <td class="px-6 py-4 text-slate-500 text-xs">
-                                                    <?php echo date('d/m/Y', strtotime($op['created_at'])); ?></td>
-                                                <td class="px-6 py-4 text-right font-bold text-emerald-500">$
-                                                    <?php echo number_format($op['subtotal_usd'], 2); ?></td>
-                                                <td class="px-6 py-4 text-center">
-                                                    <a href="analisis.php?id=<?php echo $op['id']; ?>"
-                                                        class="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#136dec] border border-[#136dec]/20 px-3 py-1.5 rounded-lg hover:bg-[#136dec] hover:text-white transition-all">
-                                                        Analizar <span
-                                                            class="material-symbols-outlined text-sm">arrow_forward</span>
-                                                    </a>
-                                                </td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>Estructura de Margen</h3>
+                        <canvas id="marginChart"></canvas>
+                        <div class="cost-breakdown">
+                            <div class="cost-item">
+                                <span>Costo Mercaderó­a</span>
+                                <strong><?php echo number_format(($analysis['total_cost'] / $analysis['total_revenue']) * 100, 1); ?>%</strong>
+                            </div>
+                            <div class="cost-item">
+                                <span>Impuestos (Est. IIBB 3.5%)</span>
+                                <strong><?php echo number_format($analysis['taxes'], 2); ?> (3.5%)</strong>
+                            </div>
+                            <div class="cost-item" style="border-top: 1px solid white; margin-top: 5px; padding-top: 5px;">
+                                <span>Utilidad Neta Real</span>
+                                <strong
+                                    style="color: #10b981;"><?php echo number_format($analysis['profit'] - $analysis['taxes'], 2); ?></strong>
                             </div>
                         </div>
-                    <?php elseif (isset($error)): ?>
-                        <div
-                            class="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl text-red-500 flex items-center gap-4">
-                            <span class="material-symbols-outlined text-3xl">error</span>
-                            <div>
-                                <h4 class="font-bold">Error de Operación</h4>
-                                <p class="text-sm"><?php echo $error; ?></p>
-                            </div>
-                        </div>
-                    <?php else: ?>
-
-                        <!-- Analysis Header Card -->
-                        <div
-                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] p-8 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
-                            <div class="space-y-1 text-center md:text-left">
-                                <div class="flex items-center gap-3 justify-center md:justify-start">
-                                    <h1 class="text-2xl font-extrabold tracking-tight">Análisis de Rentabilidad</h1>
-                                    <span
-                                        class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest border border-primary/20">#<?php echo $analysis['quote_number']; ?></span>
-                                </div>
-                                <p class="text-slate-500">Cliente: <strong
-                                        class="text-slate-700 dark:text-slate-300"><?php echo $analysis['client_name']; ?></strong>
-                                    | Fecha: <?php echo $analysis['date']; ?></p>
-                            </div>
-                            <div class="bg-emerald-500/10 border border-emerald-500/20 px-8 py-4 rounded-2xl text-center">
-                                <span
-                                    class="block text-[10px] font-extrabold uppercase tracking-widest text-emerald-600 mb-1">Margen
-                                    Operativo</span>
-                                <span
-                                    class="text-3xl font-black text-emerald-500"><?php echo number_format($analysis['margin_percent'], 2); ?>%</span>
-                            </div>
-                        </div>
-
-                        <!-- Top Metrics -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div
-                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] p-8 rounded-3xl group hover:border-primary/30 transition-all duration-300">
-                                <div class="flex items-center justify-between mb-4">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Ingresos
-                                        Netos</span>
-                                    <span
-                                        class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">receipt_long</span>
-                                </div>
-                                <div class="text-3xl font-black dark:text-white text-slate-800 mb-1">USD
-                                    <?php echo number_format($analysis['total_revenue'], 2); ?></div>
-                                <p class="text-[10px] text-slate-400 font-medium leading-relaxed">Facturación proyectada sin
-                                    impuestos directos.</p>
-                            </div>
-
-                            <div
-                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] p-8 rounded-3xl group hover:border-red-500/30 transition-all duration-300">
-                                <div class="flex items-center justify-between mb-4">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Costo
-                                        Mercadería</span>
-                                    <span
-                                        class="material-symbols-outlined text-red-400 group-hover:scale-110 transition-transform">inventory_2</span>
-                                </div>
-                                <div class="text-3xl font-black dark:text-white text-slate-800 mb-1">USD
-                                    <?php echo number_format($analysis['total_cost'], 2); ?></div>
-                                <p class="text-[10px] text-slate-400 font-medium leading-relaxed">Costo total de reposición
-                                    de los productos.</p>
-                            </div>
-
-                            <div
-                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] p-8 rounded-3xl group hover:border-emerald-500/30 transition-all duration-300">
-                                <div class="flex items-center justify-between mb-4">
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Utilidad
-                                        Bruta</span>
-                                    <span
-                                        class="material-symbols-outlined text-emerald-400 group-hover:scale-110 transition-transform">payments</span>
-                                </div>
-                                <div
-                                    class="text-3xl font-black <?php echo $analysis['profit'] >= 0 ? 'text-emerald-500' : 'text-red-500'; ?> mb-1">
-                                    USD <?php echo number_format($analysis['profit'], 2); ?></div>
-                                <p class="text-[10px] text-slate-400 font-medium leading-relaxed">Ganancia estimada de la
-                                    operación comercial.</p>
-                            </div>
-                        </div>
-
-                        <!-- Details Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <!-- Product Breakdown -->
-                            <div
-                                class="lg:col-span-2 bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-3xl overflow-hidden shadow-sm">
-                                <div class="p-6 border-b border-slate-200 dark:border-[#233348] flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-primary">view_list</span>
-                                    <h3 class="font-bold text-sm uppercase tracking-widest">Desglose por Producto</h3>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="w-full text-left">
-                                        <thead
-                                            class="bg-slate-50 dark:bg-[#101822]/50 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
-                                            <tr>
-                                                <th class="px-6 py-4">Producto</th>
-                                                <th class="px-6 py-4 text-right">Venta Unit</th>
-                                                <th class="px-6 py-4 text-right">Costo Unit</th>
-                                                <th class="px-6 py-4 text-right">Utilidad</th>
-                                                <th class="px-6 py-4 text-center">% Margen</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-slate-100 dark:divide-[#233348]">
-                                            <?php foreach ($analysis['items'] as $item):
-                                                $margin = ($item['unit_price'] > 0) ? (($item['unit_price'] - $item['unit_cost']) / $item['unit_price']) * 100 : 0;
-                                                ?>
-                                                <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
-                                                    <td class="px-6 py-4">
-                                                        <div class="font-bold text-sm text-slate-800 dark:text-white">
-                                                            <?php echo $item['sku']; ?></div>
-                                                        <div class="text-[10px] text-slate-500 truncate max-w-[200px]">
-                                                            <?php echo $item['description']; ?></div>
-                                                    </td>
-                                                    <td class="px-6 py-4 text-right font-medium">$
-                                                        <?php echo number_format($item['unit_price'], 2); ?></td>
-                                                    <td class="px-6 py-4 text-right text-slate-500 text-xs">$
-                                                        <?php echo number_format($item['unit_cost'], 2); ?></td>
-                                                    <td class="px-6 py-4 text-right font-bold text-emerald-500">$
-                                                        <?php echo number_format(($item['unit_price'] - $item['unit_cost']) * $item['qty'], 2); ?>
-                                                    </td>
-                                                    <td class="px-6 py-4 text-center">
-                                                        <span
-                                                            class="inline-block text-[10px] font-bold px-3 py-1 rounded-full <?php echo $margin < 20 ? 'bg-red-500/10 text-red-500 border border-red-500/10' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/10'; ?>">
-                                                            <?php echo number_format($margin, 1); ?>%
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- Margin Chart & Breakdown -->
-                            <div class="space-y-6 h-fit">
-                                <div
-                                    class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] p-8 rounded-3xl shadow-sm">
-                                    <h3 class="font-bold text-sm uppercase tracking-widest mb-6 flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-primary">pie_chart</span>
-                                        Estructura
-                                    </h3>
-                                    <div class="relative aspect-square mb-8">
-                                        <canvas id="marginChart"></canvas>
-                                    </div>
-                                    <div class="space-y-4">
-                                        <div class="flex items-center justify-between text-xs">
-                                            <span class="flex items-center gap-2 text-slate-500">
-                                                <div class="size-2 rounded-full bg-red-400"></div> Costo Mercadería
-                                            </span>
-                                            <span
-                                                class="font-bold"><?php echo number_format(($analysis['total_cost'] / $analysis['total_revenue']) * 100, 1); ?>%</span>
-                                        </div>
-                                        <div
-                                            class="flex items-center justify-between text-xs border-b border-dashed border-slate-200 dark:border-[#233348] pb-4">
-                                            <span class="flex items-center gap-2 text-slate-500">
-                                                <div class="size-2 rounded-full bg-amber-400"></div> IIBB (Est. 3.5%)
-                                            </span>
-                                            <span class="font-bold">USD
-                                                <?php echo number_format($analysis['taxes'], 2); ?></span>
-                                        </div>
-                                        <div class="flex items-center justify-between">
-                                            <span class="text-sm font-bold">Utilidad Neta Real</span>
-                                            <span class="text-sm font-black text-emerald-500">USD
-                                                <?php echo number_format($analysis['profit'] - $analysis['taxes'], 2); ?></span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button
-                                    class="w-full bg-primary hover:bg-blue-600 text-white py-4 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-3">
-                                    <span class="material-symbols-outlined">print</span> Imprimir Informe
-                                </button>
-                            </div>
-                        </div>
-
-                        <script>
-                            const ctx = document.getElementById('marginChart').getContext('2d');
-                            new Chart(ctx, {
-                                type: 'doughnut',
-                                data: {
-                                    labels: ['Costo', 'Neto', 'Taxes'],
-                                    datasets: [{
-                                        data: [
-                                            <?php echo $analysis['total_cost']; ?>,
-                                            <?php echo max(0, $analysis['profit'] - $analysis['taxes']); ?>,
-                                            <?php echo $analysis['taxes']; ?>
-                                        ],
-                                        backgroundColor: [
-                                            '#fb7185', // Rose 400
-                                            '#34d399', // Emerald 400
-                                            '#fbbf24'  // Amber 400
-                                        ],
-                                        borderWidth: 0,
-                                        cutout: '80%'
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: true,
-                                    plugins: {
-                                        legend: { display: false }
-                                    }
-                                }
-                            });
-                        </script>
-
-                    <?php endif; ?>
+                    </div>
                 </div>
-            </div>
+
+                <script>
+                    const ctx = document.getElementById('marginChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Costo', 'Utilidad', 'Impuestos'],
+                            datasets: [{
+                                data: [
+                                    <?php echo $analysis['total_cost']; ?>,
+                                    <?php echo $analysis['profit'] - $analysis['taxes']; ?>,
+                                    <?php echo $analysis['taxes']; ?>
+                                ],
+                                backgroundColor: [
+                                    '#ef4444',
+                                    '#10b981',
+                                    '#f59e0b'
+                                ],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: { color: 'white' }
+                                }
+                            }
+                        }
+                    });
+                </script>
+
+            <?php endif; ?>
         </main>
     </div>
 </body>
 
 </html>
+
+
+
+

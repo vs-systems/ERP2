@@ -6,7 +6,6 @@
 namespace Vsys\Modules\Catalogo;
 
 use Vsys\Lib\Database;
-use Vsys\Lib\Logger;
 
 class Catalog
 {
@@ -19,15 +18,14 @@ class Catalog
 
     public function getAllProducts()
     {
-        // Relaxed filter: return all products if only one company exists or just to ensure functionality
-        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY (p.stock_current > 0) DESC, p.description ASC");
+        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.description ASC");
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
     public function getProviders()
     {
-        $stmt = $this->db->prepare("SELECT id, name FROM entities WHERE (type = 'provider' OR type = 'supplier') ORDER BY name ASC");
+        $stmt = $this->db->prepare("SELECT id, name FROM entities WHERE type = 'provider' OR type = 'supplier' ORDER BY name ASC");
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -35,10 +33,10 @@ class Catalog
     public function searchProducts($query)
     {
         $sql = "SELECT * FROM products WHERE 
-                (sku LIKE ? OR 
+                sku LIKE ? OR 
                 barcode LIKE ? OR 
                 provider_code LIKE ? OR 
-                description LIKE ?) 
+                description LIKE ? 
                 LIMIT 20";
         $searchTerm = "%$query%";
         $stmt = $this->db->prepare($sql);
@@ -48,8 +46,8 @@ class Catalog
 
     public function addProduct($data)
     {
-        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current, stock_min, stock_transit, stock_incoming, incoming_date) 
-                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current, :stock_min, :stock_transit, :stock_incoming, :incoming_date)
+        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current) 
+                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current)
                 ON DUPLICATE KEY UPDATE 
                 barcode = VALUES(barcode),
                 image_url = VALUES(image_url),
@@ -63,12 +61,7 @@ class Catalog
                 price_gremio = VALUES(price_gremio),
                 price_web = VALUES(price_web),
                 iva_rate = VALUES(iva_rate),
-                has_serial_number = VALUES(has_serial_number),
-                stock_current = VALUES(stock_current),
-                stock_min = VALUES(stock_min),
-                stock_transit = VALUES(stock_transit),
-                stock_incoming = VALUES(stock_incoming),
-                incoming_date = VALUES(incoming_date)";
+                has_serial_number = VALUES(has_serial_number)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':sku' => $data['sku'],
@@ -86,22 +79,8 @@ class Catalog
             ':iva_rate' => $data['iva_rate'],
             ':brand' => $data['brand'] ?? '',
             ':has_serial_number' => $data['has_serial_number'] ?? 0,
-            ':stock_current' => $data['stock_current'] ?? 0,
-            ':stock_min' => $data['stock_min'] ?? 0,
-            ':stock_transit' => $data['stock_transit'] ?? 0,
-            ':stock_incoming' => $data['stock_incoming'] ?? 0,
-            ':incoming_date' => $data['incoming_date'] ?? null
+            ':stock_current' => $data['stock_current'] ?? 0
         ]);
-
-        if ($success) {
-            Logger::event($p ? 'PRODUCT_UPDATE' : 'PRODUCT_CREATE', 'product', null, [
-                'sku' => $data['sku'],
-                'description' => $data['description'],
-                'cost' => $data['unit_cost_usd']
-            ]);
-        }
-
-        return $success;
     }
 
     public function getCategories()

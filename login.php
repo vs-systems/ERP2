@@ -14,7 +14,7 @@ $error = '';
 
 // Redirect if already logged in
 if ($userAuth->isLoggedIn()) {
-    header('Location: dashboard.php');
+    header('Location: index.php');
     exit;
 }
 
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if ($userAuth->login($username, $password)) {
-        header('Location: dashboard.php');
+        header('Location: index.php');
         exit;
     } else {
         $error = "Usuario o contraseña incorrectos.";

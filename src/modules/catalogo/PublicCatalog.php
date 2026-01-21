@@ -30,35 +30,37 @@ class PublicCatalog
     }
 
     /**
-     * Get all products with calculated Price in ARS based on profile (Gremio or Web).
+     * Get all products with calculated Web Price in ARS.
      */
-    public function getProductsForUser($isLoggedIn = false)
+    public function getProductsForWeb()
     {
         $rate = $this->getExchangeRate();
-        $targetListName = $isLoggedIn ? 'Gremio' : 'WEB Final ARS';
 
-        // Get Margin
+        // Get Web Margin
         $lists = $this->priceListModule->getAll();
-        $margin = 0;
+        $webMargin = 40; // Default
         foreach ($lists as $l) {
-            if (stripos($l['name'], $targetListName) !== false) {
-                $margin = (float) $l['margin_percent'];
+            if ($l['name'] === 'Web') {
+                $webMargin = (float) $l['margin_percent'];
                 break;
             }
         }
 
         // Get Products
+        $stmt = $this->db->prepare("SELECT * FROM products WHERE stock_current > 0 OR stock_current IS NULL ORDER BY brand, description"); // Maybe filter enabled?
+        // Assuming all products in DB are active. Added basic stock check optional.
+        // Actually, user didn't specify stock check. Let's just return all.
         $stmt = $this->db->prepare("SELECT * FROM products ORDER BY brand, description");
         $stmt->execute();
         $products = $stmt->fetchAll();
 
-        $processedProducts = [];
+        $webProducts = [];
         foreach ($products as $p) {
             $cost = (float) $p['unit_cost_usd'];
-            $iva = (float) $p['iva_rate'] ?: 21; // Default 21 if not set
+            $iva = (float) $p['iva_rate'];
 
-            // Calculate Price USD: Cost + Margin
-            $priceUsd = $cost * (1 + ($margin / 100));
+            // Calc Web Price USD: Cost + Margin
+            $priceUsd = $cost * (1 + ($webMargin / 100));
 
             // Add IVA
             $priceUsdWithIva = $priceUsd * (1 + ($iva / 100));
@@ -66,21 +68,66 @@ class PublicCatalog
             // Convert to ARS
             $priceArs = $priceUsdWithIva * $rate;
 
+            // Only add if price is valid
             if ($priceArs > 0) {
-                $p['price_final_usd'] = $priceUsd; // Price without IVA
-                $p['price_final_ars_total'] = round($priceArs, 0); // Final ARS with IVA
-                $p['price_final_formatted'] = number_format($p['price_final_ars_total'], 0, ',', '.');
+                // Rounding
+                $p['price_final_ars'] = round($priceArs, 0); // Round to integer for cleaner look? Or 2 decimals? Standard retail is 2 decimals or rounded. ARS is usually rounded.
+                $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.'); // $ 1.000
                 $p['image_url'] = !empty($p['image_url']) ? $p['image_url'] : 'https://placehold.co/300x300?text=No+Image';
 
-                $processedProducts[] = $p;
+                $webProducts[] = $p;
             }
         }
 
         return [
             'rate' => $rate,
-            'products' => $processedProducts,
-            'target_list' => $targetListName
+            'products' => $webProducts
+        ];
+    }
+
+    /**
+     * Get products with price based on client profile (Gremio or Web).
+     * Returns prices in ARS applying IVA and exchange rate.
+     */
+    public function getProductsForProfile(string $profile)
+    {
+        $rate = $this->getExchangeRate();
+
+        // Determine which price column to use
+        $priceColumn = ($profile === 'Gremio') ? 'price_gremio' : 'price_web';
+
+        // Get Products
+        $stmt = $this->db->prepare("SELECT *, $priceColumn FROM products ORDER BY brand, description");
+        $stmt->execute();
+        $products = $stmt->fetchAll();
+
+        $profileProducts = [];
+        foreach ($products as $p) {
+            $basePriceUsd = (float) $p[$priceColumn];
+            $iva = (float) $p['iva_rate'];
+
+            // If base price is null or zero, fallback to unit_price_usd
+            if ($basePriceUsd <= 0) {
+                $basePriceUsd = (float) $p['unit_price_usd'];
+            }
+
+            // Add IVA
+            $priceUsdWithIva = $basePriceUsd * (1 + ($iva / 100));
+
+            // Convert to ARS
+            $priceArs = $priceUsdWithIva * $rate;
+
+            if ($priceArs > 0) {
+                $p['price_final_ars'] = round($priceArs, 0);
+                $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.');
+                $p['image_url'] = !empty($p['image_url']) ? $p['image_url'] : 'https://placehold.co/300x300?text=No+Image';
+                $profileProducts[] = $p;
+            }
+        }
+
+        return [
+            'rate' => $rate,
+            'products' => $profileProducts
         ];
     }
 }
-

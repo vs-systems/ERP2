@@ -7,7 +7,6 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/lib/Mailer.php';
-require_once 'auth_check.php';
 require_once __DIR__ . '/src/modules/cotizador/Cotizador.php';
 require_once __DIR__ . '/src/modules/crm/CRM.php';
 
@@ -39,15 +38,13 @@ try {
             throw new Exception("El cliente no tiene un email configurado");
 
         $subject = "Presupuesto VS System - " . $q['quote_number'];
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https://" : "http://";
-        $pdfUrl = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . "/imprimir_cotizacion.php?id=" . $q['id'];
         $body = "
             <h2>Hola " . htmlspecialchars($q['client_name']) . ",</h2>
-            <p>Adjuntamos la información del presupuesto solicitado.</p>
+            <p>Adjuntamos la informació³n del presupuesto solicitado.</p>
             <p><strong>Nro de Presupuesto:</strong> " . $q['quote_number'] . "</p>
             <p><strong>Total:</strong> $" . number_format($q['total_usd'], 2) . " USD / $" . number_format($q['total_ars'], 2) . " ARS</p>
             <p>Puede ver el detalle completo en el siguiente enlace:</p>
-            <p><a href='$pdfUrl' target='_blank'>Ver Presupuesto Online (PDF)</a></p>
+            <p><a href='http://" . $_SERVER['HTTP_HOST'] . str_replace('public/ajax_send_email.php', '', $_SERVER['PHP_SELF']) . "public/imprimir_cotizacion.php?id=" . $q['id'] . "' target='_blank'>Ver Presupuesto Online (PDF)</a></p>
             <br>
             <p>Saludos,<br>El equipo de VS System</p>
         ";

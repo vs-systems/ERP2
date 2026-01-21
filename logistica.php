@@ -274,56 +274,10 @@ $phases = [
             formData.append('action', 'update_phase');
             formData.append('quote_number', quoteNumber);
             formData.append('phase', phase);
-
-            try {
-                const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
-                const text = await res.text();
-                try {
-                    const data = JSON.parse(text);
-                    if (data.success) location.reload();
-                    else alert("Error: " + data.error);
-                } catch (e) {
-                    console.error("JSON Parse Error. Server sent:", text);
-                    alert("Error en la respuesta del servidor. Ver consola.");
-                }
-            } catch (err) {
-                alert("Error de conexión: " + err.message);
-            }
-        }
-
-        function subirPago(quoteNumber) {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*,application/pdf';
-            input.onchange = async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                const formData = new FormData();
-                formData.append('action', 'upload_payment');
-                formData.append('quote_number', quoteNumber);
-                formData.append('payment_proof', file);
-
-                try {
-                    const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
-                    const text = await res.text();
-                    try {
-                        const data = JSON.parse(text);
-                        if (data.success) {
-                            alert("Pago registrado correctamente.");
-                            location.reload();
-                        } else {
-                            alert("Error: " + data.error);
-                        }
-                    } catch (e) {
-                        console.error("JSON Parse Error:", text);
-                        alert("Error de servidor. Ver consola.");
-                    }
-                } catch (err) {
-                    alert("Error de conexión: " + err.message);
-                }
-            };
-            input.click();
+            const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) location.reload();
+            else alert(data.error);
         }
 
         async function despachar(quoteNumber) {
@@ -337,23 +291,18 @@ $phases = [
             formData.append('transport_id', transportId);
             formData.append('packages_qty', qty);
             formData.append('freight_cost', cost);
-
-            try {
-                const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (data.success) {
-                    alert("Despacho registrado correctamente.");
-                    location.reload();
-                } else { alert(data.error); }
-            } catch (err) {
-                alert("Error de conexión.");
-            }
+            const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (data.success) {
+                alert("Despacho registrado correctamente.");
+                location.reload();
+            } else { alert(data.error); }
         }
 
         function subirGuia(quoteNumber) {
             const input = document.createElement('input');
             input.type = 'file';
-            input.accept = 'image/*,application/pdf';
+            input.accept = 'image/*';
             input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -361,17 +310,12 @@ $phases = [
                 formData.append('action', 'upload_guide');
                 formData.append('quote_number', quoteNumber);
                 formData.append('guide_photo', file);
-
-                try {
-                    const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
-                    const data = await res.json();
-                    if (data.success) {
-                        alert("Guía subida y pedido entregado.");
-                        location.reload();
-                    } else { alert("Error: " + data.error); }
-                } catch (err) {
-                    alert("Error de conexión.");
-                }
+                const res = await fetch('ajax_logistics.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Guía subida y pedido entregado.");
+                    location.reload();
+                } else { alert("Error: " + data.error); }
             };
             input.click();
         }

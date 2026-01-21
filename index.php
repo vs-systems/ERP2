@@ -1,149 +1,377 @@
 <?php
-/**
- * Vecino Seguro - Corporate Gateway
- * ERP + CRM + Catalogo Nativo
- */
+require_once 'auth_check.php';
+require_once __DIR__ . '/src/config/config.php';
+
+require_once __DIR__ . '/src/modules/analysis/OperationAnalysis.php';
+require_once __DIR__ . '/src/modules/logistica/Logistics.php';
+require_once __DIR__ . '/src/modules/dashboard/SellerDashboard.php';
+
+$analysis = new \Vsys\Modules\Analysis\OperationAnalysis();
+$logistics = new \Vsys\Modules\Logistica\Logistics();
+$userRole = $_SESSION['role'] ?? 'Invitado';
+$userId = $_SESSION['user_id'] ?? 0;
+$userName = $_SESSION['user_name'] ?? 'Usuario';
+
+$stats = ['total_sales' => 0, 'pending_collections' => 0, 'total_purchases' => 0, 'pending_payments' => 0, 'effectiveness' => 0];
+$sellerStats = ['total' => 0, 'converted' => 0];
+$shipStats = [];
+
+if ($userRole === 'Vendedor') {
+    $sellerDash = new \Vsys\Modules\Dashboard\SellerDashboard($userId);
+    $sellerStats = $sellerDash->getEfficiencyStats() ?: $sellerStats;
+    $recentQuotations = $sellerDash->getRecentQuotes();
+    $recentShipments = $sellerDash->getClientShipments();
+} else {
+    $stats = $analysis->getDashboardSummary() ?: $stats;
+    $shipStats = $logistics->getShippingStats() ?: $shipStats;
+}
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html class="dark" lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vecino Seguro Sistemas | ERP + CRM + Catálogo</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>VS System - Panel de Control</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script src="js/theme_handler.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#136dec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101822",
+                        "surface-dark": "#16202e",
+                        "surface-border": "#233348",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #020617;
-            color: white;
-            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
         }
 
-        .hero-gradient {
-            background: radial-gradient(circle at 50% -20%, #1e293b 0%, #020617 100%);
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
 
-        .glass {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+        ::-webkit-scrollbar-track {
+            background: #101822;
         }
 
-        .module-card {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        ::-webkit-scrollbar-thumb {
+            background: #233348;
+            border-radius: 3px;
         }
 
-        .module-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(59, 130, 246, 0.5);
-            background: rgba(59, 130, 246, 0.05);
+        ::-webkit-scrollbar-thumb:hover {
+            background: #324867;
         }
 
-        .text-gradient {
-            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .glass-card {
+            background: rgba(22, 32, 46, 0.8);
+            backdrop-filter: blur(8px);
         }
     </style>
 </head>
 
-<body class="antialiased">
+<body
+    class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white antialiased overflow-hidden transition-colors duration-300">
+    <div class="flex h-screen w-full">
+        <!-- Sidebar Inclusion -->
+        <?php include 'sidebar.php'; ?>
 
-    <!-- Hero Section -->
-    <section class="min-h-screen flex flex-col items-center justify-center relative px-6 hero-gradient">
-        <div class="absolute inset-0 overflow-hidden pointer-events-none">
-            <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px]"></div>
-            <div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px]">
-            </div>
-        </div>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+            <!-- Top Header -->
+            <header
+                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
+                <div class="flex items-center gap-4 lg:hidden">
+                    <button class="dark:text-white text-slate-800"><span class="material-symbols-outlined">menu</span></button>
+                    <span class="dark:text-white text-slate-800 font-bold text-lg">VS System</span>
+                </div>
 
-        <div class="max-w-6xl w-full text-center z-10 space-y-12 py-20">
-            <div class="flex flex-col items-center gap-6">
-                <img src="logo_display.php" alt="VS Logo" class="h-24 drop-shadow-2xl">
-                <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-gradient">
-                    Vecinos Seguros Sistemas
-                </h1>
-                <p class="text-xl md:text-2xl font-medium text-blue-400 uppercase tracking-[0.3em]">
-                    ERP + CRM + Catálogo Nativo
-                </p>
-            </div>
+                <div class="hidden lg:flex items-center flex-1 max-w-xl">
+                    <div class="relative w-full">
+                        <span
+                            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xl">search</span>
+                        <input type="text" placeholder="Buscar cliente, SKU o cotización..."
+                            class="w-full bg-slate-100 dark:bg-[#16202e] border-none rounded-lg py-2 pl-10 pr-4 text-sm dark:text-white text-slate-800 placeholder-slate-500 focus:ring-2 focus:ring-[#136dec] outline-none">
+                    </div>
+                </div>
 
-            <!-- Module Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
-                <?php
-                $modules = [
-                    ['name' => 'Ventas & CRM', 'status' => 'Actual', 'icon' => 'query_stats'],
-                    ['name' => 'Catálogo', 'status' => 'Actual', 'icon' => 'inventory_2'],
-                    ['name' => 'Compras', 'status' => 'Actual', 'icon' => 'shopping_cart'],
-                    ['name' => 'Logística', 'status' => 'Actual', 'icon' => 'local_shipping'],
-                    ['name' => 'Facturación', 'status' => 'Próximamente', 'icon' => 'receipt_long'],
-                    ['name' => 'Tesorería', 'status' => 'Próximamente', 'icon' => 'account_balance_wallet'],
-                    ['name' => 'RRHH', 'status' => 'Próximamente', 'icon' => 'groups'],
-                    ['name' => 'Marketing', 'status' => 'Próximamente', 'icon' => 'campaign'],
-                    ['name' => 'Gestión Calidad', 'status' => 'Próximamente', 'icon' => 'verified'],
-                    ['name' => 'BuroSE', 'status' => 'Próximamente', 'icon' => 'credit_score'],
-                    ['name' => 'RMA & Garantías', 'status' => 'Próximamente', 'icon' => 'build'],
-                    ['name' => 'Proyectos', 'status' => 'Próximamente', 'icon' => 'account_tree'],
-                    ['name' => 'Análisis Pliegos', 'status' => 'Próximamente', 'icon' => 'description'],
-                    ['name' => 'Competencia', 'status' => 'Próximamente', 'icon' => 'monitoring'],
-                    ['name' => 'Informes Glob.', 'status' => 'Próximamente', 'icon' => 'public'],
-                ];
+                <div class="flex items-center gap-4 ml-auto">
+                    <div class="flex flex-col items-end mr-2">
+                        <span
+                            class="text-xs text-slate-500 uppercase font-bold tracking-tighter"><?php echo date('d M, Y'); ?></span>
+                        <span class="text-[10px] text-[#136dec] font-medium"><?php echo $userRole; ?> session</span>
+                    </div>
+                    <div class="h-8 w-px bg-[#233348]"></div>
+                    <button class="text-slate-400 hover:text-white transition-colors relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-0 right-0 size-2 bg-red-500 rounded-full border-2 border-[#101822]"></span>
+                    </button>
+                </div>
+            </header>
 
-                foreach ($modules as $m):
-                    $isFuture = $m['status'] === 'Próximamente';
-                    ?>
-                    <div
-                        class="glass p-6 rounded-2xl module-card <?php echo $isFuture ? 'opacity-40 grayscale' : 'border-blue-500/30'; ?>">
-                        <div class="flex flex-col items-center gap-3">
-                            <span
-                                class="material-symbols-outlined text-3xl <?php echo $isFuture ? 'text-slate-500' : 'text-blue-500'; ?>"><?php echo $m['icon']; ?></span>
-                            <h3 class="text-[11px] font-bold uppercase tracking-wider"><?php echo $m['name']; ?></h3>
-                            <span
-                                class="text-[9px] font-black px-2 py-0.5 rounded-full <?php echo $isFuture ? 'bg-slate-800 text-slate-500' : 'bg-blue-500/10 text-blue-400'; ?>">
-                                <?php echo $m['status']; ?>
-                            </span>
+            <!-- Scrollable Body -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-8">
+                <div class="max-w-7xl mx-auto space-y-8">
+
+                    <!-- Welcome Header -->
+                    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                        <div>
+                            <h2 class="text-3xl font-bold dark:text-white text-slate-800 tracking-tight">Panel de Control</h2>
+                            <p class="text-slate-400 mt-1">Bienvenido de nuevo, <span
+                                    class="text-[#136dec] font-semibold"><?php echo $userName; ?></span>.</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <a href="cotizador.php"
+                                class="flex items-center gap-2 bg-[#136dec] hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-[#136dec]/20 transition-all text-sm">
+                                <span class="material-symbols-outlined text-lg">add</span> NUEVA COTIZACIÓN
+                            </a>
                         </div>
                     </div>
-                <?php endforeach; ?>
+
+                    <!-- Stats Grid -->
+                    <?php if ($userRole === 'Admin' || $userRole === 'Sistemas'): ?>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                            <div
+                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-xl p-5 hover:border-[#136dec]/50 transition-all group shadow-sm dark:shadow-none">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div
+                                        class="p-2.5 bg-green-500/10 rounded-lg text-green-500 group-hover:bg-green-500 group-hover:text-white transition-colors">
+                                        <span class="material-symbols-outlined">payments</span>
+                                    </div>
+                                    <span
+                                        class="text-green-500 text-[10px] font-bold bg-green-500/10 px-2 py-1 rounded-full uppercase">Ventas
+                                        Netas</span>
+                                </div>
+                                <h3 class="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">USD
+                                    <?php echo number_format($stats['total_sales'], 2); ?>
+                                </h3>
+                                <p class="text-slate-500 text-xs mt-2">Pendiente de cobro: <span
+                                        class="text-slate-400 dark:text-slate-300 font-medium">$<?php echo number_format($stats['pending_collections'], 2); ?></span>
+                                </p>
+                            </div>
+
+                            <div
+                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-xl p-5 hover:border-[#136dec]/50 transition-all group shadow-sm dark:shadow-none">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div
+                                        class="p-2.5 bg-red-500/10 rounded-lg text-red-500 group-hover:bg-red-500 group-hover:text-white transition-colors">
+                                        <span class="material-symbols-outlined">shopping_cart</span>
+                                    </div>
+                                    <span
+                                        class="text-red-500 text-[10px] font-bold bg-red-500/10 px-2 py-1 rounded-full uppercase">Compras
+                                        Totales</span>
+                                </div>
+                                <h3 class="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">USD
+                                    <?php echo number_format($stats['total_purchases'], 2); ?>
+                                </h3>
+                                <p class="text-slate-500 text-xs mt-2">Pendiente de pago: <span
+                                        class="text-slate-400 dark:text-slate-300 font-medium">$<?php echo number_format($stats['pending_payments'], 2); ?></span>
+                                </p>
+                            </div>
+
+                            <div
+                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-xl p-5 hover:border-[#136dec]/50 transition-all group shadow-sm dark:shadow-none">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div
+                                        class="p-2.5 bg-[#136dec]/10 rounded-lg text-[#136dec] group-hover:bg-[#136dec] group-hover:text-white transition-colors">
+                                        <span class="material-symbols-outlined">query_stats</span>
+                                    </div>
+                                    <span
+                                        class="text-[#136dec] text-[10px] font-bold bg-[#136dec]/10 px-2 py-1 rounded-full uppercase">Eficiencia</span>
+                                </div>
+                                <h3 class="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">
+                                    <?php echo $stats['effectiveness']; ?>%
+                                </h3>
+                                <p class="text-slate-500 text-xs mt-2">Cierre de presupuestos</p>
+                            </div>
+
+                            <div
+                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-xl p-5 hover:border-amber-500/50 transition-all group shadow-sm dark:shadow-none">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div
+                                        class="p-2.5 bg-amber-500/10 rounded-lg text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                                        <span class="material-symbols-outlined">local_shipping</span>
+                                    </div>
+                                    <span
+                                        class="text-amber-500 text-[10px] font-bold bg-amber-500/10 px-2 py-1 rounded-full uppercase">Logística</span>
+                                </div>
+                                <h3 class="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">
+                                    <?php echo $shipStats['pending'] ?? 0; ?> envíos
+                                </h3>
+                                <p class="text-slate-500 text-xs mt-2">Procesos pendientes este mes</p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <!-- Secondary Row: Charts & Tables -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left: Main Chart -->
+                        <div class="lg:col-span-2 bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none transition-colors duration-300">
+                            <div class="flex justify-between items-center mb-8">
+                                <div>
+                                    <h3 class="text-lg font-bold dark:text-white text-slate-800">Flujo Operativo (Real)</h3>
+                                    <p class="text-slate-500 text-sm">Resumen de ingresos vs egresos acumulados</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <span class="size-3 rounded-full bg-[#136dec]"></span>
+                                    <span class="size-3 rounded-full bg-red-500"></span>
+                                    <span class="size-3 rounded-full bg-green-500"></span>
+                                </div>
+                            </div>
+                            <div class="h-[320px] w-full mt-4">
+                                <canvas id="opsChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Right: Quick Activity + Calendar -->
+                        <div class="space-y-6">
+                            <div class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-sm dark:shadow-none transition-colors duration-300">
+                                <h3 class="font-bold dark:text-white text-slate-800 mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[#136dec]">event_note</span> Agenda del
+                                    Día
+                                </h3>
+                                <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-[#233348]">
+                                    <iframe
+                                        src="https://calendar.google.com/calendar/embed?src=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20&ctz=America%2FArgentina%2FBuenos_Aires&showTitle=0&showNav=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0&mode=AGENDA"
+                                        class="w-full h-[250px] bg-white dark:invert dark:hue-rotate-180" frameborder="0"
+                                        scrolling="no"></iframe>
+                                </div>
+                                <a href="https://calendar.google.com" target="_blank"
+                                    class="block text-center mt-3 text-xs text-slate-500 hover:text-[#136dec] transition-colors underline">Ver
+                                    calendario completo</a>
+                            </div>
+
+                            <div
+                                class="bg-gradient-to-br from-[#136dec]/20 to-transparent border border-[#136dec]/30 rounded-2xl p-6">
+                                <h3 class="font-bold text-[#136dec] mb-2 uppercase text-xs tracking-widest">Acceso
+                                    Directo</h3>
+                                <p class="text-white text-sm font-medium mb-4">Consulta el inventario y actualiza
+                                    precios de mercado en tiempo real.</p>
+                                <a href="catalogo.php"
+                                    class="inline-flex items-center gap-2 text-white bg-[#136dec] px-4 py-2 rounded-lg text-sm font-bold w-full justify-center hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20">
+                                    <span class="material-symbols-outlined text-lg">category</span> IR AL CATÁLOGO
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom: Recent Operations Table -->
+                    <div class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-xl dark:shadow-none transition-colors duration-300">
+                        <div class="p-6 border-b border-slate-200 dark:border-[#233348] flex justify-between items-center">
+                            <h3 class="text-lg font-bold dark:text-white text-slate-800">Cotizaciones Recientes</h3>
+                            <a href="presupuestos.php" class="text-xs text-[#136dec] hover:underline font-bold">VER
+                                TODAS</a>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50 dark:bg-[#101822]/50 transition-colors">
+                                    <tr>
+                                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">Referencia
+                                        </th>
+                                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">Cliente
+                                        </th>
+                                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase text-right">
+                                            Monto USD</th>
+                                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">Estado</th>
+                                        <th
+                                            class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase text-center">
+                                            Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-[#233348] transition-colors">
+                                    <?php
+                                    $db = \Vsys\Lib\Database::getInstance();
+                                    $quotations = ($userRole === 'Vendedor') ? $recentQuotations : $db->query("SELECT q.*, e.name as client_name FROM quotations q JOIN entities e ON q.client_id = e.id ORDER BY q.id DESC LIMIT 8")->fetchAll();
+                                    foreach ($quotations as $r):
+                                        $statusColor = ($r['status'] === 'Pedido') ? 'text-green-500 bg-green-500/10' : 'text-slate-400 bg-white/5';
+                                        ?>
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                                            <td class="px-6 py-4">
+                                                <span
+                                                    class="text-sm font-bold dark:text-white text-slate-800 group-hover:text-[#136dec] transition-colors"><?php echo $r['quote_number']; ?></span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="text-sm text-slate-400"><?php echo $r['client_name']; ?></span>
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <span
+                                                    class="text-sm font-mono text-white">$<?php echo number_format($r['total_usd'], 2); ?></span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span
+                                                    class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase <?php echo $statusColor; ?>">
+                                                    <?php echo $r['status']; ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                <a href="analisys.php?id=<?php echo $r['id']; ?>"
+                                                    class="p-1.5 text-slate-400 hover:text-[#136dec] transition-colors">
+                                                    <span class="material-symbols-outlined text-xl">monitoring</span>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- Spacing at bottom -->
+                <div class="h-10"></div>
             </div>
+        </main>
+    </div>
 
-            <!-- Action Buttons -->
-            <div class="flex flex-col md:flex-row gap-6 justify-center pt-8">
-                <a href="catalogo_publico.php" target="_blank"
-                    class="bg-white text-black px-12 py-5 rounded-full font-black text-lg hover:bg-slate-200 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-white/5">
-                    ABRIR CATÁLOGO PÚBLICO
-                </a>
-                <a href="login.php"
-                    class="bg-blue-600 text-white px-12 py-5 rounded-full font-black text-lg hover:bg-blue-500 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-blue-500/20">
-                    ACCESO SISTEMA VS
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="py-12 px-6 border-t border-white/5 text-center space-y-4">
-        <p class="text-slate-500 font-bold tracking-widest text-xs uppercase">VS Sistemas by Javier Gozzi</p>
-        <div class="flex items-center justify-center gap-6">
-            <a href="https://wa.me/5492235772165" target="_blank"
-                class="flex items-center gap-2 text-slate-400 hover:text-green-500 transition-colors">
-                <span class="material-symbols-outlined text-sm">chat</span> +54 9 223 577-2165
-            </a>
-            <a href="mailto:vecinoseguro0@gmail.com"
-                class="flex items-center gap-2 text-slate-400 hover:text-blue-500 transition-colors">
-                <span class="material-symbols-outlined text-sm">mail</span> vecinoseguro0@gmail.com
-            </a>
-        </div>
-        <p class="text-[10px] text-slate-600 font-medium">Soft exclusivo para Gremio de la Seguridad Electronica y
-            afines.</p>
-    </footer>
-
-    <!-- Google Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet" />
+    <!-- Charts Script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctxOps = document.getElementById('opsChart').getContext('2d');
+        new Chart(ctxOps, {
+            type: 'bar',
+            data: {
+                labels: ['Ventas Realizadas', 'Compras Registradas', 'Margen Operativo'],
+                datasets: [{
+                    data: [
+                        <?php echo $stats['total_sales']; ?>,
+                        <?php echo $stats['total_purchases']; ?>,
+                        <?php echo ($stats['total_sales'] - $stats['total_purchases']); ?>
+                    ],
+                    backgroundColor: ['rgba(19, 109, 236, 0.6)', 'rgba(239, 68, 68, 0.6)', 'rgba(16, 185, 129, 0.6)'],
+                    borderColor: ['#136dec', '#ef4444', '#10b981'],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10, weight: 'bold' } } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
 </body>
 
 </html>

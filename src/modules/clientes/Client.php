@@ -60,7 +60,6 @@ class Client
      */
     public function saveClient($data)
     {
-
         $sql = "INSERT INTO entities (
                     id, type, tax_id, document_number, name, fantasy_name, 
                     contact_person, email, phone, mobile, address, 

@@ -7,7 +7,6 @@ namespace Vsys\Modules\Cotizador;
 
 use Vsys\Lib\Database;
 use Vsys\Lib\BCRAClient;
-use Vsys\Lib\Logger;
 
 class Cotizador
 {
@@ -21,26 +20,26 @@ class Cotizador
     /**
      * Generate unique quote number: VS-COT-YYYY-MM-DD-NUMBER_VERSION
      */
-    public function generateQuoteNumber()
+    public function generateQuoteNumber($clientId)
     {
-        $yearMonth = date('Y-m');
-        $prefix = "VS-" . $yearMonth . "-";
+        $dateStr = date('Y-m-d');
+        $prefix = "VS-COT-" . $dateStr . "-";
 
-        // Reset monthly: find max number for this month
+        // Get the last number used today to avoid collisions even if records were deleted
         $stmt = $this->db->prepare("SELECT quote_number FROM quotations WHERE quote_number LIKE :prefix ORDER BY id DESC LIMIT 1");
         $stmt->execute(['prefix' => $prefix . '%']);
         $lastQuote = $stmt->fetch();
 
         if ($lastQuote) {
             $parts = explode('-', $lastQuote['quote_number']);
-            $lastPart = end($parts); // e.g. 001_01
+            $lastPart = end($parts); // e.g. 0001_01
             $num = (int) explode('_', $lastPart)[0];
             $nextNum = $num + 1;
         } else {
             $nextNum = 1;
         }
 
-        $numberPart = str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+        $numberPart = str_pad($nextNum, 4, '0', STR_PAD_LEFT);
         return $prefix . $numberPart . "_01";
     }
 
@@ -133,28 +132,12 @@ class Cotizador
             ]);
         }
 
-        if ($quotationId) {
-            // CRM Automation: Move lead to 'Presupuestado'
-            try {
-                $stmtLead = $this->db->prepare("UPDATE leads SET status = 'Presupuestado', updated_at = NOW() WHERE entity_id = ?");
-                $stmtLead->execute([$data['client_id']]);
-            } catch (\Exception $e) {
-                // Non-critical, just log it
-            }
-
-            Logger::event('QUOTE_CREATE', 'quotation', $quotationId, [
-                'number' => $data['quote_number'],
-                'total' => $data['total_usd'],
-                'client_id' => $data['client_id']
-            ]);
-        }
-
         return $quotationId;
     }
 
     public function getQuotation($id)
     {
-        $stmt = $this->db->prepare("SELECT q.*, e.name as client_name, e.tax_id, e.address, e.email as client_email, e.phone, e.preferred_transport, u.full_name as seller_name 
+        $stmt = $this->db->prepare("SELECT q.*, e.name as client_name, e.tax_id, e.address, e.email as client_email, e.phone, u.full_name as seller_name 
                                     FROM quotations q 
                                     JOIN entities e ON q.client_id = e.id 
                                     JOIN users u ON q.user_id = u.id 
@@ -190,3 +173,4 @@ class Cotizador
     }
 }
 ?>
+

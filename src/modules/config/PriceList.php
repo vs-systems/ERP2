@@ -23,8 +23,7 @@ class PriceList
      */
     public function getAll()
     {
-        $stmt = $this->db->prepare("SELECT * FROM price_lists ORDER BY id ASC");
-        $stmt->execute();
+        $stmt = $this->db->query("SELECT * FROM price_lists ORDER BY id ASC");
         return $stmt->fetchAll();
     }
 
@@ -35,15 +34,6 @@ class PriceList
     {
         $stmt = $this->db->prepare("UPDATE price_lists SET margin_percent = ?, updated_at = NOW() WHERE id = ?");
         return $stmt->execute([(float) $percent, $id]);
-    }
-
-    /**
-     * Update name for a specific list
-     */
-    public function updatePriceList($id, $name, $margin)
-    {
-        $stmt = $this->db->prepare("UPDATE price_lists SET name = ?, margin_percent = ?, updated_at = NOW() WHERE id = ?");
-        return $stmt->execute([$name, (float) $margin, $id]);
     }
 
     /**

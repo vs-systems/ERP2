@@ -1,5 +1,5 @@
 ﻿<?php
-// sidebar.php - Rediseño basado en Stitch (Tailwind + Material Symbols) con Soporte de Temas, Permisos y Menús Colapsables
+// sidebar.php - Rediseño basado en Stitch (Tailwind + Material Symbols) con Soporte de Temas
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/lib/User.php';
@@ -10,46 +10,36 @@ if (!isset($userAuth)) {
     $userAuth = new \Vsys\Lib\User();
 }
 
-$userName = $_SESSION['username'] ?? 'Usuario';
+$userName = $_SESSION['user_name'] ?? 'Usuario';
 $userRole = $_SESSION['role'] ?? 'Invitado';
 
 $menu = [
-    ['id' => 'dashboard', 'href' => 'dashboard.php', 'icon' => 'dashboard', 'label' => 'Dashboard'],
+    ['id' => 'index', 'href' => 'index.php', 'icon' => 'dashboard', 'label' => 'Inicio'],
     [
-        'id' => 'group_ventas',
         'label' => 'Ventas',
         'icon' => 'receipt_long',
         'items' => [
-            ['id' => 'presupuestos', 'href' => 'presupuestos.php', 'icon' => 'history', 'label' => 'Historial', 'perm' => 'quotes'],
-            ['id' => 'cotizador', 'href' => 'cotizador.php', 'icon' => 'add_shopping_cart', 'label' => 'Generar Cotiz.', 'perm' => 'quotes'],
-            ['id' => 'productos', 'href' => 'productos.php', 'icon' => 'inventory_2', 'label' => 'Productos/Stock', 'perm' => 'catalog'],
-            ['id' => 'imprimir_lista_precios', 'href' => 'imprimir_lista_precios.php', 'icon' => 'lists', 'label' => 'Lista de Precios', 'perm' => 'catalog'],
-            ['id' => 'config_productos_masivos', 'href' => 'config_productos_masivos.php', 'icon' => 'auto_fix_high', 'label' => 'Acciones Masivas', 'perm' => 'catalog'],
+            ['id' => 'presupuestos', 'href' => 'presupuestos.php', 'icon' => 'history', 'label' => 'Historial'],
+            ['id' => 'cotizador', 'href' => 'cotizador.php', 'icon' => 'add_shopping_cart', 'label' => 'Generar Cotiz.'],
+            ['id' => 'productos', 'href' => 'productos.php', 'icon' => 'inventory_2', 'label' => 'Productos/Stock'],
         ]
     ],
     [
-        'id' => 'group_contabilidad',
         'label' => 'Contabilidad',
         'icon' => 'payments',
         'items' => [
-            ['id' => 'compras', 'href' => 'compras.php', 'icon' => 'shopping_cart_checkout', 'label' => 'Compras', 'perm' => 'purchases'],
-            ['id' => 'facturacion', 'href' => 'facturacion.php', 'icon' => 'description', 'label' => 'Facturaci&oacute;n', 'perm' => 'sales'],
-            ['id' => 'analizador', 'href' => 'analizador.php', 'icon' => 'query_stats', 'label' => 'An&aacute;lisis OP.', 'perm' => 'sales'],
+            ['id' => 'compras', 'href' => 'compras.php', 'icon' => 'shopping_cart_checkout', 'label' => 'Compras'],
+            ['id' => 'facturacion', 'href' => 'facturacion.php', 'icon' => 'description', 'label' => 'Facturación'],
+            ['id' => 'analizador', 'href' => 'analizador.php', 'icon' => 'query_stats', 'label' => 'Análisis OP.'],
         ]
     ],
-    ['id' => 'crm', 'href' => 'crm.php', 'icon' => 'group', 'label' => 'CRM', 'perm' => 'clients'],
-    ['id' => 'logistica', 'href' => 'logistica.php', 'icon' => 'local_shipping', 'label' => 'Logística', 'perm' => 'logistics'],
-    ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'badge', 'label' => 'Clientes', 'perm' => 'clients'],
-    ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores', 'perm' => 'suppliers'],
-    [
-        'id' => 'configuration',
-        'href' => 'configuration.php',
-        'icon' => 'settings',
-        'label' => 'Configuraci&oacute;n',
-        'perm' => 'admin'
-    ],
+    ['id' => 'crm', 'href' => 'crm.php', 'icon' => 'group', 'label' => 'CRM'],
+    ['id' => 'logistica', 'href' => 'logistica.php', 'icon' => 'local_shipping', 'label' => 'Logística'],
+    ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'badge', 'label' => 'Clientes'],
+    ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores'],
+    ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'settings', 'label' => 'Configuración', 'role' => 'Admin'],
+    ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios', 'role' => 'Admin'],
 ];
-
 // Cargar preferencia del sistema
 $settingsFile = __DIR__ . '/src/config/settings.json';
 $sysSettings = ['default_theme' => 'auto'];
@@ -59,36 +49,20 @@ if (file_exists($settingsFile)) {
 $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
 ?>
 
-<style>
-    .menu-group-content {
-        transition: all 0.3s ease-in-out;
-        max-height: 0;
-        overflow: hidden;
-    }
-
-    .menu-group-content.expanded {
-        max-height: 1000px;
-    }
-
-    .chevron-icon {
-        transition: transform 0.3s ease;
-    }
-
-    .expanded .chevron-icon {
-        transform: rotate(180deg);
-    }
-</style>
-
-<!-- Theme Handler -->
+<!-- Theme Handler (Prevent FOUC) -->
 <script>
+    // Inyectar preferencia del sistema para que theme_handler.js la use
     window.vsys_default_theme = "<?php echo $defaultTheme; ?>";
 </script>
 <script src="js/theme_handler.js"></script>
+
+<!-- Material Symbols Font -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet" />
 
 <aside
-    class="hidden lg:flex flex-col w-64 h-full bg-[#101822] border-r border-[#233348] flex-shrink-0 overflow-y-auto transition-colors duration-300 dark:bg-[#101822] bg-white border-slate-200 dark:border-[#233348]">
+    class="hidden md:flex flex-col w-64 h-full bg-[#101822] border-r border-[#233348] flex-shrink-0 overflow-y-auto transition-colors duration-300 dark:bg-[#101822] bg-white border-slate-200 dark:border-[#233348]">
+    <!-- Brand Logo Section -->
     <div class="p-6 flex items-center gap-3">
         <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec] flex items-center justify-center">
             <span class="material-symbols-outlined text-2xl">shield</span>
@@ -99,61 +73,51 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
         </div>
     </div>
 
+    <!-- Navigation Menu -->
     <nav class="flex-1 px-4 py-2 space-y-1">
         <?php foreach ($menu as $section): ?>
             <?php
-            if (isset($section['perm']) && !$userAuth->hasPermission($section['perm']))
-                continue;
             if (isset($section['role']) && !$userAuth->hasRole($section['role']))
                 continue;
 
-            if (isset($section['items'])):
-                $visibleItems = array_filter($section['items'], function ($item) use ($userAuth) {
-                    return !isset($item['perm']) || $userAuth->hasPermission($item['perm']);
-                });
-                if (empty($visibleItems))
-                    continue;
-
-                $isAnyChildActive = false;
-                foreach ($visibleItems as $item) {
-                    if ($currentPage === $item['id']) {
-                        $isAnyChildActive = true;
+            $isActiveParent = false;
+            if (isset($section['items'])) {
+                foreach ($section['items'] as $sub) {
+                    if ($currentPage === $sub['id']) {
+                        $isActiveParent = true;
                         break;
                     }
                 }
-                ?>
-                <div class="menu-group pt-2">
-                    <button onclick="toggleMenuGroup('<?php echo $section['id']; ?>')"
-                        class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] transition-all group">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-[20px]"><?php echo $section['icon']; ?></span>
-                            <span
-                                class="text-sm font-bold uppercase tracking-widest text-[10px]"><?php echo $section['label']; ?></span>
-                        </div>
-                        <span class="material-symbols-outlined text-[18px] chevron-icon"
-                            id="chevron-<?php echo $section['id']; ?>">expand_more</span>
-                    </button>
+            } else {
+                $isActiveParent = ($currentPage === $section['id']);
+            }
+            ?>
 
-                    <div id="content-<?php echo $section['id']; ?>"
-                        class="menu-group-content space-y-1 mt-1 ml-4 border-l border-slate-200 dark:border-[#233348] pl-2 <?php echo $isAnyChildActive ? 'expanded' : ''; ?>">
-                        <?php foreach ($visibleItems as $item): ?>
-                            <a href="<?php echo $item['href']; ?>"
-                                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
-                                <span class="material-symbols-outlined text-[18px]"><?php echo $item['icon']; ?></span>
-                                <span class="text-sm font-medium"><?php echo $item['label']; ?></span>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
+            <?php if (isset($section['items'])): ?>
+                <div class="pt-4 pb-1">
+                    <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 font-display">
+                        <?php echo $section['label']; ?>
+                    </p>
+                    <?php foreach ($section['items'] as $item): ?>
+                        <?php if (isset($item['role']) && !$userAuth->hasRole($item['role']))
+                            continue; ?>
+                        <a href="<?php echo $item['href']; ?>"
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
+                            <span class="material-symbols-outlined text-[20px]"><?php echo $item['icon']; ?></span>
+                            <span class="text-sm font-medium"><?php echo $item['label']; ?></span>
+                        </a>
+                    <?php endforeach; ?>
                 </div>
             <?php else: ?>
                 <a href="<?php echo $section['href']; ?>"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?php echo ($currentPage === $section['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?php echo $isActiveParent ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
                     <span class="material-symbols-outlined text-[20px]"><?php echo $section['icon']; ?></span>
                     <span class="text-sm font-medium"><?php echo $section['label']; ?></span>
                 </a>
             <?php endif; ?>
         <?php endforeach; ?>
 
+        <!-- External Links -->
         <div class="pt-6 border-t border-slate-200 dark:border-[#233348] mt-4">
             <a href="catalogo_publico.php" target="_blank"
                 class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#10b981] hover:bg-[#10b981]/10 transition-all font-bold">
@@ -168,6 +132,7 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
         </div>
     </nav>
 
+    <!-- User Section -->
     <div class="p-4 border-t border-slate-200 dark:border-[#233348]">
         <div class="flex items-center gap-3 px-2 py-3">
             <div
@@ -179,6 +144,7 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
                 <p class="text-slate-500 text-[10px] uppercase font-bold tracking-tighter"><?php echo $userRole; ?></p>
             </div>
 
+            <!-- Theme Toggle -->
             <button onclick="toggleVsysTheme()" class="text-slate-400 hover:text-[#136dec] transition-colors p-1"
                 title="Cambiar Tema">
                 <span class="material-symbols-outlined text-[20px] dark:hidden">dark_mode</span>
@@ -192,111 +158,17 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
     </div>
 </aside>
 
-<!-- Mobile Sidebar (Drawer) -->
-<div id="vsys_mobile_sidebar" class="fixed inset-0 z-[100] hidden">
-    <!-- Overlay -->
-    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleVsysMobileMenu()"></div>
-
-    <!-- Sidebar Content -->
-    <aside
-        class="absolute left-0 top-0 bottom-0 w-[280px] bg-white dark:bg-[#101822] shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
-        <div class="p-6 flex items-center justify-between border-b border-slate-100 dark:border-[#233348]">
-            <div class="flex items-center gap-3">
-                <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
-                    <span class="material-symbols-outlined text-2xl">shield</span>
-                </div>
-                <h1 class="dark:text-white text-slate-800 text-lg font-bold">VS System</h1>
-            </div>
-            <button onclick="toggleVsysMobileMenu()" class="text-slate-400">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-
-        <nav class="flex-1 px-4 py-6 overflow-y-auto space-y-1">
-            <?php foreach ($menu as $section): ?>
-                <?php
-                if (isset($section['perm']) && !$userAuth->hasPermission($section['perm']))
-                    continue;
-                if (isset($section['items'])):
-                    $visibleItems = array_filter($section['items'], function ($item) use ($userAuth) {
-                        return !isset($item['perm']) || $userAuth->hasPermission($item['perm']);
-                    });
-                    if (empty($visibleItems))
-                        continue;
-                    ?>
-                    <div class="pt-2">
-                        <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                            <?php echo $section['label']; ?>
-                        </p>
-                        <div class="space-y-1">
-                            <?php foreach ($visibleItems as $item): ?>
-                                <a href="<?php echo $item['href']; ?>"
-                                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white' : 'text-slate-400 hover:text-[#136dec] dark:hover:bg-[#233348]'; ?>">
-                                    <span class="material-symbols-outlined text-[20px]"><?php echo $item['icon']; ?></span>
-                                    <span class="text-sm font-medium"><?php echo $item['label']; ?></span>
-                                </a>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                <?php else: ?>
-                    <a href="<?php echo $section['href']; ?>"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all <?php echo ($currentPage === $section['id']) ? 'bg-[#136dec] text-white' : 'text-slate-400 hover:text-[#136dec] dark:hover:bg-[#233348]'; ?>">
-                        <span class="material-symbols-outlined text-[20px]"><?php echo $section['icon']; ?></span>
-                        <span class="text-sm font-medium"><?php echo $section['label']; ?></span>
-                    </a>
-                <?php endif; ?>
-            <?php endforeach; ?>
-        </nav>
-
-        <div class="p-4 border-t border-slate-100 dark:border-[#233348]">
-            <a href="logout.php"
-                class="flex items-center gap-3 px-3 py-3 rounded-xl bg-red-500/10 text-red-500 font-bold justify-center">
-                <span class="material-symbols-outlined text-[18px]">logout</span>
-                <span class="text-xs uppercase tracking-widest">Cerrar Sesión</span>
-            </a>
-        </div>
-    </aside>
-</div>
-
 <script>
-    function toggleVsysMobileMenu() {
-        const sidebar = document.getElementById('vsys_mobile_sidebar');
-        if (sidebar) sidebar.classList.toggle('hidden');
-    }
-
-    function toggleMenuGroup(groupId) {
-        const content = document.getElementById('content-' + groupId);
-        const chevron = document.getElementById('chevron-' + groupId);
-
-        if (content) content.classList.toggle('expanded');
-        if (chevron) chevron.classList.toggle('rotate-180');
-
-        if (content) {
-            const isExpanded = content.classList.contains('expanded');
-            localStorage.setItem('menu_' + groupId, isExpanded ? '1' : '0');
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const groups = ['group_ventas', 'group_contabilidad', 'group_config'];
-        groups.forEach(id => {
-            const state = localStorage.getItem('menu_' + id);
-            const content = document.getElementById('content-' + id);
-            const chevron = document.getElementById('chevron-' + id);
-
-            if (content && (state === '1' || content.classList.contains('expanded'))) {
-                content.classList.add('expanded');
-                if (chevron) chevron.classList.add('rotate-180');
-            }
-        });
-    });
-
     function toggleVsysTheme() {
         const current = localStorage.getItem('vsys_theme') || 'auto';
         let next = 'dark';
+
         if (current === 'dark') next = 'light';
         else if (current === 'light') next = 'dark';
-        else next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+        else {
+            next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+        }
+
         window.setVsysTheme(next);
     }
 </script>

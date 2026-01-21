@@ -21,7 +21,6 @@ $today = date('d/m/y');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuevo Presupuesto - VS System</title>
-    <!-- VS_DEPLOY_VER_1768999400 -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
@@ -271,7 +270,6 @@ $today = date('d/m/y');
                                         <th class="px-6 py-4 w-24 text-center">Cant.</th>
                                         <th class="px-6 py-4">Producto</th>
                                         <th class="px-6 py-4 text-right">Unit. USD</th>
-                                        <th class="px-6 py-4 text-center w-20">Desc. %</th>
                                         <th class="px-6 py-4 text-right">Unit. ARS</th>
                                         <th class="px-6 py-4 text-center">IVA</th>
                                         <th class="px-6 py-4 text-right">Total USD</th>
@@ -398,12 +396,6 @@ $today = date('d/m/y');
     <!-- JS Logic Re-integrated -->
     <script>
         let bnaRate = <?php echo $currentRate; ?>;
-        <?php
-        $stmt = $db->prepare("SELECT discount_cap FROM users WHERE id = ?");
-        $stmt->execute([$_SESSION['user_id']]);
-        $cap = $stmt->fetchColumn() ?: 0;
-        ?>
-        const userDiscountCap = <?php echo (float) $cap; ?>;
         let items = [];
         let searchTimeout;
 
@@ -420,11 +412,11 @@ $today = date('d/m/y');
                 return;
             }
 
-            fetch(`ajax_search_clients.php?q=${query}`)
+            fetch(`ajax_search_clients.php?q=${encodeURIComponent(query)}`)
                 .then(r => r.json())
                 .then(data => {
                     clientResults.innerHTML = '';
-                    if (data && data.length > 0) {
+                    if (data.length > 0) {
                         data.forEach(client => {
                             const div = document.createElement('div');
                             div.className = 'search-item';
@@ -442,10 +434,6 @@ $today = date('d/m/y');
                     } else {
                         clientResults.style.display = 'none';
                     }
-                })
-                .catch(err => {
-                    console.error('Client search error:', err);
-                    clientResults.style.display = 'none';
                 });
         });
 
@@ -476,7 +464,7 @@ $today = date('d/m/y');
                     .then(res => res.json())
                     .then(data => {
                         productResults.innerHTML = '';
-                        if (data && data.length > 0) {
+                        if (data.length > 0) {
                             productResults.style.display = 'block';
                             data.forEach(prod => {
                                 const div = document.createElement('div');
@@ -495,10 +483,6 @@ $today = date('d/m/y');
                         } else {
                             productResults.style.display = 'none';
                         }
-                    })
-                    .catch(err => {
-                        console.error('Product search error:', err);
-                        productResults.style.display = 'none';
                     });
             }, 300);
         });
@@ -513,7 +497,6 @@ $today = date('d/m/y');
                     sku: prod.sku,
                     desc: prod.description,
                     price: parseFloat(prod.unit_price_usd),
-                    discount_pct: 0,
                     iva: parseFloat(prod.iva_rate),
                     qty: 1
                 });
@@ -543,9 +526,6 @@ $today = date('d/m/y');
                 if (isRetention) adjustedUnitPrice *= 1.07;
                 if (isBank) adjustedUnitPrice *= 1.03;
 
-                // Apply discount
-                const discountedPrice = adjustedUnitPrice * (1 - (item.discount_pct / 100));
-
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors";
                 tr.innerHTML = `
@@ -562,17 +542,12 @@ $today = date('d/m/y');
                             onchange="updatePrice(${index}, this.value, 'usd')" 
                             class="w-24 h-10 text-right bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-lg text-sm text-primary font-mono font-bold focus:ring-primary/30">
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <input type="number" value="${item.discount_pct}" min="0" max="100" 
-                            onchange="updateDiscount(${index}, this.value)" 
-                            class="w-16 h-10 text-center bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-lg text-sm font-bold text-orange-500 focus:ring-orange-500/30">
-                    </td>
                     <td class="px-6 py-4 text-right">
-                        <div class="text-sm dark:text-white/80 text-slate-500 font-mono font-medium">$ ${(discountedPrice * bnaRate).toFixed(2)}</div>
+                        <div class="text-sm dark:text-white/80 text-slate-500 font-mono font-medium">$ ${(adjustedUnitPrice * bnaRate).toFixed(2)}</div>
                     </td>
                     <td class="px-6 py-4 text-center font-bold text-slate-400 text-[11px] uppercase">${item.iva}%</td>
                     <td class="px-6 py-4 text-right">
-                        <div class="text-sm font-bold dark:text-white text-slate-800 font-mono">$ ${(discountedPrice * item.qty).toFixed(2)}</div>
+                        <div class="text-sm font-bold dark:text-white text-slate-800 font-mono">$ ${(adjustedUnitPrice * item.qty).toFixed(2)}</div>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <button onclick="removeItem(${index})" class="p-2 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-500/10 transition-all">
@@ -583,16 +558,6 @@ $today = date('d/m/y');
                 tbody.appendChild(tr);
             });
             calculateTotals();
-        }
-
-        function updateDiscount(index, val) {
-            let d = parseFloat(val) || 0;
-            if (d > userDiscountCap && userDiscountCap > 0) {
-                alert(`No tiene permiso para otorgar un descuento mayor al ${userDiscountCap}%`);
-                d = userDiscountCap;
-            }
-            items[index].discount_pct = d;
-            renderTable();
         }
 
         function updateQty(index, val) {
@@ -631,9 +596,6 @@ $today = date('d/m/y');
                 let adjustedPrice = item.price;
                 if (isRetention) adjustedPrice *= 1.07;
                 if (isBank) adjustedPrice *= 1.03;
-
-                // Apply discount
-                adjustedPrice *= (1 - (item.discount_pct / 100));
 
                 let lineTotal = adjustedPrice * item.qty;
                 subtotal += lineTotal;

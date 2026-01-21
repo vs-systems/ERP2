@@ -6,12 +6,10 @@ use Vsys\Lib\Database;
 class Logistics
 {
     private $db;
-    private $company_id;
 
-    public function __construct($company_id = null)
+    public function __construct()
     {
         $this->db = Database::getInstance();
-        $this->company_id = $company_id ?: ($_SESSION['company_id'] ?? null);
     }
 
     /**
@@ -24,10 +22,10 @@ class Logistics
                 FROM quotations q
                 LEFT JOIN entities e ON q.client_id = e.id
                 LEFT JOIN logistics_process lp ON q.quote_number = lp.quote_number
-                WHERE q.company_id = :cid AND (q.payment_status = 'Pagado' OR q.authorized_dispatch = 1 OR lp.id IS NOT NULL)
+                WHERE q.payment_status = 'Pagado' OR q.authorized_dispatch = 1 OR lp.id IS NOT NULL
                 ORDER BY q.created_at DESC";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['cid' => $this->company_id]);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 
@@ -48,8 +46,8 @@ class Logistics
     public function logFreightCost($data)
     {
         $sql = "INSERT INTO logistics_freight_costs 
-                (quote_number, dispatch_date, client_id, packages_qty, freight_cost, transport_id, company_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+                (quote_number, dispatch_date, client_id, packages_qty, freight_cost, transport_id) 
+                VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             $data['quote_number'],
@@ -57,8 +55,7 @@ class Logistics
             $data['client_id'],
             $data['packages_qty'],
             $data['freight_cost'],
-            $data['transport_id'],
-            $this->company_id
+            $data['transport_id']
         ]);
     }
 
@@ -67,13 +64,11 @@ class Logistics
      */
     public function getTransports($onlyActive = true)
     {
-        $sql = "SELECT * FROM transports WHERE company_id = ?";
+        $sql = "SELECT * FROM transports";
         if ($onlyActive)
-            $sql .= " AND is_active = TRUE";
+            $sql .= " WHERE is_active = TRUE";
         $sql .= " ORDER BY name";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([$this->company_id]);
-        return $stmt->fetchAll();
+        return $this->db->query($sql)->fetchAll();
     }
 
     /**
@@ -85,7 +80,7 @@ class Logistics
             $stmt = $this->db->prepare("UPDATE transports SET 
                 name = ?, contact_person = ?, phone = ?, email = ?, 
                 address = ?, cuit = ?, can_pickup = ?, is_active = ? 
-                WHERE id = ? AND company_id = ?");
+                WHERE id = ?");
             return $stmt->execute([
                 $data['name'],
                 $data['contact_person'],
@@ -95,13 +90,12 @@ class Logistics
                 $data['cuit'] ?? '',
                 $data['can_pickup'] ?? 0,
                 $data['is_active'],
-                $data['id'],
-                $this->company_id
+                $data['id']
             ]);
         } else {
             $stmt = $this->db->prepare("INSERT INTO transports 
-                (name, contact_person, phone, email, address, cuit, can_pickup, company_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                (name, contact_person, phone, email, address, cuit, can_pickup) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)");
             return $stmt->execute([
                 $data['name'],
                 $data['contact_person'],
@@ -109,8 +103,7 @@ class Logistics
                 $data['email'],
                 $data['address'] ?? '',
                 $data['cuit'] ?? '',
-                $data['can_pickup'] ?? 0,
-                $this->company_id
+                $data['can_pickup'] ?? 0
             ]);
         }
     }
@@ -142,33 +135,17 @@ class Logistics
         ];
 
         try {
-            // Check if company_id exists in logistics_process
-            $cols = $this->db->query("DESCRIBE logistics_process")->fetchAll(\PDO::FETCH_COLUMN);
-            $hasCid = in_array('company_id', $cols);
-
             // Pending: En reserva or En preparación
-            $sqlP = "SELECT COUNT(*) FROM logistics_process WHERE current_phase IN ('En reserva', 'En preparación') AND MONTH(updated_at) = MONTH(CURRENT_DATE)";
-            if ($hasCid)
-                $sqlP .= " AND company_id = ?";
-            $stmtP = $this->db->prepare($sqlP);
-            $hasCid ? $stmtP->execute([$this->company_id]) : $stmtP->execute();
-            $stats['pending'] = $stmtP->fetchColumn() ?: 0;
+            $res = $this->db->query("SELECT COUNT(*) FROM logistics_process WHERE current_phase IN ('En reserva', 'En preparación') AND MONTH(updated_at) = MONTH(CURRENT_DATE)")->fetchColumn();
+            $stats['pending'] = $res ?: 0;
 
             // Prepared: Disponible
-            $sqlD = "SELECT COUNT(*) FROM logistics_process WHERE current_phase = 'Disponible' AND MONTH(updated_at) = MONTH(CURRENT_DATE)";
-            if ($hasCid)
-                $sqlD .= " AND company_id = ?";
-            $stmtD = $this->db->prepare($sqlD);
-            $hasCid ? $stmtD->execute([$this->company_id]) : $stmtD->execute();
-            $stats['prepared'] = $stmtD->fetchColumn() ?: 0;
+            $res = $this->db->query("SELECT COUNT(*) FROM logistics_process WHERE current_phase = 'Disponible' AND MONTH(updated_at) = MONTH(CURRENT_DATE)")->fetchColumn();
+            $stats['prepared'] = $res ?: 0;
 
             // Dispatched: En su transporte or Entregado
-            $sqlS = "SELECT COUNT(*) FROM logistics_process WHERE current_phase IN ('En su transporte', 'Entregado') AND MONTH(updated_at) = MONTH(CURRENT_DATE)";
-            if ($hasCid)
-                $sqlS .= " AND company_id = ?";
-            $stmtS = $this->db->prepare($sqlS);
-            $hasCid ? $stmtS->execute([$this->company_id]) : $stmtS->execute();
-            $stats['dispatched'] = $stmtS->fetchColumn() ?: 0;
+            $res = $this->db->query("SELECT COUNT(*) FROM logistics_process WHERE current_phase IN ('En su transporte', 'Entregado') AND MONTH(updated_at) = MONTH(CURRENT_DATE)")->fetchColumn();
+            $stats['dispatched'] = $res ?: 0;
 
             return $stats;
         } catch (\Exception $e) {
