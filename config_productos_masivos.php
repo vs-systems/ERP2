@@ -68,7 +68,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_bulk'])) {
         fgetcsv($handle, 1000, ";"); // Skip header
         $count = 0;
         $db = Vsys\Lib\Database::getInstance();
-        $cid = $_SESSION['company_id'] ?? 1;
 
         // Try to detect separator
         $line = fgets($handle);
@@ -99,8 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_bulk'])) {
 $categories = $catalog->getCategories();
 // Get brands
 $db = Vsys\Lib\Database::getInstance();
-$brands = $db->query("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand != '' AND company_id = "
-    . $_SESSION['company_id'])->fetchAll(PDO::FETCH_COLUMN);
+$brands = $db->query("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand != ''")->fetchAll(PDO::FETCH_COLUMN);
 
 ?>
 <!DOCTYPE html>

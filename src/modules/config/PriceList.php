@@ -12,12 +12,10 @@ use Vsys\Lib\Database;
 class PriceList
 {
     private $db;
-    private $company_id;
 
-    public function __construct($company_id = null)
+    public function __construct()
     {
         $this->db = Database::getInstance();
-        $this->company_id = $company_id ?: ($_SESSION['company_id'] ?? null);
     }
 
     /**
@@ -25,8 +23,8 @@ class PriceList
      */
     public function getAll()
     {
-        $stmt = $this->db->prepare("SELECT * FROM price_lists WHERE company_id = ? ORDER BY id ASC");
-        $stmt->execute([$this->company_id]);
+        $stmt = $this->db->prepare("SELECT * FROM price_lists ORDER BY id ASC");
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 
@@ -35,8 +33,8 @@ class PriceList
      */
     public function updateMargin($id, $percent)
     {
-        $stmt = $this->db->prepare("UPDATE price_lists SET margin_percent = ?, updated_at = NOW() WHERE id = ? AND company_id = ?");
-        return $stmt->execute([(float) $percent, $id, $this->company_id]);
+        $stmt = $this->db->prepare("UPDATE price_lists SET margin_percent = ?, updated_at = NOW() WHERE id = ?");
+        return $stmt->execute([(float) $percent, $id]);
     }
 
     /**
@@ -44,8 +42,8 @@ class PriceList
      */
     public function updatePriceList($id, $name, $margin)
     {
-        $stmt = $this->db->prepare("UPDATE price_lists SET name = ?, margin_percent = ?, updated_at = NOW() WHERE id = ? AND company_id = ?");
-        return $stmt->execute([$name, (float) $margin, $id, $this->company_id]);
+        $stmt = $this->db->prepare("UPDATE price_lists SET name = ?, margin_percent = ?, updated_at = NOW() WHERE id = ?");
+        return $stmt->execute([$name, (float) $margin, $id]);
     }
 
     /**
@@ -53,8 +51,8 @@ class PriceList
      */
     public function calculatePrice($cost, $listId)
     {
-        $stmt = $this->db->prepare("SELECT margin_percent FROM price_lists WHERE id = ? AND company_id = ?");
-        $stmt->execute([$listId, $this->company_id]);
+        $stmt = $this->db->prepare("SELECT margin_percent FROM price_lists WHERE id = ?");
+        $stmt->execute([$listId]);
         $margin = $stmt->fetchColumn();
 
         if ($margin === false)

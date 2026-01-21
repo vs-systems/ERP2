@@ -11,12 +11,10 @@ use Vsys\Lib\Logger;
 class Catalog
 {
     private $db;
-    private $company_id;
 
-    public function __construct($company_id = null)
+    public function __construct()
     {
         $this->db = Database::getInstance();
-        $this->company_id = $company_id ?: ($_SESSION['company_id'] ?? null);
     }
 
     public function getAllProducts()
@@ -29,8 +27,8 @@ class Catalog
 
     public function getProviders()
     {
-        $stmt = $this->db->prepare("SELECT id, name FROM entities WHERE (type = 'provider' OR type = 'supplier') AND company_id = ? ORDER BY name ASC");
-        $stmt->execute([$this->company_id]);
+        $stmt = $this->db->prepare("SELECT id, name FROM entities WHERE (type = 'provider' OR type = 'supplier') ORDER BY name ASC");
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 
@@ -50,8 +48,8 @@ class Catalog
 
     public function addProduct($data)
     {
-        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current, stock_min, stock_transit, stock_incoming, incoming_date, company_id) 
-                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current, :stock_min, :stock_transit, :stock_incoming, :incoming_date, :company_id)
+        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current, stock_min, stock_transit, stock_incoming, incoming_date) 
+                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current, :stock_min, :stock_transit, :stock_incoming, :incoming_date)
                 ON DUPLICATE KEY UPDATE 
                 barcode = VALUES(barcode),
                 image_url = VALUES(image_url),
@@ -92,8 +90,7 @@ class Catalog
             ':stock_min' => $data['stock_min'] ?? 0,
             ':stock_transit' => $data['stock_transit'] ?? 0,
             ':stock_incoming' => $data['stock_incoming'] ?? 0,
-            ':incoming_date' => $data['incoming_date'] ?? null,
-            ':company_id' => $this->company_id
+            ':incoming_date' => $data['incoming_date'] ?? null
         ]);
 
         if ($success) {

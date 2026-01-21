@@ -419,11 +419,8 @@ $today = date('d/m/y');
                 return;
             }
 
-            fetch(`ajax_search_clients.php?q=${encodeURIComponent(query)}&_=${Date.now()}`)
-                .then(r => {
-                    if (!r.ok) throw new Error('Network response was not ok');
-                    return r.json();
-                })
+            fetch(`ajax_search_clients.php?q=${query}`)
+                .then(r => r.json())
                 .then(data => {
                     clientResults.innerHTML = '';
                     if (data && data.length > 0) {
@@ -474,11 +471,8 @@ $today = date('d/m/y');
             }
 
             searchTimeout = setTimeout(() => {
-                fetch(`ajax_search_products.php?q=${encodeURIComponent(query)}&_=${Date.now()}`)
-                    .then(res => {
-                        if (!res.ok) throw new Error('Network response was not ok');
-                        return res.json();
-                    })
+                fetch(`ajax_search_products.php?q=${query}`)
+                    .then(res => res.json())
                     .then(data => {
                         productResults.innerHTML = '';
                         if (data && data.length > 0) {

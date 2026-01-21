@@ -18,14 +18,12 @@ header("Pragma: no-cache");
 header('Content-Type: application/json');
 
 $query = isset($_GET['q']) ? trim($_GET['q']) : '';
-$cid = $_SESSION['company_id'] ?? 1; // Fallback to 1 for safety
-
 if (strlen($query) < 2) {
     echo json_encode([]);
     exit;
 }
 
-$catalog = new Catalog($cid);
+$catalog = new Catalog();
 $results = $catalog->searchProducts($query);
 
 echo json_encode($results);

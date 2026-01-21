@@ -1,9 +1,4 @@
 ﻿<?php
-ob_start();
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
 /**
  * Authentication check script
  */
@@ -24,7 +19,7 @@ $isLocal = (strpos($clientIp, '192.168.0.') === 0 || $clientIp === '127.0.0.1' |
 if (!$userAuth->isLoggedIn()) {
     if ($isLocal) {
         // Auto-login logic for local development
-        if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+        if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
         $_SESSION['user_id'] = 1;
@@ -37,22 +32,13 @@ if (!$userAuth->isLoggedIn()) {
     } else {
         $currentPage = basename($_SERVER['PHP_SELF']);
         if ($currentPage !== 'login.php') {
-            if (!headers_sent()) {
-                header('Location: login.php');
-                exit;
-            } else {
-                echo "<script>window.location.href='login.php';</script>";
-                exit;
-            }
+            header('Location: login.php');
+            exit;
         }
     }
 }
 
-// Ensure company_id is set if the user is logged in
+// Ensure company_id is set if the user is logged in (legacy support)
 if ($userAuth->isLoggedIn() && (!isset($_SESSION['company_id']) || empty($_SESSION['company_id']))) {
-    $db = Vsys\Lib\Database::getInstance();
-    $stmt = $db->prepare("SELECT company_id FROM users WHERE id = ?");
-    $stmt->execute([$_SESSION['user_id']]);
-    $cid = $stmt->fetchColumn();
-    $_SESSION['company_id'] = $cid ?: 1;
+    $_SESSION['company_id'] = 1;
 }
