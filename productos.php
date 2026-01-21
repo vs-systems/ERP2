@@ -86,6 +86,9 @@ $mlMargin = $listsByName['MercadoLibre'] ?? 50;
             <header
                 class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
                 <div class="flex items-center gap-3">
+                    <button onclick="toggleVsysSidebar()" class="lg:hidden dark:text-white text-slate-800 p-1 mr-2">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
                     <div class="bg-primary/20 p-2 rounded-lg text-primary">
                         <span class="material-symbols-outlined text-2xl">inventory_2</span>
                     </div>

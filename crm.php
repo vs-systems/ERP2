@@ -95,6 +95,9 @@ $stages = [
             <header
                 class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
                 <div class="flex items-center gap-3">
+                    <button onclick="toggleVsysSidebar()" class="lg:hidden dark:text-white text-slate-800 p-1 mr-2">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
                     <div class="bg-primary/20 p-2 rounded-lg text-primary">
                         <span class="material-symbols-outlined text-2xl">dynamic_feed</span>
                     </div>
@@ -125,7 +128,8 @@ $stages = [
                             <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Presupuestos
                                 Activos</h4>
                             <div class="text-3xl font-bold dark:text-white text-slate-800">
-                                <?php echo $stats['active_quotes']; ?></div>
+                                <?php echo $stats['active_quotes']; ?>
+                            </div>
                             <div class="mt-2 flex items-center gap-1 text-[10px] font-bold text-green-500 uppercase">
                                 <span class="material-symbols-outlined text-sm">trending_up</span> Pipeline Saludable
                             </div>
@@ -149,7 +153,8 @@ $stages = [
                             <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Eficiencia
                                 de Ventas</h4>
                             <div class="text-3xl font-bold dark:text-white text-slate-800">
-                                <?php echo $stats['efficiency']; ?>%</div>
+                                <?php echo $stats['efficiency']; ?>%
+                            </div>
                             <div class="mt-4 w-full h-1.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
                                 <div class="h-full bg-primary rounded-full transition-all duration-1000"
                                     style="width: <?php echo $stats['efficiency']; ?>%;"></div>
@@ -195,7 +200,8 @@ $stages = [
                                                 style="color: <?php echo $meta['color']; ?>;"><?php echo $meta['icon']; ?></span>
                                             <h3
                                                 class="text-xs font-bold dark:text-slate-400 text-slate-500 uppercase tracking-widest">
-                                                <?php echo $meta['label']; ?></h3>
+                                                <?php echo $meta['label']; ?>
+                                            </h3>
                                         </div>
                                         <span
                                             class="bg-slate-200 dark:bg-white/10 px-2 py-0.5 rounded-full text-[10px] font-bold text-slate-500 dark:text-slate-400"><?php echo count($leads); ?></span>
@@ -208,7 +214,8 @@ $stages = [
                                                 <div class="flex justify-between items-start">
                                                     <h4
                                                         class="text-sm font-bold dark:text-white text-slate-800 group-hover:text-primary transition-colors leading-tight">
-                                                        <?php echo $lead['name']; ?></h4>
+                                                        <?php echo $lead['name']; ?>
+                                                    </h4>
                                                     <span
                                                         class="text-[9px] font-bold dark:text-slate-500 text-slate-400 uppercase"><?php echo date('d M', strtotime($lead['updated_at'])); ?></span>
                                                 </div>

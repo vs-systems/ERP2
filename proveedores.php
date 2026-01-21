@@ -110,6 +110,9 @@ $suppliers = $db->query($sql)->fetchAll();
             <header
                 class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
                 <div class="flex items-center gap-3">
+                    <button onclick="toggleVsysSidebar()" class="lg:hidden dark:text-white text-slate-800 p-1 mr-2">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
                     <div class="bg-primary/20 p-2 rounded-lg text-primary">
                         <span class="material-symbols-outlined text-2xl">factory</span>
                     </div>
@@ -175,19 +178,23 @@ $suppliers = $db->query($sql)->fetchAll();
                                             class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group <?php echo !$s['is_enabled'] ? 'opacity-60' : ''; ?>">
                                             <td class="px-6 py-5">
                                                 <div class="font-bold text-sm dark:text-white text-slate-800">
-                                                    <?php echo $s['name']; ?></div>
+                                                    <?php echo $s['name']; ?>
+                                                </div>
                                                 <div class="text-[11px] text-slate-500 font-medium">
-                                                    <?php echo $s['fantasy_name']; ?></div>
+                                                    <?php echo $s['fantasy_name']; ?>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800 font-mono">
-                                                    <?php echo $s['tax_id']; ?></div>
+                                                    <?php echo $s['tax_id']; ?>
+                                                </div>
                                                 <div class="text-[11px] text-slate-500"><?php echo $s['document_number']; ?>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800 font-medium">
-                                                    <?php echo $s['contact_person']; ?></div>
+                                                    <?php echo $s['contact_person']; ?>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <span
@@ -197,10 +204,12 @@ $suppliers = $db->query($sql)->fetchAll();
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-sm dark:text-white text-slate-800">
-                                                    <?php echo $s['email']; ?></div>
+                                                    <?php echo $s['email']; ?>
+                                                </div>
                                                 <div
                                                     class="text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
-                                                    <?php echo $s['mobile'] ?: $s['phone']; ?></div>
+                                                    <?php echo $s['mobile'] ?: $s['phone']; ?>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-5 text-center">
                                                 <span

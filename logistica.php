@@ -108,6 +108,9 @@ $phases = [
             <header
                 class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 transition-colors duration-300">
                 <div class="flex items-center gap-3">
+                    <button onclick="toggleVsysSidebar()" class="lg:hidden dark:text-white text-slate-800 p-1 mr-2">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
                     <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
                         <span class="material-symbols-outlined text-2xl">local_shipping</span>
                     </div>

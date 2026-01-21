@@ -60,8 +60,12 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet" />
 
-<aside
-    class="hidden md:flex flex-col w-64 h-full bg-[#101822] border-r border-[#233348] flex-shrink-0 overflow-y-auto transition-colors duration-300 dark:bg-[#101822] bg-white border-slate-200 dark:border-[#233348]">
+<!-- Mobile Overlay -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] md:hidden hidden"
+    onclick="toggleVsysSidebar()"></div>
+
+<aside id="mainSidebar"
+    class="fixed md:relative inset-y-0 left-0 w-64 h-full bg-[#101822] border-r border-[#233348] flex-shrink-0 overflow-y-auto transition-all duration-300 z-[50] -translate-x-full md:translate-x-0 dark:bg-[#101822] bg-white border-slate-200 dark:border-[#233348] flex flex-col">
     <!-- Brand Logo Section -->
     <div class="p-6 flex items-center gap-3">
         <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec] flex items-center justify-center">
@@ -170,5 +174,19 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
         }
 
         window.setVsysTheme(next);
+    }
+
+    function toggleVsysSidebar() {
+        const sidebar = document.getElementById('mainSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const isOpen = !sidebar.classList.contains('-translate-x-full');
+
+        if (isOpen) {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        } else {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        }
     }
 </script>

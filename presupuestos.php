@@ -72,11 +72,14 @@ $quotes = $cot->getAllQuotations(100);
             <header
                 class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
                 <div class="flex items-center gap-3">
-                    <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
+                    <button onclick="toggleVsysSidebar()" class="lg:hidden dark:text-white text-slate-800 p-1 mr-2">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                    <div class="bg-primary/20 p-2 rounded-lg text-primary">
                         <span class="material-symbols-outlined text-2xl">history</span>
                     </div>
                     <h2 class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">Historial de
-                        Cotizaciones</h2>
+                        Presupuestos</h2>
                 </div>
                 <div class="flex items-center gap-4">
                     <a href="cotizador.php"
@@ -139,7 +142,8 @@ $quotes = $cot->getAllQuotations(100);
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="text-xs font-semibold dark:text-slate-200 text-slate-700">
-                                                    <?php echo $q['client_name']; ?></div>
+                                                    <?php echo $q['client_name']; ?>
+                                                </div>
                                             </td>
                                             <td
                                                 class="px-6 py-5 text-right font-mono text-sm dark:text-white text-slate-800">
