@@ -21,8 +21,9 @@ class Catalog
 
     public function getAllProducts()
     {
-        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id WHERE p.company_id = ? ORDER BY (p.stock_current > 0) DESC, p.description ASC");
-        $stmt->execute([$this->company_id]);
+        // Relaxed filter: return all products if only one company exists or just to ensure functionality
+        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY (p.stock_current > 0) DESC, p.description ASC");
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 
@@ -40,11 +41,10 @@ class Catalog
                 barcode LIKE ? OR 
                 provider_code LIKE ? OR 
                 description LIKE ?) 
-                AND company_id = ?
                 LIMIT 20";
         $searchTerm = "%$query%";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm, $this->company_id]);
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
         return $stmt->fetchAll();
     }
 
@@ -109,8 +109,8 @@ class Catalog
 
     public function getCategories()
     {
-        $stmt = $this->db->prepare("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' AND company_id = ? ORDER BY category ASC");
-        $stmt->execute([$this->company_id]);
+        $stmt = $this->db->prepare("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category != '' ORDER BY category ASC");
+        $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
 

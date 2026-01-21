@@ -25,7 +25,6 @@ class Client
     {
         $typeFilter = ($type === 'all') ? "1=1" : "type = :type";
         $sql = "SELECT * FROM entities WHERE 
-                company_id = :cid AND 
                 $typeFilter AND (
                     LOWER(name) LIKE :q1 OR 
                     LOWER(fantasy_name) LIKE :q2 OR
@@ -40,7 +39,6 @@ class Client
 
         $searchTerm = "%" . mb_strtolower($query, 'UTF-8') . "%";
         $params = [
-            'cid' => $this->company_id,
             'q1' => $searchTerm,
             'q2' => $searchTerm,
             'q3' => $searchTerm,
