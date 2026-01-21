@@ -20,7 +20,7 @@ $shipStats = [];
 
 // Get current exchange rate for display
 $db = \Vsys\Lib\Database::getInstance();
-$exchangeRate = $db->query("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1")->fetchColumn() ?: 1250.00;
+$exchangeRate = $db->query("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1")->fetchColumn() ?: 1455.00;
 
 if ($userRole === 'Vendedor') {
     $sellerDash = new \Vsys\Modules\Dashboard\SellerDashboard($userId);
@@ -121,11 +121,14 @@ if ($userRole === 'Vendedor') {
 
                 <div class="flex items-center gap-4 ml-auto">
                     <div class="flex flex-col items-end mr-2">
-                        <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
-                            USD Oficial: <span class="text-sm font-black">$<?php echo number_format($exchangeRate, 2, ',', '.'); ?></span>
+                        <span
+                            class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                            USD Oficial: <span
+                                class="text-sm font-black">$<?php echo number_format($exchangeRate, 2, ',', '.'); ?></span>
                         </span>
                         <span
-                            class="text-[9px] text-slate-500 uppercase font-bold tracking-tighter"><?php echo date('d M, Y'); ?> - <?php echo $userRole; ?></span>
+                            class="text-[9px] text-slate-500 uppercase font-bold tracking-tighter"><?php echo date('d M, Y'); ?>
+                            - <?php echo $userRole; ?></span>
                     </div>
                     <div class="h-8 w-px bg-[#233348]"></div>
                     <button class="text-slate-400 hover:text-white transition-colors relative">
