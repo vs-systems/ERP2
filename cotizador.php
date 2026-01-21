@@ -419,11 +419,14 @@ $today = date('d/m/y');
                 return;
             }
 
-            fetch(`ajax_search_clients.php?q=${encodeURIComponent(query)}`)
-                .then(r => r.json())
+            fetch(`ajax_search_clients.php?q=${encodeURIComponent(query)}&_=${Date.now()}`)
+                .then(r => {
+                    if (!r.ok) throw new Error('Network response was not ok');
+                    return r.json();
+                })
                 .then(data => {
                     clientResults.innerHTML = '';
-                    if (data.length > 0) {
+                    if (data && data.length > 0) {
                         data.forEach(client => {
                             const div = document.createElement('div');
                             div.className = 'search-item';
@@ -441,6 +444,10 @@ $today = date('d/m/y');
                     } else {
                         clientResults.style.display = 'none';
                     }
+                })
+                .catch(err => {
+                    console.error('Client search error:', err);
+                    clientResults.style.display = 'none';
                 });
         });
 
@@ -467,11 +474,14 @@ $today = date('d/m/y');
             }
 
             searchTimeout = setTimeout(() => {
-                fetch(`ajax_search_products.php?q=${query}`)
-                    .then(res => res.json())
+                fetch(`ajax_search_products.php?q=${encodeURIComponent(query)}&_=${Date.now()}`)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Network response was not ok');
+                        return res.json();
+                    })
                     .then(data => {
                         productResults.innerHTML = '';
-                        if (data.length > 0) {
+                        if (data && data.length > 0) {
                             productResults.style.display = 'block';
                             data.forEach(prod => {
                                 const div = document.createElement('div');
@@ -490,6 +500,10 @@ $today = date('d/m/y');
                         } else {
                             productResults.style.display = 'none';
                         }
+                    })
+                    .catch(err => {
+                        console.error('Product search error:', err);
+                        productResults.style.display = 'none';
                     });
             }, 300);
         });

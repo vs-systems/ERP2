@@ -1,5 +1,9 @@
 ﻿<?php
 ob_start();
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
 /**
  * Authentication check script
  */
@@ -42,4 +46,13 @@ if (!$userAuth->isLoggedIn()) {
             }
         }
     }
+}
+
+// Ensure company_id is set if the user is logged in
+if ($userAuth->isLoggedIn() && (!isset($_SESSION['company_id']) || empty($_SESSION['company_id']))) {
+    $db = Vsys\Lib\Database::getInstance();
+    $stmt = $db->prepare("SELECT company_id FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    $cid = $stmt->fetchColumn();
+    $_SESSION['company_id'] = $cid ?: 1;
 }
