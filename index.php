@@ -75,7 +75,7 @@ require_once __DIR__ . '/src/config/config.php';
 
         <div class="max-w-6xl w-full text-center z-10 space-y-12 py-20">
             <div class="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-700">
-                <img src="logo_display.php" alt="VS Logo"
+                <img src="src/img/VSLogo_v2.jpg" alt="VS Logo"
                     class="h-24 md:h-28 drop-shadow-2xl hover:scale-105 transition-transform">
                 <h1 class="text-4xl md:text-7xl font-extrabold tracking-tight text-gradient">
                     Vecino Seguro Sistemas
