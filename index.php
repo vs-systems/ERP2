@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 require_once 'auth_check.php';
 require_once __DIR__ . '/src/config/config.php';
 
@@ -99,7 +101,8 @@ if ($userRole === 'Vendedor') {
             <header
                 class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 sticky top-0 transition-colors duration-300">
                 <div class="flex items-center gap-4 lg:hidden">
-                    <button class="dark:text-white text-slate-800"><span class="material-symbols-outlined">menu</span></button>
+                    <button class="dark:text-white text-slate-800"><span
+                            class="material-symbols-outlined">menu</span></button>
                     <span class="dark:text-white text-slate-800 font-bold text-lg">VS System</span>
                 </div>
 
@@ -134,7 +137,8 @@ if ($userRole === 'Vendedor') {
                     <!-- Welcome Header -->
                     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                         <div>
-                            <h2 class="text-3xl font-bold dark:text-white text-slate-800 tracking-tight">Panel de Control</h2>
+                            <h2 class="text-3xl font-bold dark:text-white text-slate-800 tracking-tight">Panel de
+                                Control</h2>
                             <p class="text-slate-400 mt-1">Bienvenido de nuevo, <span
                                     class="text-[#136dec] font-semibold"><?php echo $userName; ?></span>.</p>
                         </div>
@@ -224,10 +228,12 @@ if ($userRole === 'Vendedor') {
                     <!-- Secondary Row: Charts & Tables -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <!-- Left: Main Chart -->
-                        <div class="lg:col-span-2 bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none transition-colors duration-300">
+                        <div
+                            class="lg:col-span-2 bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none transition-colors duration-300">
                             <div class="flex justify-between items-center mb-8">
                                 <div>
-                                    <h3 class="text-lg font-bold dark:text-white text-slate-800">Flujo Operativo (Real)</h3>
+                                    <h3 class="text-lg font-bold dark:text-white text-slate-800">Flujo Operativo (Real)
+                                    </h3>
                                     <p class="text-slate-500 text-sm">Resumen de ingresos vs egresos acumulados</p>
                                 </div>
                                 <div class="flex gap-2">
@@ -243,7 +249,8 @@ if ($userRole === 'Vendedor') {
 
                         <!-- Right: Quick Activity + Calendar -->
                         <div class="space-y-6">
-                            <div class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-sm dark:shadow-none transition-colors duration-300">
+                            <div
+                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-sm dark:shadow-none transition-colors duration-300">
                                 <h3 class="font-bold dark:text-white text-slate-800 mb-4 flex items-center gap-2">
                                     <span class="material-symbols-outlined text-[#136dec]">event_note</span> Agenda del
                                     Día
@@ -251,8 +258,8 @@ if ($userRole === 'Vendedor') {
                                 <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-[#233348]">
                                     <iframe
                                         src="https://calendar.google.com/calendar/embed?src=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20&ctz=America%2FArgentina%2FBuenos_Aires&showTitle=0&showNav=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0&mode=AGENDA"
-                                        class="w-full h-[250px] bg-white dark:invert dark:hue-rotate-180" frameborder="0"
-                                        scrolling="no"></iframe>
+                                        class="w-full h-[250px] bg-white dark:invert dark:hue-rotate-180"
+                                        frameborder="0" scrolling="no"></iframe>
                                 </div>
                                 <a href="https://calendar.google.com" target="_blank"
                                     class="block text-center mt-3 text-xs text-slate-500 hover:text-[#136dec] transition-colors underline">Ver
@@ -274,8 +281,10 @@ if ($userRole === 'Vendedor') {
                     </div>
 
                     <!-- Bottom: Recent Operations Table -->
-                    <div class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-xl dark:shadow-none transition-colors duration-300">
-                        <div class="p-6 border-b border-slate-200 dark:border-[#233348] flex justify-between items-center">
+                    <div
+                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-xl dark:shadow-none transition-colors duration-300">
+                        <div
+                            class="p-6 border-b border-slate-200 dark:border-[#233348] flex justify-between items-center">
                             <h3 class="text-lg font-bold dark:text-white text-slate-800">Cotizaciones Recientes</h3>
                             <a href="presupuestos.php" class="text-xs text-[#136dec] hover:underline font-bold">VER
                                 TODAS</a>
