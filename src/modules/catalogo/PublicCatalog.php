@@ -71,9 +71,13 @@ class PublicCatalog
             // Only add if price is valid
             if ($priceArs > 0) {
                 // Rounding
-                $p['price_final_ars'] = round($priceArs, 0); // Round to integer for cleaner look? Or 2 decimals? Standard retail is 2 decimals or rounded. ARS is usually rounded.
-                $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.'); // $ 1.000
-                $p['image_url'] = !empty($p['image_url']) ? $p['image_url'] : 'https://placehold.co/300x300?text=No+Image';
+                $p['price_final_ars'] = round($priceArs, 0);
+                $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.');
+
+                // Clean image path
+                $img = $p['image_url'] ?? '';
+                $img = str_replace(['Z:\\Vsys_ERP\\', 'Z:/Vsys_ERP/'], '', $img);
+                $p['image_url'] = !empty($img) ? $img : 'https://placehold.co/300x300?text=No+Image';
 
                 $webProducts[] = $p;
             }
@@ -120,7 +124,12 @@ class PublicCatalog
             if ($priceArs > 0) {
                 $p['price_final_ars'] = round($priceArs, 0);
                 $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.');
-                $p['image_url'] = !empty($p['image_url']) ? $p['image_url'] : 'https://placehold.co/300x300?text=No+Image';
+
+                // Clean image path
+                $img = $p['image_url'] ?? '';
+                $img = str_replace(['Z:\\Vsys_ERP\\', 'Z:/Vsys_ERP/'], '', $img);
+                $p['image_url'] = !empty($img) ? $img : 'https://placehold.co/300x300?text=No+Image';
+
                 $profileProducts[] = $p;
             }
         }

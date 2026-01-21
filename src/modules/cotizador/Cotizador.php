@@ -22,19 +22,20 @@ class Cotizador
      */
     public function generateQuoteNumber($clientId)
     {
-        $dateStr = date('Y-m-d');
-        $prefix = "VS-COT-" . $dateStr . "-";
+        $yearMonth = date('Y-m');
+        $prefix = "VS-" . $yearMonth . "-";
 
-        // Get the last number used today to avoid collisions even if records were deleted
+        // Get the last number used this month to reset monthly
         $stmt = $this->db->prepare("SELECT quote_number FROM quotations WHERE quote_number LIKE :prefix ORDER BY id DESC LIMIT 1");
         $stmt->execute(['prefix' => $prefix . '%']);
         $lastQuote = $stmt->fetch();
 
         if ($lastQuote) {
+            // Format: VS-YYYY-MM-XXXX_VV -> split by '-'
             $parts = explode('-', $lastQuote['quote_number']);
-            $lastPart = end($parts); // e.g. 0001_01
-            $num = (int) explode('_', $lastPart)[0];
-            $nextNum = $num + 1;
+            $lastSegment = end($parts); // XXXX_VV
+            $numPart = explode('_', $lastSegment)[0];
+            $nextNum = (int) $numPart + 1;
         } else {
             $nextNum = 1;
         }
@@ -173,4 +174,3 @@ class Cotizador
     }
 }
 ?>
-
