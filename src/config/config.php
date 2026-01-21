@@ -3,14 +3,19 @@
  * VS System ERP - Core Configuration (Production)
  */
 
-// Error reporting (ENABLED FOR DEBUGGING)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Error reporting (Disable in production)
+error_reporting(0);
+ini_set('display_errors', 0);
+
+// Database configuration
+// Error reporting (Disable in production)
+error_reporting(0);
+ini_set('display_errors', 0);
 
 // Database configuration
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'gozziar_vsys');
-define('DB_USER', 'gozziar_vsys_user');
+define('DB_NAME', 'u499089589_vsys');
+define('DB_USER', 'u499089589_admin');
 define('DB_PASS', 'v5yS_2024_P@ss!#');
 define('DB_CHARSET', 'utf8mb4');
 
