@@ -6,11 +6,21 @@ require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/catalogo/Catalog.php';
 
+require_once __DIR__ . '/src/modules/config/PriceList.php';
+
 use Vsys\Modules\Catalogo\Catalog;
+use Vsys\Modules\Config\PriceList;
 
 $catalog = new Catalog();
+$priceListModule = new PriceList();
+
 $allProducts = $catalog->getAllProducts();
 $categories = $catalog->getCategories();
+
+// Fetch exchange rate
+$db = Vsys\Lib\Database::getInstance();
+$stmt = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'USD' ORDER BY date_rate DESC LIMIT 1");
+$currentRate = $stmt->fetchColumn() ?: 1455.00;
 
 // Fetch unique brands for filtering
 $brands = array_unique(array_filter(array_column($allProducts, 'brand')));
@@ -195,7 +205,7 @@ sort($brands);
 <body>
     <header>
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large"style="height: 45px;">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large" class="logo-large" style="height: 45px;">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.2rem;">
                 Vecino Seguro <span
                     style="background: var(--gradient-premium); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Cató¡logo</span>
@@ -277,16 +287,34 @@ sort($brands);
 
                     <div class="product-footer">
                         <div class="product-price-container">
-                            <?php if (($_SESSION['user_role'] ?? '') === 'Vendedor'): ?>
+                            <?php
+                            $cost = (float) $p['unit_cost_usd'];
+                            $iva = (float) $p['iva_rate'];
+
+                            // Prices including IVA for Web list (Internal Catalog rule)
+                            $priceWebArs = $priceListModule->getPriceByListName($cost, $iva, 'Web', $currentRate, true);
+                            $priceGremioArs = $priceListModule->getPriceByListName($cost, $iva, 'Gremio', $currentRate, true);
+                            ?>
+
+                            <?php if (($_SESSION['role'] ?? '') === 'Admin' || ($_SESSION['role'] ?? '') === 'Vendedor'): ?>
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
-                                    <div style="font-size: 0.7rem; color: var(--accent-blue); opacity: 0.8; text-transform: uppercase;">Precio Gremio</div>
-                                    <div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">USD <?php echo number_format($p['price_gremio'] ?: $p['unit_price_usd'], 2); ?></div>
-                                    <div style="font-size: 0.7rem; color: var(--accent-violet); opacity: 0.8; text-transform: uppercase; margin-top: 4px;">Precio Web</div>
-                                    <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">USD <?php echo number_format($p['price_web'] ?: ($p['unit_price_usd'] * 1.2), 2); ?></div>
+                                    <div
+                                        style="font-size: 0.7rem; color: #10b981; opacity: 0.8; text-transform: uppercase; font-weight: bold;">
+                                        Gremio (+IVA)</div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">$
+                                        <?php echo number_format($priceGremioArs, 0, ',', '.'); ?></div>
+                                    <div
+                                        style="font-size: 0.7rem; color: #3b82f6; opacity: 0.8; text-transform: uppercase; font-weight: bold; margin-top: 4px;">
+                                        Web / Lista (+IVA)</div>
+                                    <div
+                                        style="font-size: 1.2rem; font-weight: 900; color: #3b82f6; text-shadow: 0 0 10px rgba(59, 130, 246, 0.2);">
+                                        $ <?php echo number_format($priceWebArs, 0, ',', '.'); ?></div>
                                 </div>
                             <?php else: ?>
-                                <div class="product-price">
-                                    USD <?php echo number_format($p['unit_price_usd'], 2); ?>
+                                <div class="product-price" style="display: flex; flex-direction: column;">
+                                    <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Precio
+                                        Lista</span>
+                                    $ <?php echo number_format($priceWebArs, 0, ',', '.'); ?>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -352,8 +380,3 @@ sort($brands);
 </body>
 
 </html>
-
-
-
-
-

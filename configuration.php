@@ -33,14 +33,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'import_v2' && $isAdmin && isset($_FILES['csv_file'])) {
+        $type = $_POST['import_type'] ?? 'products';
         $targetDir = __DIR__ . "/src/data/uploads/";
         if (!file_exists($targetDir))
             mkdir($targetDir, 0777, true);
         $targetFile = $targetDir . time() . "_" . basename($_FILES["csv_file"]["name"]);
 
         if (move_uploaded_file($_FILES["csv_file"]["tmp_name"], $targetFile)) {
-            $count = $catalog->importProductsFromCsv($targetFile);
-            $message = "¡Éxito! Se han procesado $count registros.";
+            $count = 0;
+            if ($type === 'products') {
+                $count = $catalog->importProductsFromCsv($targetFile);
+            } else if ($type === 'entities') {
+                // Import logic for Entities (Clients/Suppliers)
+                $handle = fopen($targetFile, "r");
+                $firstLine = fgets($handle);
+                $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
+                rewind($handle);
+                fgetcsv($handle, 1000, $delimiter); // Skip header
+
+                while (($data = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+                    if (count($data) < 2)
+                        continue;
+                    $name = trim($data[0]);
+                    $taxid = trim($data[1]);
+                    $contact = trim($data[2] ?? '');
+                    $cat_fiscal = trim($data[3] ?? '');
+                    $email = trim($data[4] ?? '');
+                    $phone = trim($data[5] ?? '');
+                    $profile = trim($data[6] ?? 'Mostrador');
+                    $is_supplier = (stripos($cat_fiscal, 'proveedor') !== false || stripos($name, 'prov-') !== false || stripos($profile, 'proveedor') !== false);
+
+                    $entityType = $is_supplier ? 'provider' : 'client';
+
+                    $sql = "INSERT INTO entities (type, name, tax_id, contact_person, tax_category, email, phone, client_profile, is_enabled) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+                            ON DUPLICATE KEY UPDATE 
+                            tax_id = VALUES(tax_id),
+                            contact_person = VALUES(contact_person),
+                            tax_category = VALUES(tax_category),
+                            email = VALUES(email),
+                            phone = VALUES(phone),
+                            client_profile = VALUES(client_profile)";
+                    $db->prepare($sql)->execute([$entityType, $name, $taxid, $contact, $cat_fiscal, $email, $phone, $profile]);
+                    $count++;
+                }
+                fclose($handle);
+            }
+            $message = "¡Éxito! Se han procesado $count registros de $type.";
             $status = "success";
         }
     }
@@ -226,14 +265,34 @@ $priceLists = $priceListModule->getAll();
                                 <form method="POST" enctype="multipart/form-data" class="space-y-6">
                                     <input type="hidden" name="action" value="import_v2">
 
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Tipo
+                                                de Información</label>
+                                            <select name="import_type" id="import_type"
+                                                class="w-full bg-slate-100 dark:bg-[#101822] border-none rounded-xl text-sm font-bold dark:text-white">
+                                                <option value="products">📦 PRODUCTOS (Artículos)</option>
+                                                <option value="entities">👥 ENTIDADES (Clientes/Prov)</option>
+                                            </select>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <label
+                                                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Formato
+                                                Sugerido</label>
+                                            <div class="bg-primary/10 border border-primary/20 p-2 rounded-xl text-[10px] text-primary"
+                                                id="format_help">
+                                                CSV: SKU; Desc; Marca; Costo; IVA; Cat; Subcat; Prov
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="border-2 border-dashed border-primary/30 rounded-2xl p-12 text-center hover:border-primary/50 transition-all cursor-pointer group bg-primary/5"
                                         onclick="document.getElementById('csv_file').click()">
                                         <span
                                             class="material-symbols-outlined text-5xl text-primary/50 group-hover:scale-110 transition-transform mb-4">file_upload</span>
                                         <p class="text-lg font-bold text-slate-700 dark:text-slate-300" id="file_status">Suelta
                                             tu archivo CSV aquí o haz clic para buscar</p>
-                                        <p class="text-xs text-slate-500 mt-2">Formato: SKU; DESCRIPCION; MARCA; COSTO; IVA;
-                                            CATEGORIA; SUBCATEGORIA; PROVEEDOR</p>
                                         <input type="file" name="csv_file" id="csv_file" class="hidden" accept=".csv"
                                             onchange="document.getElementById('file_status').innerText = this.files[0].name.toUpperCase()">
                                     </div>
@@ -243,6 +302,13 @@ $priceLists = $priceListModule->getAll();
                                         <span class="material-symbols-outlined">play_arrow</span> INICIAR PROCESAMIENTO
                                     </button>
                                 </form>
+                                <script>
+                                    document.getElementById('import_type').addEventListener('change', function () {
+                                        const help = document.getElementById('format_help');
+                                        if (this.value === 'products') help.innerText = 'CSV: SKU; Desc; Marca; Costo; IVA; Cat; Subcat; Prov';
+                                        else help.innerText = 'CSV: Nombre; CUIT; Contacto; CatFiscal; Email; Tel; Perfil';
+                                    });
+                                </script>
                             </div>
                             <?php break;
 
@@ -289,7 +355,8 @@ $priceLists = $priceListModule->getAll();
                                                     </td>
                                                     <td class="px-6 py-4">
                                                         <div class="font-bold text-slate-800 dark:text-white">
-                                                            <?php echo $e['name']; ?></div>
+                                                            <?php echo $e['name']; ?>
+                                                        </div>
                                                     </td>
                                                     <td class="px-6 py-4 text-xs"><?php echo $e['tax_id']; ?></td>
                                                     <td class="px-6 py-4">
@@ -343,13 +410,16 @@ $priceLists = $priceListModule->getAll();
                                                 <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                                                     <td class="px-6 py-4">
                                                         <div class="font-bold text-slate-800 dark:text-white">
-                                                            <?php echo $p['sku']; ?></div>
+                                                            <?php echo $p['sku']; ?>
+                                                        </div>
                                                         <div class="text-[9px] uppercase font-bold text-primary">
-                                                            <?php echo $p['brand']; ?></div>
+                                                            <?php echo $p['brand']; ?>
+                                                        </div>
                                                     </td>
                                                     <td class="px-6 py-4">
                                                         <div class="text-xs font-medium line-clamp-1">
-                                                            <?php echo $p['description']; ?></div>
+                                                            <?php echo $p['description']; ?>
+                                                        </div>
                                                     </td>
                                                     <td class="px-6 py-4">
                                                         <span class="font-bold text-emerald-500">USD
