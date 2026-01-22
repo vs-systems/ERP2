@@ -334,14 +334,36 @@ $today = date('d/m/y');
                                             <span id="total-neto-usd" class="dark:text-white text-slate-800">0.00</span>
                                         </div>
                                     </div>
+
+                                    <!-- IVA 10.5% -->
+                                    <div id="row-iva-105"
+                                        class="flex justify-between items-center text-sm font-medium hidden text-slate-500">
+                                        <span>I.V.A. (10.5%):</span>
+                                        <div class="flex items-center gap-1.5 font-mono">
+                                            <span class="text-slate-400">USD</span>
+                                            <span id="total-iva-105-usd">0.00</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- IVA 21% -->
+                                    <div id="row-iva-21"
+                                        class="flex justify-between items-center text-sm font-medium hidden text-slate-500">
+                                        <span>I.V.A. (21%):</span>
+                                        <div class="flex items-center gap-1.5 font-mono">
+                                            <span class="text-slate-400">USD</span>
+                                            <span id="total-iva-21-usd">0.00</span>
+                                        </div>
+                                    </div>
+
                                     <div class="flex justify-between items-center text-sm font-medium">
-                                        <span class="text-slate-500">I.V.A.:</span>
+                                        <span class="text-slate-500 font-bold">Total I.V.A.:</span>
                                         <div class="flex items-center gap-1.5 font-mono">
                                             <span class="text-slate-400">USD</span>
                                             <span id="total-iva-usd"
                                                 class="dark:text-white text-slate-800 font-bold">0.00</span>
                                         </div>
                                     </div>
+
                                     <div
                                         class="pt-4 mt-2 border-t border-slate-100 dark:border-[#233348] flex justify-between items-end">
                                         <div class="flex flex-col">
@@ -448,14 +470,12 @@ $today = date('d/m/y');
             document.getElementById('client-tax-display').value = client.tax_id;
             document.getElementById('client-address-display').value = client.address;
 
-            // Fix: Restore missing logic for retention and payment method
             document.getElementById('is-retention').checked = (client.is_retention_agent == 1);
             const pref = (client.preferred_payment_method || '').toLowerCase();
             document.getElementById('is-bank').checked = (pref.includes('transferencia') || pref.includes('banco') || pref.includes('deposito'));
 
             selectedClientProfile = client.client_profile || 'Mostrador';
 
-            // Visual feedback on profile
             const profileBadge = document.createElement('span');
             profileBadge.id = 'profile-badge';
             profileBadge.className = "text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded ml-2 uppercase";
@@ -514,18 +534,13 @@ $today = date('d/m/y');
             if (existing) {
                 existing.qty++;
             } else {
-                // Determine price based on profile
-                let unitPrice = parseFloat(prod.unit_price_usd); // Legacy fallback
-
-                // New logic: Priority to calculated prices by profile
+                let unitPrice = parseFloat(prod.unit_price_usd);
                 const profilePrices = prod.prices_by_name || prod.prices;
                 if (profilePrices && profilePrices[selectedClientProfile]) {
                     unitPrice = parseFloat(profilePrices[selectedClientProfile]);
                 }
 
-                // Logic Tax 10.5 for Hard Drives or Surveillance (approx)
                 let taxRate = parseFloat(prod.iva_rate || 21);
-                // Force 10.5 for demonstration if user request specific SKU or logic
                 if (prod.sku === 'HD1TB-P-I') taxRate = 10.5;
 
                 items.push({
@@ -596,7 +611,88 @@ $today = date('d/m/y');
             calculateTotals();
         }
 
-        // ... (updateQty, updatePrice, removeItem remain same)
+        function updateQty(index, val) {
+            items[index].qty = parseInt(val) || 1;
+            renderTable();
+        }
+
+        function updatePrice(index, val, unit) {
+            let enteredPrice = parseFloat(val) || 0;
+            const isRetention = document.getElementById('is-retention').checked;
+            const isBank = document.getElementById('is-bank').checked;
+
+            if (unit === 'ars') enteredPrice = enteredPrice / bnaRate;
+
+            let basePrice = enteredPrice;
+            if (isBank) basePrice /= 1.03;
+            if (isRetention) basePrice /= 1.07;
+
+            items[index].price = basePrice;
+            renderTable();
+        }
+
+        function removeItem(index) {
+            items.splice(index, 1);
+            renderTable();
+        }
+
+        function calculateTotals() {
+            let subtotal = 0;
+            let totalIva105 = 0;
+            let totalIva21 = 0;
+
+            const isRetention = document.getElementById('is-retention').checked;
+            const isBank = document.getElementById('is-bank').checked;
+            const withIva = document.getElementById('with-iva').checked;
+
+            items.forEach(item => {
+                let adjustedPrice = parseFloat(item.price) || 0;
+                if (isRetention) adjustedPrice *= 1.07;
+                if (isBank) adjustedPrice *= 1.03;
+
+                let lineTotal = adjustedPrice * (parseInt(item.qty) || 1);
+                subtotal += lineTotal;
+
+                if (withIva) {
+                    let rate = parseFloat(item.iva) || 21;
+                    let ivaAmount = lineTotal * (rate / 100);
+
+                    if (Math.abs(rate - 10.5) < 0.1) {
+                        totalIva105 += ivaAmount;
+                    } else {
+                        totalIva21 += ivaAmount;
+                    }
+                }
+            });
+
+            document.getElementById('total-neto-usd').innerText = subtotal.toFixed(2);
+
+            document.getElementById('total-iva-105-usd').innerText = totalIva105.toFixed(2);
+            document.getElementById('row-iva-105').classList.toggle('hidden', totalIva105 === 0);
+
+            document.getElementById('total-iva-21-usd').innerText = totalIva21.toFixed(2);
+            document.getElementById('row-iva-21').classList.toggle('hidden', totalIva21 === 0);
+
+            const totalIva = totalIva105 + totalIva21;
+            document.getElementById('total-iva-usd').innerText = totalIva.toFixed(2);
+
+            const totalGeneral = subtotal + totalIva;
+            document.getElementById('total-general-usd').innerText = totalGeneral.toFixed(2);
+            document.getElementById('total-general-ars').innerText = (totalGeneral * bnaRate).toLocaleString('es-AR', { minimumFractionDigits: 2 });
+        }
+
+        document.getElementById('is-retention').addEventListener('change', renderTable);
+        document.getElementById('is-bank').addEventListener('change', renderTable);
+        document.getElementById('with-iva').addEventListener('change', renderTable);
+        document.getElementById('bcra-reference').addEventListener('change', function () {
+            bnaRate = parseFloat(this.value) || 0;
+            renderTable();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target !== clientSearch && !clientResults.contains(e.target)) clientResults.style.display = 'none';
+            if (e.target !== productSearch && !productResults.contains(e.target)) productResults.style.display = 'none';
+        });
 
         function saveQuotation() {
             if (items.length === 0) {
@@ -629,7 +725,6 @@ $today = date('d/m/y');
                     if (res.success) {
                         logCrmInteraction(data.client_id, 'Email/PDF', `Generó presupuesto ${data.quote_number}`);
 
-                        // Copy Public Link
                         if (res.public_url) {
                             navigator.clipboard.writeText(res.public_url).then(() => {
                                 alert('Presupuesto Guardado.\nEnlace público copiado al portapapeles!');
@@ -637,7 +732,6 @@ $today = date('d/m/y');
                         }
 
                         window.open('imprimir_cotizacion.php?id=' + res.id, '_blank');
-                        // Delay reload to allow PDF open
                         setTimeout(() => location.reload(), 1000);
                     } else {
                         alert('Error: ' + res.error);
@@ -677,7 +771,6 @@ $today = date('d/m/y');
             });
         }
 
-        // Initialize table
         renderTable();
     </script>
 </body>
