@@ -116,7 +116,7 @@ $priceLists = $priceListModule->getAll();
         }
 
         .tab-active {
-            color: white;
+            color: #136dec;
             border-bottom: 2px solid #136dec;
         }
 

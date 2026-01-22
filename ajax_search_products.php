@@ -6,6 +6,7 @@
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/catalogo/Catalog.php';
+require_once __DIR__ . '/src/modules/config/PriceList.php';
 
 use Vsys\Modules\Catalogo\Catalog;
 
@@ -22,21 +23,24 @@ $catalog = new Catalog();
 $priceList = new \Vsys\Modules\Config\PriceList();
 $results = $catalog->searchProducts($query);
 
+// Pre-fetch all margins to avoid N+1 queries
+$allMargins = [];
+foreach ($priceList->getAll() as $list) {
+    $allMargins[$list['name']] = (float) $list['margin_percent'];
+}
+
 // Inject calculated prices for each profile
 foreach ($results as &$r) {
     $cost = (float) $r['unit_cost_usd'];
+
+    // Use pre-fetched margins for speed
     $r['prices'] = [
-        'Gremio' => round($priceList->calculatePrice($cost, 1), 2), // Assuming ID 1 is Gremio
-        'Web' => round($priceList->calculatePrice($cost, 2), 2),    // Assuming ID 2 is Web
-        'Mostrador' => round($priceList->calculatePrice($cost, 3), 2) // Assuming ID 3 is Mostrador
+        'Gremio' => round($cost * (1 + (($allMargins['Gremio'] ?? 25) / 100)), 2),
+        'Web' => round($cost * (1 + (($allMargins['Web'] ?? 40) / 100)), 2),
+        'Mostrador' => round($cost * (1 + (($allMargins['Mostrador'] ?? 55) / 100)), 2)
     ];
 
-    // Fallback if IDs are different: find by name
-    $r['prices_by_name'] = [
-        'Gremio' => round($priceList->getPriceByListName($cost, 0, 'Gremio', 1.0, false), 2),
-        'Web' => round($priceList->getPriceByListName($cost, 0, 'Web', 1.0, false), 2),
-        'Mostrador' => round($priceList->getPriceByListName($cost, 0, 'Mostrador', 1.0, false), 2)
-    ];
+    $r['prices_by_name'] = $r['prices']; // Consolidate
 }
 
 echo json_encode($results);
