@@ -364,6 +364,17 @@ $today = date('d/m/y');
                                         </div>
                                     </div>
 
+                                    <!-- DOLLAR RATE REFERENCE -->
+                                    <div
+                                        class="flex justify-between items-center text-[10px] font-bold text-slate-400 mt-2 pt-2 border-t border-dashed border-slate-200 dark:border-[#233348]">
+                                        <span>Cotización Ref. (BNA):</span>
+                                        <div class="flex items-center gap-1">
+                                            <span>$</span>
+                                            <span
+                                                id="summary-rate-display"><?php echo number_format($currentRate, 2); ?></span>
+                                        </div>
+                                    </div>
+
                                     <div
                                         class="pt-4 mt-2 border-t border-slate-100 dark:border-[#233348] flex justify-between items-end">
                                         <div class="flex flex-col">
@@ -420,6 +431,23 @@ $today = date('d/m/y');
 
     <!-- JS Logic Re-integrated -->
     <script>
+        // GLOBAL TEXT SANITIZATION (Uppercase + No Accents)
+        document.addEventListener('input', function (e) {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'text' || e.target.tagName === 'TEXTAREA') {
+                const original = e.target.value;
+                const upper = original.toUpperCase();
+                // Normalize NFD to separate accents, remove diacritics, then uppercase
+                const clean = upper.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+                if (original !== clean) {
+                    const start = e.target.selectionStart;
+                    const end = e.target.selectionEnd;
+                    e.target.value = clean;
+                    e.target.setSelectionRange(start, end);
+                }
+            }
+        });
+
         let bnaRate = <?php echo $currentRate; ?>;
         let items = [];
         let searchTimeout;
@@ -686,6 +714,7 @@ $today = date('d/m/y');
         document.getElementById('with-iva').addEventListener('change', renderTable);
         document.getElementById('bcra-reference').addEventListener('change', function () {
             bnaRate = parseFloat(this.value) || 0;
+            document.getElementById('summary-rate-display').innerText = bnaRate.toFixed(2);
             renderTable();
         });
 
