@@ -10,8 +10,15 @@ require_once __DIR__ . '/src/modules/analizador/PriceAnalyzer.php';
 use Vsys\Modules\Analizador\PriceAnalyzer;
 
 $analyzer = new PriceAnalyzer();
-$products = $analyzer->getProductsForAnalysis(20);
-$stats = $analyzer->getAnalyticsSummary();
+$products = [];
+$stats = ['categories' => [], 'brands' => []];
+
+try {
+    $products = $analyzer->getProductsForAnalysis(20);
+    $stats = $analyzer->getAnalyticsSummary();
+} catch (Exception $e) {
+    error_log("Analyzer Error: " . $e->getMessage());
+}
 
 // Prepare chart data
 $catLabels = json_encode(array_column($stats['categories'], 'label'));
@@ -173,13 +180,16 @@ $brandData = json_encode(array_column($stats['brands'], 'value'));
                                         <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                                             <td class="px-6 py-5">
                                                 <div class="font-bold text-sm dark:text-white text-slate-800">
-                                                    <?php echo $p['sku']; ?></div>
+                                                    <?php echo $p['sku']; ?>
+                                                </div>
                                                 <div class="text-[11px] text-slate-500 font-medium">
-                                                    <?php echo $p['brand']; ?></div>
+                                                    <?php echo $p['brand']; ?>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <div class="font-bold text-sm dark:text-white text-slate-800">$
-                                                    <?php echo number_format($mainCost, 2); ?></div>
+                                                    <?php echo number_format($mainCost, 2); ?>
+                                                </div>
                                             </td>
                                             <td class="px-6 py-5">
                                                 <?php if ($suppliersCount > 0): ?>

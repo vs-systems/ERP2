@@ -238,18 +238,38 @@ $stages = [
 
                                                 <div
                                                     class="flex justify-between items-center mt-2 pt-2 border-t border-slate-50 dark:border-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                                                    <!-- Delete -->
                                                     <button
-                                                        onclick="event.stopPropagation(); moveLead(<?php echo $lead['id']; ?>, 'prev')"
-                                                        class="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-primary transition-all">
-                                                        <span class="material-symbols-outlined text-lg">chevron_left</span>
+                                                        onclick="event.stopPropagation(); deleteLead(<?php echo $lead['id']; ?>, '<?php echo addslashes($lead['name']); ?>')"
+                                                        class="p-1 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition-all"
+                                                        title="Eliminar">
+                                                        <span class="material-symbols-outlined text-lg">delete</span>
                                                     </button>
-                                                    <span
-                                                        class="text-[9px] font-bold uppercase text-slate-400 tracking-tighter">Mover</span>
-                                                    <button
-                                                        onclick="event.stopPropagation(); moveLead(<?php echo $lead['id']; ?>, 'next')"
-                                                        class="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-primary transition-all">
-                                                        <span class="material-symbols-outlined text-lg">chevron_right</span>
-                                                    </button>
+
+                                                    <div class="flex items-center gap-1">
+                                                        <button
+                                                            onclick="event.stopPropagation(); moveLead(<?php echo $lead['id']; ?>, 'prev')"
+                                                            class="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-primary transition-all">
+                                                            <span class="material-symbols-outlined text-lg">chevron_left</span>
+                                                        </button>
+
+                                                        <!-- Link to Quote if status is Presupuestado/Ganado -->
+                                                        <?php if (in_array($lead['status'], ['Presupuestado', 'Ganado'])): ?>
+                                                            <a href="presupuestos.php?search=<?php echo urlencode($lead['name']); ?>"
+                                                                onclick="event.stopPropagation()"
+                                                                class="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-amber-500 transition-all"
+                                                                title="Ver Presupuestos">
+                                                                <span class="material-symbols-outlined text-lg">request_quote</span>
+                                                            </a>
+                                                        <?php endif; ?>
+
+                                                        <button
+                                                            onclick="event.stopPropagation(); moveLead(<?php echo $lead['id']; ?>, 'next')"
+                                                            class="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg text-slate-400 hover:text-primary transition-all">
+                                                            <span class="material-symbols-outlined text-lg">chevron_right</span>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         <?php endforeach; ?>
@@ -292,6 +312,24 @@ $stages = [
             } catch (e) {
                 console.error(e);
                 alert('Error al mover lead');
+            }
+        }
+
+        async function deleteLead(id, name) {
+            if (!confirm(`¿Estás seguro de eliminar el lead "${name}"? Esta acción no se puede deshacer.`)) return;
+
+            const formData = new FormData();
+            formData.append('action', 'delete_lead');
+            formData.append('id', id);
+
+            try {
+                const resp = await fetch('ajax_crm_actions.php', { method: 'POST', body: formData });
+                const res = await resp.json();
+                if (res.success) location.reload();
+                else alert(res.error || 'Error al eliminar');
+            } catch (e) {
+                console.error(e);
+                alert('Error de conexión');
             }
         }
     </script>

@@ -150,11 +150,17 @@ class Purchases
      */
     public function generatePurchaseNumber()
     {
-        $prefix = "VS-COM-" . date('Y-m-d') . "-";
-        $sql = "SELECT purchase_number FROM purchases WHERE purchase_number LIKE '$prefix%' ORDER BY id DESC LIMIT 1";
-        $last = $this->db->query($sql)->fetchColumn();
+        // Format: VS-YYYY-MM-XXXX (Reset monthly)
+        $prefix = "VS-" . date('Y-m') . "-";
+
+        // Find last number for this month
+        $sql = "SELECT purchase_number FROM purchases WHERE purchase_number LIKE :prefix ORDER BY id DESC LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':prefix' => $prefix . '%']);
+        $last = $stmt->fetchColumn();
 
         if ($last) {
+            // Split by '-' and get the last part (sequence)
             $parts = explode('-', $last);
             $seq = intval(end($parts)) + 1;
         } else {

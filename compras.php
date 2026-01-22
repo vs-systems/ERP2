@@ -8,9 +8,10 @@ use Vsys\Modules\Purchases\Purchases;
 
 $purchasesModule = new Purchases();
 $purchaseNumber = $purchasesModule->generatePurchaseNumber();
-$exchangeRate = 1480; // Tasa por defecto
-
+// Get current exchange rate from DB
 $db = Vsys\Lib\Database::getInstance();
+$exchangeRate = $db->query("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1")->fetchColumn() ?: 1455.00;
+
 // Listado de proveedores para el selector opcional
 $suppliersList = $db->query("SELECT id, name, fantasy_name FROM entities WHERE type IN ('supplier', 'provider') ORDER BY name ASC")->fetchAll();
 ?>
@@ -328,7 +329,8 @@ $suppliersList = $db->query("SELECT id, name, fantasy_name FROM entities WHERE t
                                                 </td>
                                                 <td class="px-6 py-5">
                                                     <div class="text-xs font-semibold dark:text-slate-200 text-slate-700">
-                                                        <?php echo $p['supplier_name']; ?></div>
+                                                        <?php echo $p['supplier_name']; ?>
+                                                    </div>
                                                 </td>
                                                 <td class="px-6 py-5">
                                                     <div class="text-xs text-slate-500"><?php echo $p['purchase_date']; ?>
@@ -502,7 +504,7 @@ $suppliersList = $db->query("SELECT id, name, fantasy_name FROM entities WHERE t
                     qty: 1,
                     unit_price_usd: costUsd,
                     unit_price_ars: costUsd * currentExchangeRate,
-                    iva_rate: 21
+                    iva_rate: parseFloat(p.iva_rate) || 21
                 });
             }
             productResults.style.display = 'none';

@@ -47,6 +47,11 @@ try {
             echo json_encode(['success' => $success]);
             break;
 
+        case 'delete_lead':
+            $success = $crm->deleteLead($data['id']);
+            echo json_encode(['success' => $success]);
+            break;
+
         default:
             echo json_encode(['success' => false, 'error' => 'Unknown action: ' . $data['action']]);
     }

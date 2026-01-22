@@ -19,6 +19,22 @@ class CRM
     }
 
     /**
+     * Delete a lead by ID
+     */
+    public function deleteLead($id)
+    {
+        try {
+            // Also delete interactions? Or keep them? Usually cascade or soft delete.
+            // For now hard delete as requested.
+            $this->db->prepare("DELETE FROM crm_interactions WHERE entity_type = 'lead' AND entity_id = ?")->execute([$id]);
+            $stmt = $this->db->prepare("DELETE FROM crm_leads WHERE id = ?");
+            return $stmt->execute([$id]);
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
      * Get Leads count by status
      */
     /**
