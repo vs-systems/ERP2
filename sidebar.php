@@ -37,6 +37,7 @@ $menu = [
     ['id' => 'logistica', 'href' => 'logistica.php', 'icon' => 'local_shipping', 'label' => 'Logística'],
     ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'badge', 'label' => 'Clientes'],
     ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores'],
+    ['id' => 'informes', 'href' => 'informes.php', 'icon' => 'insert_chart', 'label' => 'Informes'],
     ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'settings', 'label' => 'Configuración', 'role' => 'Admin'],
     ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios', 'role' => 'Admin'],
 ];

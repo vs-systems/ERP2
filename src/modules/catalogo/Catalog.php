@@ -46,24 +46,21 @@ class Catalog
 
     public function addProduct($data)
     {
-        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, supplier_id, unit_cost_usd, unit_price_usd, price_gremio, price_web, iva_rate, brand, has_serial_number, stock_current) 
-                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :supplier_id, :unit_cost_usd, :unit_price_usd, :price_gremio, :price_web, :iva_rate, :brand, :has_serial_number, :stock_current)
+        // 1. Insert or Update main product
+        $sql = "INSERT INTO products (sku, barcode, image_url, provider_code, description, category, subcategory, unit_cost_usd, unit_price_usd, iva_rate, brand, has_serial_number, stock_current) 
+                VALUES (:sku, :barcode, :image_url, :provider_code, :description, :category, :subcategory, :unit_cost_usd, :unit_price_usd, :iva_rate, :brand, :has_serial_number, :stock_current)
                 ON DUPLICATE KEY UPDATE 
                 barcode = VALUES(barcode),
-                image_url = VALUES(image_url),
+                image_url = IF(VALUES(image_url) IS NOT NULL AND VALUES(image_url) != '', VALUES(image_url), image_url),
                 description = VALUES(description),
                 category = VALUES(category),
                 subcategory = VALUES(subcategory),
-                supplier_id = VALUES(supplier_id),
                 brand = VALUES(brand),
-                unit_cost_usd = VALUES(unit_cost_usd),
-                unit_price_usd = VALUES(unit_price_usd),
-                price_gremio = VALUES(price_gremio),
-                price_web = VALUES(price_web),
                 iva_rate = VALUES(iva_rate),
                 has_serial_number = VALUES(has_serial_number)";
+
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $res = $stmt->execute([
             ':sku' => $data['sku'],
             ':barcode' => $data['barcode'] ?? null,
             ':image_url' => $data['image_url'] ?? null,
@@ -71,16 +68,42 @@ class Catalog
             ':description' => $data['description'],
             ':category' => $data['category'] ?? '',
             ':subcategory' => $data['subcategory'] ?? '',
-            ':supplier_id' => $data['supplier_id'] ?? null,
             ':unit_cost_usd' => $data['unit_cost_usd'],
-            ':unit_price_usd' => $data['unit_price_usd'],
-            ':price_gremio' => $data['price_gremio'] ?? null,
-            ':price_web' => $data['price_web'] ?? null,
-            ':iva_rate' => $data['iva_rate'],
+            ':unit_price_usd' => $data['unit_price_usd'] ?? ($data['unit_cost_usd'] * 1.4),
+            ':iva_rate' => $data['iva_rate'] ?? 21.00,
             ':brand' => $data['brand'] ?? '',
             ':has_serial_number' => $data['has_serial_number'] ?? 0,
             ':stock_current' => $data['stock_current'] ?? 0
         ]);
+
+        if (!$res)
+            return false;
+
+        // 2. Get the product ID
+        $stmtId = $this->db->prepare("SELECT id FROM products WHERE sku = ?");
+        $stmtId->execute([$data['sku']]);
+        $productId = $stmtId->fetchColumn();
+
+        // 3. Insert or Update supplier price
+        if ($productId && isset($data['supplier_id']) && $data['supplier_id']) {
+            $sqlSup = "INSERT INTO supplier_prices (product_id, entity_id, cost_usd) 
+                       VALUES (:p_id, :e_id, :cost)
+                       ON DUPLICATE KEY UPDATE cost_usd = VALUES(cost_usd)";
+            $stmtSup = $this->db->prepare($sqlSup);
+            $stmtSup->execute([
+                ':p_id' => $productId,
+                ':e_id' => $data['supplier_id'],
+                ':cost' => $data['unit_cost_usd']
+            ]);
+
+            // 4. Update the main product's unit_cost_usd to be the minimum of all suppliers
+            $sqlMin = "UPDATE products p 
+                       SET unit_cost_usd = (SELECT MIN(cost_usd) FROM supplier_prices WHERE product_id = p.id)
+                       WHERE p.id = ?";
+            $this->db->prepare($sqlMin)->execute([$productId]);
+        }
+
+        return $res;
     }
 
     public function getCategories()
@@ -90,44 +113,37 @@ class Catalog
         return $stmt->fetchAll(\PDO::FETCH_COLUMN);
     }
 
-    public function importProductsFromCsv($filePath, $providerId = null)
+    public function importProductsFromCsv($filePath, $defaultProviderId = null)
     {
         $handle = fopen($filePath, "r");
         if (!$handle)
             return false;
 
-        fgetcsv($handle, 1000, ";");
+        // Try to detect delimiter (semicolon or comma)
+        $firstLine = fgets($handle);
+        $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
+        rewind($handle);
+
+        // Skip header
+        fgetcsv($handle, 1000, $delimiter);
 
         $imported = 0;
-        $categories = [];
         $suppliers = [];
 
-        while (($data = fgetcsv($handle, 1000, ";")) !== FALSE) {
-            if (count($data) < 8)
-                continue;
+        while (($data = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+            if (count($data) < 4)
+                continue; // Basic check (SKU, Desc, Brand, Cost)
 
             $sku = trim($data[0]);
             $description = trim($data[1]);
             $brand = trim($data[2]);
             $cost = floatval(str_replace(',', '.', $data[3]));
-            $iva = floatval(str_replace(',', '.', $data[4]));
-            $catName = trim($data[5]);
-            $subcatName = trim($data[6]);
-            $providerName = trim($data[7]);
+            $iva = isset($data[4]) ? floatval(str_replace(',', '.', $data[4])) : 21.00;
+            $catName = $data[5] ?? '';
+            $subcatName = $data[6] ?? '';
+            $providerName = trim($data[7] ?? '');
 
-            if (!isset($categories[$catName])) {
-                $stmt = $this->db->prepare("SELECT id FROM categories WHERE name = ?");
-                $stmt->execute([$catName]);
-                $id = $stmt->fetchColumn();
-                if (!$id && $catName) {
-                    $this->db->prepare("INSERT INTO categories (name) VALUES (?)")->execute([$catName]);
-                    $id = $this->db->lastInsertId();
-                }
-                $categories[$catName] = $id;
-            }
-            $catId = $categories[$catName] ?? null;
-
-            $supplierId = null;
+            $supplierId = $defaultProviderId;
             if ($providerName) {
                 if (!isset($suppliers[$providerName])) {
                     $stmt = $this->db->prepare("SELECT id FROM entities WHERE name = ? AND (type = 'provider' OR type = 'supplier')");
@@ -144,21 +160,13 @@ class Catalog
 
             $this->addProduct([
                 'sku' => $sku,
-                'barcode' => null,
-                'provider_code' => null,
                 'description' => $description,
-                'category' => $catName,
-                'category_id' => $catId,
-                'subcategory' => $subcatName,
-                'unit_cost_usd' => $cost,
-                'unit_price_usd' => $cost * 1.4,
-                'price_gremio' => $cost * 1.4,
-                'price_web' => $cost * 1.6,
-                'iva_rate' => $iva,
                 'brand' => $brand,
-                'supplier_id' => $supplierId,
-                'has_serial_number' => 0,
-                'stock_current' => 0
+                'unit_cost_usd' => $cost,
+                'iva_rate' => $iva,
+                'category' => $catName,
+                'subcategory' => $subcatName,
+                'supplier_id' => $supplierId
             ]);
 
             $imported++;

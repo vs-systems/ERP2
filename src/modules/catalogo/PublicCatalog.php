@@ -36,15 +36,11 @@ class PublicCatalog
     {
         $rate = $this->getExchangeRate();
 
-        // Get Web Margin
-        $lists = $this->priceListModule->getAll();
-        $webMargin = 40; // Default
-        foreach ($lists as $l) {
-            if ($l['name'] === 'Web') {
-                $webMargin = (float) $l['margin_percent'];
-                break;
-            }
-        }
+        // Get Mostrador Margin
+        $stmt = $this->db->prepare("SELECT margin_percent FROM price_lists WHERE name = 'Mostrador'");
+        $stmt->execute();
+        $margin = $stmt->fetchColumn();
+        $margin = ($margin !== false) ? (float) $margin : 55.0; // Fallback Mostrador
 
         // Get Products
         $stmt = $this->db->prepare("SELECT * FROM products WHERE stock_current > 0 OR stock_current IS NULL ORDER BY brand, description"); // Maybe filter enabled?
@@ -59,11 +55,9 @@ class PublicCatalog
             $cost = (float) $p['unit_cost_usd'];
             $iva = (float) $p['iva_rate'];
 
-            // Calc Web Price USD: Cost + Margin
-            $priceUsd = $cost * (1 + ($webMargin / 100));
-
-            // Add IVA
-            $priceUsdWithIva = $priceUsd * (1 + ($iva / 100));
+            // Calc Price USD: Cost + Margin + IVA
+            $priceUsd = $cost * (1 + ($margin / 100)); // Base + Markup
+            $priceUsdWithIva = $priceUsd * (1 + ($iva / 100)); // + IVA
 
             // Convert to ARS
             $priceArs = $priceUsdWithIva * $rate;
@@ -71,6 +65,7 @@ class PublicCatalog
             // Only add if price is valid
             if ($priceArs > 0) {
                 // Rounding
+                $p['price_final_usd'] = round($priceUsdWithIva, 2);
                 $p['price_final_ars'] = round($priceArs, 0);
                 $p['price_final_formatted'] = number_format($p['price_final_ars'], 0, ',', '.');
 

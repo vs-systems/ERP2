@@ -34,7 +34,10 @@ $editData = [
     'is_retention_agent' => 0,
     'seller_id' => null,
     'client_profile' => 'Otro',
-    'is_verified' => 0
+    'is_verified' => 0,
+    'city' => '',
+    'lat' => '',
+    'lng' => ''
 ];
 
 if ($id) {
@@ -67,7 +70,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'payment_method' => $_POST['payment_method'],
         'seller_id' => !empty($_POST['seller_id']) ? $_POST['seller_id'] : null,
         'client_profile' => $_POST['client_profile'] ?? 'Otro',
-        'is_verified' => isset($_POST['is_verified']) ? 1 : 0
+        'is_verified' => isset($_POST['is_verified']) ? 1 : 0,
+        'city' => $_POST['city'] ?? null,
+        'lat' => $_POST['lat'] ?? null,
+        'lng' => $_POST['lng'] ?? null
     ];
 
     if ($clientModule->saveClient($data)) {
@@ -225,6 +231,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="form-group"><label>Lugar Entrega</label><textarea name="delivery_address"
                                 rows="2"><?php echo $editData['delivery_address']; ?></textarea></div>
                     </div>
+                    <div class="form-grid" style="margin-top:20px;">
+                        <div class="form-group">
+                            <label>Ciudad / Localidad</label>
+                            <div style="display: flex; gap: 5px;">
+                                <input type="text" id="geo_city" name="city" value="<?php echo $editData['city']; ?>" style="flex: 1;">
+                                <button type="button" onclick="geocodeCity()" class="btn-primary" style="padding: 5px 10px; background: #334155; font-size: 0.7rem;" title="Buscar coordenadas automáticamente">
+                                    <i class="fa fa-location-dot"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Latitud (Geolocalización)</label><input type="text" id="geo_lat" name="lat" value="<?php echo $editData['lat']; ?>" placeholder="-34.6037"></div>
+                        <div class="form-group"><label>Longitud (Geolocalización)</label><input type="text" id="geo_lng" name="lng" value="<?php echo $editData['lng']; ?>" placeholder="-58.3816"></div>
+                    </div>
                     <div style="margin-top:20px; display:flex; gap:20px;">
                         <label><input type="checkbox" name="is_enabled" <?php echo $editData['is_enabled'] ? 'checked' : ''; ?>> Habilitado</label>
                         <?php if ($type == 'client'): ?><label><input type="checkbox" name="is_retention_agent" <?php echo $editData['is_retention_agent'] ? 'checked' : ''; ?>> Agente Retenció³n</label>
@@ -240,8 +259,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </main>
     </div>
-</body>
 
+    <script>
+        async function geocodeCity() {
+            const city = document.getElementById('geo_city').value;
+            if (!city) {
+                alert('Por favor, ingrese una ciudad.');
+                return;
+            }
+
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                // We add ", Argentina" to narrow down search results
+                const query = encodeURIComponent(city + ', Argentina');
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    document.getElementById('geo_lat').value = parseFloat(data[0].lat).toFixed(6);
+                    document.getElementById('geo_lng').value = parseFloat(data[0].lon).toFixed(6);
+                    
+                    // Add visual feedback
+                    document.getElementById('geo_lat').style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                    document.getElementById('geo_lng').style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                    setTimeout(() => {
+                        document.getElementById('geo_lat').style.backgroundColor = '';
+                        document.getElementById('geo_lng').style.backgroundColor = '';
+                    }, 2000);
+                } else {
+                    alert('No se encontraron coordenadas para esta ciudad. Por favor, verifique el nombre o ingréselas manualmente.');
+                }
+            } catch (error) {
+                console.error('Error geocoding:', error);
+                alert('Error al conectar con el servicio de geolocalización.');
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // Auto-geocode on blur if coords are empty
+        document.getElementById('geo_city').addEventListener('blur', function() {
+            const lat = document.getElementById('geo_lat').value;
+            const lng = document.getElementById('geo_lng').value;
+            if (this.value && (!lat || !lng)) {
+                geocodeCity();
+            }
+        });
+    </script>
+</body>
 </html>
 
 

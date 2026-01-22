@@ -31,6 +31,7 @@ foreach ($results as $r) {
         'address' => $r['address'] ?? '',
         'is_retention_agent' => $r['is_retention_agent'] ?? 0,
         'preferred_payment_method' => $r['preferred_payment_method'] ?? '',
+        'client_profile' => $r['client_profile'] ?? 'Mostrador',
         'origin' => 'entity'
     ];
 }

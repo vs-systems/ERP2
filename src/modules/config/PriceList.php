@@ -50,6 +50,27 @@ class PriceList
 
         return $cost * (1 + ($margin / 100));
     }
+
+    /**
+     * Get price by list name (Gremio, Web, Mostrador)
+     */
+    public function getPriceByListName($costUsd, $ivaPercent, $listName, $exchangeRate = 1.0, $includeIva = true)
+    {
+        $stmt = $this->db->prepare("SELECT margin_percent FROM price_lists WHERE name = ?");
+        $stmt->execute([$listName]);
+        $margin = $stmt->fetchColumn();
+
+        if ($margin === false)
+            $margin = 0;
+
+        $priceUsd = $costUsd * (1 + ($margin / 100));
+
+        if ($includeIva) {
+            $priceUsd *= (1 + ($ivaPercent / 100));
+        }
+
+        return $priceUsd * $exchangeRate;
+    }
 }
 
 

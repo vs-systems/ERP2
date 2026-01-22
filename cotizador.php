@@ -401,6 +401,7 @@ $today = date('d/m/y');
         let bnaRate = <?php echo $currentRate; ?>;
         let items = [];
         let searchTimeout;
+        let selectedClientProfile = 'Mostrador'; // Default
 
         const clientSearch = document.getElementById('client-search');
         const clientResults = document.getElementById('client-results');
@@ -446,9 +447,25 @@ $today = date('d/m/y');
             document.getElementById('client-name-display').value = client.name;
             document.getElementById('client-tax-display').value = client.tax_id;
             document.getElementById('client-address-display').value = client.address;
+
+            // Fix: Restore missing logic for retention and payment method
             document.getElementById('is-retention').checked = (client.is_retention_agent == 1);
             const pref = (client.preferred_payment_method || '').toLowerCase();
             document.getElementById('is-bank').checked = (pref.includes('transferencia') || pref.includes('banco') || pref.includes('deposito'));
+
+            selectedClientProfile = client.client_profile || 'Mostrador';
+
+            // Visual feedback on profile
+            const profileBadge = document.createElement('span');
+            profileBadge.id = 'profile-badge';
+            profileBadge.className = "text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded ml-2 uppercase";
+            profileBadge.innerText = selectedClientProfile;
+
+            const clientNameDiv = document.getElementById('client-name-display').parentElement;
+            const existingBadge = document.getElementById('profile-badge');
+            if (existingBadge) existingBadge.remove();
+            clientNameDiv.appendChild(profileBadge);
+
             clientResults.style.display = 'none';
             renderTable();
         }
@@ -491,15 +508,20 @@ $today = date('d/m/y');
         });
 
         function addItem(prod) {
-            const existing = items.find(i => i.sku === prod.sku);
             if (existing) {
                 existing.qty++;
             } else {
+                // Determine price based on profile
+                let unitPrice = parseFloat(prod.unit_price_usd); // Legacy fallback
+                if (prod.prices_by_name && prod.prices_by_name[selectedClientProfile]) {
+                    unitPrice = prod.prices_by_name[selectedClientProfile];
+                }
+
                 items.push({
                     id: prod.id,
                     sku: prod.sku,
                     desc: prod.description,
-                    price: parseFloat(prod.unit_price_usd),
+                    price: unitPrice,
                     iva: parseFloat(prod.iva_rate),
                     qty: 1
                 });
