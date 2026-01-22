@@ -132,10 +132,11 @@ if (!$quote)
 
     <table class="header-table">
         <tr>
-            <td><img src="logo_display.php?v=2" class="logo" style="width: 250px; height: auto;"></td>
+            <!-- Direct logo reference to ensure it prints -->
+            <td><img src="logo.png" class="logo" style="width: 250px; height: auto;"></td>
             <td class="quote-info">
                 <h1>PRESUPUESTO</h1>
-                <p><strong>NÂº:</strong>
+                <p><strong>Nº:</strong>
                     <?php echo $quote['quote_number']; ?>
                 </p>
                 <p><strong>Fecha:</strong>
@@ -151,17 +152,14 @@ if (!$quote)
             <td class="entity-box">
                 <strong>De:</strong><br>
                 Vecino Seguro<br>
-                Sarmiento 1113 4to Piso, CABA<br>
-                CUIT: 30-71644781-4<br>
-                Email: javier@vecinoseguro.com.ar
+                CUIT: 20-25562186-7<br>
+                Email: vecinoseguro0@gmail.com
             </td>
             <td width="10%"></td>
             <td class="entity-box">
                 <strong>Para:</strong><br>
                 <?php echo $quote['client_name']; ?><br>
-                <?php echo $quote['tax_id'] ? "CUIT: " . $quote['tax_id'] . "<br>" : ""; ?>
-                <?php echo $quote['address'] ? $quote['address'] . "<br>" : ""; ?>
-                <?php echo $quote['phone']; ?>
+                <?php echo $quote['tax_id'] ? "CUIT: " . $quote['tax_id'] : ""; ?>
             </td>
         </tr>
     </table>
@@ -171,7 +169,7 @@ if (!$quote)
             <tr>
                 <th>Cant.</th>
                 <th>SKU</th>
-                <th>Descripció³n</th>
+                <th>Descripción</th>
                 <th style="text-align: right;">Unit. USD</th>
                 <th style="text-align: right;">Subtotal USD</th>
             </tr>
@@ -222,7 +220,7 @@ if (!$quote)
         </tr>
         <tr>
             <td colspan="2" style="font-size: 11px; color: #777; padding-top: 10px;">
-                Cotizació³n BNA: $
+                Cotización BNA: $
                 <?php echo number_format($quote['exchange_rate_usd'], 2); ?>
             </td>
         </tr>
@@ -236,12 +234,12 @@ if (!$quote)
 
     <div class="footer">
         <p><strong>OBSERVACIONES:</strong></p>
-        <p>Los precios en pesos estó¡n sujetos a cambios sin previo aviso segóºn la cotizació³n del dó³lar BNA Billete Venta
-            del dó­a de pago.</p>
+        <p>Los precios en pesos están sujetos a cambios sin previo aviso según la cotización del dólar BNA Billete Venta
+            del día de pago.</p>
         <p>Forma de pago:
             <?php echo $quote['payment_method'] == 'bank' ? 'Transferencia Bancaria' : 'Contado / Efectivo'; ?>
         </p>
-        <p style="text-align: center; margin-top: 30px;">Â¡Gracias por confiar en Vecino Seguro!</p>
+        <p style="text-align: center; margin-top: 30px;">Gracias por confiar en VS Sistemas</p>
     </div>
 
     <script>
@@ -253,7 +251,3 @@ if (!$quote)
 </body>
 
 </html>
-
-
-
-
