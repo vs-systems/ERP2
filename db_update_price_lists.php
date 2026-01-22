@@ -20,7 +20,7 @@ try {
     ];
 
     $stmt = $db->prepare("INSERT INTO price_lists (name, margin_percent) VALUES (:name, :margin) 
-                          ON DUPLICATE KEY UPDATE margin_percent = :margin");
+                          ON DUPLICATE KEY UPDATE margin_percent = VALUES(margin_percent)");
 
     foreach ($lists as $l) {
         $stmt->execute([':name' => $l['name'], ':margin' => $l['margin']]);
