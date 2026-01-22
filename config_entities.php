@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
 
     if ($clientModule->saveClient($data)) {
-        header("Location: " . ($type == 'client' ? 'clientes.php' : 'proveedores.php') . "?success=1");
+        header("Location: configuration.php?tab=entidades&success=1");
         exit;
     } else {
         $message = "Error al guardar.";
@@ -323,7 +323,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             foreach ($sellers as $s):
                                                 ?>
                                                 <option value="<?php echo $s['id']; ?>" <?php echo $editData['seller_id'] == $s['id'] ? 'selected' : ''; ?>>
-                                                    <?php echo $s['username']; ?></option>
+                                                    <?php echo $s['username']; ?>
+                                                </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
