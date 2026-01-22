@@ -104,7 +104,7 @@ require_once __DIR__ . '/src/config/config.php';
                     ['name' => 'Proyectos', 'status' => 'Próximamente', 'icon' => 'account_tree'],
                     ['name' => 'Análisis Pliegos', 'status' => 'Próximamente', 'icon' => 'description'],
                     ['name' => 'Competencia', 'status' => 'Próximamente', 'icon' => 'monitoring'],
-                    ['name' => 'Informes Glob.', 'status' => 'Próximamente', 'icon' => 'public'],
+                    ['name' => 'Informes Glob.', 'status' => 'Actual', 'icon' => 'public'],
                 ];
 
                 foreach ($modules as $m):

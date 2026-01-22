@@ -497,7 +497,9 @@ $today = date('d/m/y');
                                     </div>
                                     <div class="text-[10px] text-slate-500 mt-0.5">${prod.description} (${prod.brand})</div>
                                 `;
-                                div.onclick = () => addItem(prod);
+                                div.onclick = ((p) => {
+                                    return () => addItem(p);
+                                })(prod);
                                 productResults.appendChild(div);
                             });
                         } else {
@@ -508,13 +510,17 @@ $today = date('d/m/y');
         });
 
         function addItem(prod) {
+            const existing = items.find(i => i.id === prod.id);
             if (existing) {
                 existing.qty++;
             } else {
                 // Determine price based on profile
                 let unitPrice = parseFloat(prod.unit_price_usd); // Legacy fallback
-                if (prod.prices_by_name && prod.prices_by_name[selectedClientProfile]) {
-                    unitPrice = prod.prices_by_name[selectedClientProfile];
+
+                // New logic: Priority to calculated prices by profile
+                const profilePrices = prod.prices_by_name || prod.prices;
+                if (profilePrices && profilePrices[selectedClientProfile]) {
+                    unitPrice = parseFloat(profilePrices[selectedClientProfile]);
                 }
 
                 items.push({
@@ -522,7 +528,7 @@ $today = date('d/m/y');
                     sku: prod.sku,
                     desc: prod.description,
                     price: unitPrice,
-                    iva: parseFloat(prod.iva_rate),
+                    iva: parseFloat(prod.iva_rate || 21),
                     qty: 1
                 });
             }
