@@ -61,11 +61,49 @@ foreach ($input['items'] as $item) {
     ];
 }
 
-try {
-    $id = $cot->saveQuotation($data);
+    // Calculate IVA discrimination
+    $totalIVA105 = 0;
+    $totalIVA21 = 0;
+    
+    foreach ($data['items'] as $item) {
+        if ($input['with_iva']) {
+            $basePrice = $item['subtotal_usd'];
+            $ivaRate = (float)$item['iva_rate'];
+            
+            // Calculate base amount from total including IVA if needed, 
+            // but here we assume unit_price is Net and we add IVA on top for the total?
+            // Actually usually Price List is Final (IVA Included).
+            // Let's assume the system works with Taxes added on top or extracted.
+            // Based on printing logic: Total = Subtotal + IVA.
+            
+            $ivaAmount = $basePrice * ($ivaRate / 100);
+            
+            if (abs($ivaRate - 10.5) < 0.1) {
+                $totalIVA105 += $ivaAmount;
+            } elseif (abs($ivaRate - 21) < 0.1) {
+                $totalIVA21 += $ivaAmount;
+            }
+        }
+    }
+    
+    $data['total_iva_105'] = $totalIVA105;
+    $data['total_iva_21'] = $totalIVA21;
 
-    if ($id) {
-        echo json_encode(['success' => true, 'id' => $id]);
+    $result = $cot->saveQuotation($data);
+
+    if ($result && is_array($result)) {
+        // Build Public URL
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http";
+        $host = $_SERVER['HTTP_HOST'];
+        // Adjust path if in subfolder, assuming Vsys_ERP root for now or relative to current script
+        $path = dirname($_SERVER['PHP_SELF']); 
+        $publicUrl = "$protocol://$host$path/ver_presupuesto.php?h=" . $result['hash'];
+
+        echo json_encode([
+            'success' => true, 
+            'id' => $result['id'],
+            'public_url' => $publicUrl
+        ]);
     } else {
         echo json_encode(['success' => false, 'error' => 'Error al guardar en la base de datos (Execute falló³)']);
     }

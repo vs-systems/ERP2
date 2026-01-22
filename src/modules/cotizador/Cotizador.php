@@ -93,8 +93,15 @@ class Cotizador
 
     public function saveQuotation($data)
     {
-        $sql = "INSERT INTO quotations (quote_number, version, client_id, user_id, payment_method, with_iva, exchange_rate_usd, subtotal_usd, subtotal_ars, total_usd, total_ars, valid_until, observations) 
-                VALUES (:number, :version, :client_id, :user_id, :payment, :with_iva, :rate, :subtotal, :subtotal_ars, :total_usd, :total_ars, :valid, :obs)";
+        // Calculate detailed IVAs if not provided
+        $iva105 = $data['total_iva_105'] ?? 0;
+        $iva21 = $data['total_iva_21'] ?? 0;
+
+        // Generate Public Hash unique
+        $publicHash = md5(uniqid(rand(), true));
+
+        $sql = "INSERT INTO quotations (quote_number, version, client_id, user_id, payment_method, with_iva, exchange_rate_usd, subtotal_usd, total_iva_105, total_iva_21, subtotal_ars, total_usd, total_ars, valid_until, observations, public_hash) 
+                VALUES (:number, :version, :client_id, :user_id, :payment, :with_iva, :rate, :subtotal, :iva105, :iva21, :subtotal_ars, :total_usd, :total_ars, :valid, :obs, :hash)";
 
         $stmt = $this->db->prepare($sql);
         $result = $stmt->execute([
@@ -106,11 +113,14 @@ class Cotizador
             'with_iva' => $data['with_iva'],
             'rate' => $data['exchange_rate_usd'],
             'subtotal' => $data['subtotal_usd'],
+            'iva105' => $iva105,
+            'iva21' => $iva21,
             'subtotal_ars' => $data['subtotal_ars'],
             'total_usd' => $data['total_usd'],
             'total_ars' => $data['total_ars'],
             'valid' => $data['valid_until'],
-            'obs' => $data['observations'] ?? ''
+            'obs' => $data['observations'] ?? '',
+            'hash' => $publicHash
         ]);
 
         if (!$result)
@@ -133,7 +143,7 @@ class Cotizador
             ]);
         }
 
-        return $quotationId;
+        return ['id' => $quotationId, 'hash' => $publicHash];
     }
 
     public function getQuotation($id)
