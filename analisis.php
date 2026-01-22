@@ -136,11 +136,14 @@ if ($quotationId) {
                                                     class="py-4 pl-4 font-mono text-xs font-bold dark:text-white group-hover:text-primary transition-colors">
                                                     #<?php echo $op['quote_number']; ?></td>
                                                 <td class="py-4 text-sm font-medium dark:text-slate-300">
-                                                    <?php echo $op['client_name']; ?></td>
+                                                    <?php echo $op['client_name']; ?>
+                                                </td>
                                                 <td class="py-4 text-right text-xs text-slate-500 font-mono">
-                                                    <?php echo date('d/m/Y', strtotime($op['created_at'])); ?></td>
+                                                    <?php echo date('d/m/Y', strtotime($op['created_at'])); ?>
+                                                </td>
                                                 <td class="py-4 text-right font-mono font-bold dark:text-white">$
-                                                    <?php echo number_format($op['subtotal_usd'], 2); ?></td>
+                                                    <?php echo number_format($op['subtotal_usd'], 2); ?>
+                                                </td>
                                                 <td class="py-4 text-center">
                                                     <a href="analisis.php?id=<?php echo $op['id']; ?>"
                                                         class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all">
@@ -261,12 +264,23 @@ if ($quotationId) {
                                                     <div class="font-bold text-sm dark:text-white"><?php echo $item['sku']; ?>
                                                     </div>
                                                     <div class="text-[10px] text-slate-500 uppercase line-clamp-1">
-                                                        <?php echo $item['description']; ?></div>
+                                                        <?php echo $item['description']; ?>
+                                                    </div>
                                                 </td>
                                                 <td class="py-3 text-right font-mono text-sm dark:text-slate-300">
                                                     $<?php echo number_format($item['unit_price'], 2); ?></td>
                                                 <td class="py-3 text-right font-mono text-xs text-red-400">
-                                                    $<?php echo number_format($item['unit_cost'], 2); ?></td>
+                                                    $<?php echo number_format($item['unit_cost'], 2); ?>
+                                                    <?php if (!empty($item['is_real_cost'])): ?>
+                                                        <span
+                                                            class="block text-[9px] text-green-500 font-bold uppercase tracking-tight"
+                                                            title="Costo Real de última compra">Real (Compra)</span>
+                                                    <?php else: ?>
+                                                        <span
+                                                            class="block text-[9px] text-slate-500 font-bold uppercase tracking-tight"
+                                                            title="Costo de Lista">Est. (Lista)</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td class="py-3 text-right font-mono text-sm font-bold text-green-500">
                                                     $<?php echo number_format(($item['unit_price'] - $item['unit_cost']) * $item['qty'], 2); ?>
                                                 </td>

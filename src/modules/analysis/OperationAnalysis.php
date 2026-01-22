@@ -40,7 +40,7 @@ class OperationAnalysis
                             qi.unit_price_usd as unit_price,
                             p.sku,
                             p.description, 
-                            p.unit_cost_usd as unit_cost 
+                            p.unit_cost_usd as catalog_cost 
                      FROM quotation_items qi 
                      LEFT JOIN products p ON qi.product_id = p.id 
                      WHERE qi.quotation_id = :id";
@@ -50,13 +50,33 @@ class OperationAnalysis
 
         // MERGE header fields into the top level array so $analysis['quote_number'] works
         $result = $header;
-        $result['items'] = $items;
+
+        $totalCost = 0;
+        $processedItems = [];
 
         // Calculate dynamic totals for the view
-        $totalCost = 0;
         foreach ($items as $item) {
-            $totalCost += (($item['unit_cost_usd'] ?? 0) * $item['qty']);
+            // Find LATEST Purchase Order price for this SKU
+            $sqlPurchase = "SELECT pi.unit_price_usd 
+                            FROM purchase_items pi 
+                            JOIN purchases p ON pi.purchase_id = p.id 
+                            WHERE pi.sku = :sku 
+                            ORDER BY p.purchase_date DESC, p.id DESC LIMIT 1";
+            $stmtP = $this->db->prepare($sqlPurchase);
+            $stmtP->execute([':sku' => $item['sku']]);
+            $purchasePrice = $stmtP->fetchColumn();
+
+            // Use Purchase Price if found, otherwise Catalog Cost
+            $realCost = $purchasePrice !== false ? (float) $purchasePrice : (float) ($item['catalog_cost'] ?? 0);
+
+            $item['unit_cost'] = $realCost;
+            $item['is_real_cost'] = ($purchasePrice !== false);
+
+            $totalCost += ($realCost * $item['qty']);
+            $processedItems[] = $item;
         }
+
+        $result['items'] = $processedItems;
         $result['total_revenue'] = $header['subtotal_usd']; // Assuming subtotal is net
         $result['total_cost'] = $totalCost;
         $result['profit'] = $result['total_revenue'] - $totalCost;
