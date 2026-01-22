@@ -99,7 +99,9 @@ class User
         if (!is_array($roles)) {
             $roles = [$roles];
         }
-        return in_array($this->role, $roles);
+        $userRole = strtolower($this->role);
+        $roles = array_map('strtolower', $roles);
+        return in_array($userRole, $roles);
     }
 
     /**

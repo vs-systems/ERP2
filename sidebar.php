@@ -10,7 +10,7 @@ if (!isset($userAuth)) {
     $userAuth = new \Vsys\Lib\User();
 }
 
-$userName = $_SESSION['full_name'] ?? ($_SESSION['user_name'] ?? 'Usuario');
+$userName = $_SESSION['full_name'] ?? ($_SESSION['username'] ?? 'Usuario');
 $userRole = $_SESSION['role'] ?? 'Invitado';
 
 $menu = [
@@ -66,14 +66,14 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
     onclick="toggleVsysSidebar()"></div>
 
 <aside id="mainSidebar"
-    class="fixed md:relative inset-y-0 left-0 w-64 h-full bg-[#101822] border-r border-[#233348] flex-shrink-0 overflow-y-auto transition-all duration-300 z-[50] -translate-x-full md:translate-x-0 dark:bg-[#101822] bg-white border-slate-200 dark:border-[#233348] flex flex-col">
+    class="fixed md:relative inset-y-0 left-0 w-64 h-full bg-white dark:bg-[#101822] border-r border-slate-200 dark:border-[#233348] flex-shrink-0 overflow-y-auto transition-all duration-300 z-[50] -translate-x-full md:translate-x-0 flex flex-col">
     <!-- Brand Logo Section -->
     <div class="p-6 flex items-center gap-3">
         <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec] flex items-center justify-center">
             <span class="material-symbols-outlined text-2xl">shield</span>
         </div>
         <div>
-            <h1 class="dark:text-white text-slate-800 text-lg font-bold leading-tight">VS System</h1>
+            <h1 class="text-slate-800 dark:text-white text-lg font-bold leading-tight">VS System</h1>
             <p class="text-slate-400 text-[10px] font-normal uppercase tracking-wider">ERP & Seguridad</p>
         </div>
     </div>
@@ -107,7 +107,7 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
                         <?php if (isset($item['role']) && !$userAuth->hasRole($item['role']))
                             continue; ?>
                         <a href="<?php echo $item['href']; ?>"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
+                            class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-500 dark:text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
                             <span class="material-symbols-outlined text-[20px]"><?php echo $item['icon']; ?></span>
                             <span class="text-sm font-medium"><?php echo $item['label']; ?></span>
                         </a>
@@ -115,7 +115,7 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
                 </div>
             <?php else: ?>
                 <a href="<?php echo $section['href']; ?>"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?php echo $isActiveParent ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?php echo $isActiveParent ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-500 dark:text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
                     <span class="material-symbols-outlined text-[20px]"><?php echo $section['icon']; ?></span>
                     <span class="text-sm font-medium"><?php echo $section['label']; ?></span>
                 </a>
@@ -125,12 +125,12 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
         <!-- External Links -->
         <div class="pt-6 border-t border-slate-200 dark:border-[#233348] mt-4">
             <a href="catalogo_publico.php" target="_blank"
-                class="flex items-center gap-3 px-3 py-2 rounded-lg text-[#10b981] hover:bg-[#10b981]/10 transition-all font-bold">
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-emerald-600 dark:text-[#10b981] hover:bg-emerald-50 dark:hover:bg-[#10b981]/10 transition-all font-bold">
                 <span class="material-symbols-outlined text-[20px]">open_in_new</span>
                 <span class="text-xs uppercase tracking-tight">Catálogo Público</span>
             </a>
             <a href="https://calendar.google.com/calendar/u/0/r?cid=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20" target="_blank"
-                class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] transition-all">
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] transition-all">
                 <span class="material-symbols-outlined text-[20px]">calendar_month</span>
                 <span class="text-sm font-medium">Calendario</span>
             </a>
