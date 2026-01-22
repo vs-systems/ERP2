@@ -41,7 +41,20 @@ $db = Vsys\Lib\Database::getInstance();
 $q = "%" . strtolower($query) . "%";
 $leads = $db->prepare("SELECT id, name, tax_id, address FROM crm_leads WHERE LOWER(name) LIKE ? LIMIT 10");
 $leads->execute([$q]);
+
+// Helper to check if lead exists in clients
+$existingClientNames = array_map(function ($c) {
+    return strtolower($c['name']); }, $results);
+$existingClientTaxIds = array_map(function ($c) {
+    return $c['tax_id']; }, $results);
+
 foreach ($leads->fetchAll() as $l) {
+    // Deduplication Logic: Skip Lead if Name or Tax ID matches an existing Client
+    if (in_array(strtolower($l['name']), $existingClientNames))
+        continue;
+    if (!empty($l['tax_id']) && in_array($l['tax_id'], $existingClientTaxIds))
+        continue;
+
     $finalResults[] = [
         'id' => $l['id'],
         'name' => $l['name'],
@@ -50,6 +63,7 @@ foreach ($leads->fetchAll() as $l) {
         'address' => $l['address'] ?? '',
         'is_retention_agent' => 0,
         'preferred_payment_method' => '',
+        'client_profile' => 'Prospecto',
         'origin' => 'lead'
     ];
 }
