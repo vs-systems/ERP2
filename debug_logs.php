@@ -69,11 +69,24 @@ try {
     echo "<p style='color: red;'>Error de base de datos: " . $e->getMessage() . "</p>";
 }
 
-echo "<h3>Configuración PHP relevante:</h3>";
+echo "<h3>HEX Check (Hidden Characters):</h3>";
+try {
+    $stmtHex = $db->query("SELECT quote_number, HEX(quote_number) as hex_val FROM logistics_process ORDER BY updated_at DESC LIMIT 5");
+    echo "<ul>";
+    while ($row = $stmtHex->fetch(PDO::FETCH_ASSOC)) {
+        echo "<li>{$row['quote_number']}: <code>{$row['hex_val']}</code></li>";
+    }
+    echo "</ul>";
+} catch (Exception $e) {
+}
+
+echo "<h3>Configuración Servidor/PHP:</h3>";
 echo "<ul>";
 echo "<li>display_errors: " . ini_get('display_errors') . "</li>";
-echo "<li>error_reporting: " . ini_get('error_reporting') . "</li>";
-echo "<li>Memory Limit: " . ini_get('memory_limit') . "</li>";
+echo "<li>html_errors: " . ini_get('html_errors') . "</li>";
+echo "<li>error_log: " . ini_get('error_log') . "</li>";
+echo "<li>Server Software: " . $_SERVER['SERVER_SOFTWARE'] . "</li>";
+echo "<li>PHP Version: " . phpversion() . "</li>";
 echo "</ul>";
 
 echo "<hr>";
