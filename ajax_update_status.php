@@ -166,12 +166,17 @@ try {
         require_once __DIR__ . '/src/modules/purchases/Purchases.php';
         $purchasesModule = new \Vsys\Modules\Purchases\Purchases();
         $purchase = $purchasesModule->getPurchase($id);
+
         if ($purchase) {
             $checkStmt = $db->prepare("SELECT id FROM provider_movements WHERE reference_id = ? AND type = 'Compra'");
             $checkStmt->execute([$id]);
             if (!$checkStmt->fetch()) {
                 $providerAccounts = new \Vsys\Modules\Billing\ProviderAccounts();
-                $providerAccounts->addMovement($purchase['entity_id'], 'Compra', $id, $purchase['total_ars'], "Compra #{$purchase['purchase_number']}");
+                // Ensure we use total_ars and correct entity_id
+                $amount = $purchase['total_ars'] ?? 0;
+                if ($amount > 0) {
+                    $providerAccounts->addMovement($purchase['provider_id'] ?? $purchase['entity_id'], 'Compra', $id, $amount, "Compra #{$purchase['purchase_number']}");
+                }
             }
         }
     }
