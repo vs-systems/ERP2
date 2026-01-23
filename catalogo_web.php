@@ -1,12 +1,11 @@
 <?php
 /**
- * VS System ERP - Public Catalog
+ * VS System ERP - Web Catalog (Transfer/Cash only)
  */
 session_start();
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/catalogo/Catalog.php';
-
 require_once __DIR__ . '/src/modules/config/PriceList.php';
 
 use Vsys\Modules\Catalogo\Catalog;
@@ -26,8 +25,6 @@ $currentRate = $stmt->fetchColumn() ?: 1455.00;
 // Fetch unique brands for filtering
 $brands = array_unique(array_filter(array_column($allProducts, 'brand')));
 sort($brands);
-
-// Optional: Filter products if it grows too large, but for now we'll do it via JS for speed
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -35,7 +32,7 @@ sort($brands);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cató¡logo - Vecino Seguro</title>
+    <title>Catálogo Web - Vecino Seguro</title>
     <link rel="stylesheet" href="css/style_premium.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -47,13 +44,13 @@ sort($brands);
         .catalog-header {
             text-align: center;
             padding: 4rem 1rem;
-            background: radial-gradient(circle at center, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+            background: radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
         }
 
         .catalog-header h1 {
             font-size: 3rem;
             margin-bottom: 1rem;
-            background: linear-gradient(90deg, #f8fafc, #8b5cf6);
+            background: linear-gradient(90deg, #f8fafc, #3b82f6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -101,7 +98,7 @@ sort($brands);
         .product-card:hover {
             transform: translateY(-10px);
             background: var(--card-hover);
-            border-color: var(--accent-violet);
+            border-color: #3b82f6;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
 
@@ -119,7 +116,7 @@ sort($brands);
 
         .product-image i {
             font-size: 4rem;
-            color: var(--accent-violet);
+            color: #3b82f6;
             opacity: 0.3;
         }
 
@@ -162,7 +159,7 @@ sort($brands);
         .product-price {
             font-size: 1.4rem;
             font-weight: 700;
-            color: #10b981;
+            color: #3b82f6;
         }
 
         .btn-whatsapp {
@@ -190,26 +187,15 @@ sort($brands);
             padding: 5rem;
             display: none;
         }
-
-        @media (max-width: 768px) {
-            .catalog-header h1 {
-                font-size: 2rem;
-            }
-
-            .filter-container {
-                top: 70px;
-            }
-        }
     </style>
 </head>
 
 <body>
     <header>
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=2" alt="VS System" class="logo-large" class="logo-large" style="height: 45px;">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large" style="height: 45px;">
             <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.2rem;">
-                Vecino Seguro <span
-                    style="background: var(--gradient-premium); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Cató¡logo</span>
+                Vecino Seguro <span style="color: #3b82f6;">Web</span>
             </div>
         </div>
         <div class="header-right">
@@ -221,9 +207,10 @@ sort($brands);
     </header>
 
     <div class="catalog-header">
-        <h1>Explora nuestra Tecnologó­a</h1>
-        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Equipamiento de seguridad electró³nica de
-            alta gama. Có¡maras, NVRs y soluciones de videovigilancia profesional.</p>
+        <h1>Catálogo Web</h1>
+        <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+            Precios exclusivos para compra Online (Transferencia / Efectivo). IVA Incluido.
+        </p>
     </div>
 
     <main class="content" style="max-width: 1400px; margin: 0 auto; padding-top: 0;">
@@ -233,7 +220,7 @@ sort($brands);
             </div>
             <div class="filter-item">
                 <select id="filter-category" style="margin-top:0;">
-                    <option value="">Todas las Categoró­as</option>
+                    <option value="">Todas las Categorías</option>
                     <?php foreach ($categories as $cat): ?>
                         <option value="<?php echo htmlspecialchars($cat); ?>">
                             <?php echo htmlspecialchars($cat); ?>
@@ -256,7 +243,6 @@ sort($brands);
         <div id="no-results">
             <i class="fas fa-search" style="font-size: 3rem; color: var(--text-muted); opacity: 0.3;"></i>
             <h3>No encontramos productos que coincidan</h3>
-            <p style="color: var(--text-muted);">Prueba con otros filtros o tó©rminos de bóºsqueda.</p>
         </div>
 
         <div class="product-grid" id="product-grid">
@@ -292,57 +278,23 @@ sort($brands);
                             $cost = (float) $p['unit_cost_usd'];
                             $iva = (float) $p['iva_rate'];
 
-                            // Determine which price to show
-                            // Public (default): Mostrador
-                            // Logged in (Admin/Vend/Logistica): Gremio + Web
-                        
-                            $isLoggedIn = isset($_SESSION['user_id']);
-                            $priceMostradorArs = $priceListModule->getPriceByListName($cost, $iva, 'Mostrador', $currentRate, true);
+                            // Web Price: Transfer/Cash
+                            $priceWebArs = $priceListModule->getPriceByListName($cost, $iva, 'Web', $currentRate, true);
                             ?>
 
-                            <?php if ($isLoggedIn):
-                                $priceGremioArs = $priceListModule->getPriceByListName($cost, $iva, 'Gremio', $currentRate, true);
-                                $priceWebArs = $priceListModule->getPriceByListName($cost, $iva, 'Web', $currentRate, true);
-                                ?>
-                                <div style="display: flex; flex-direction: column; gap: 4px;">
-                                    <div
-                                        style="font-size: 0.7rem; color: #10b981; opacity: 0.8; text-transform: uppercase; font-weight: bold;">
-                                        Gremio (+IVA)
-                                    </div>
-                                    <div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">
-                                        $ <?php echo number_format($priceGremioArs, 0, ',', '.'); ?>
-                                    </div>
-
-                                    <div
-                                        style="font-size: 0.7rem; color: #3b82f6; opacity: 0.8; text-transform: uppercase; font-weight: bold; margin-top: 4px;">
-                                        Web (+IVA)
-                                    </div>
-                                    <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">
-                                        $ <?php echo number_format($priceWebArs, 0, ',', '.'); ?>
-                                    </div>
-
-                                    <div
-                                        style="font-size: 0.7rem; color: #f59e0b; opacity: 0.8; text-transform: uppercase; font-weight: bold; margin-top: 4px;">
-                                        Mostrador (+IVA)
-                                    </div>
-                                    <div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">
-                                        $ <?php echo number_format($priceMostradorArs, 0, ',', '.'); ?>
-                                    </div>
-                                </div>
-                            <?php else: ?>
-                                <div class="product-price" style="display: flex; flex-direction: column;">
-                                    <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Precio
-                                        Lista</span>
-                                    $ <?php echo number_format($priceMostradorArs, 0, ',', '.'); ?>
-                                    <span style="font-size: 0.6rem; color: var(--text-muted); margin-top:2px;">(Lista
-                                        Mostrador)</span>
-                                </div>
-                            <?php endif; ?>
+                            <div class="product-price" style="display: flex; flex-direction: column;">
+                                <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Precio
+                                    Web</span>
+                                $
+                                <?php echo number_format($priceWebArs, 0, ',', '.'); ?>
+                                <span style="font-size: 0.6rem; color: var(--text-muted); margin-top:2px;">(Transferencia /
+                                    Efectivo)</span>
+                            </div>
                         </div>
-                        <a href="https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=<?php echo urlencode("Hola! Me interesa este producto: " . $p['sku'] . " - " . $p['description']); ?>"
-                            target="_blank" class="btn-whatsapp"
+                        <a href="https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=<?php echo urlencode("Hola! Me interesa este producto (Precio WEB): " . $p['sku'] . " - " . $p['description']); ?>" target="_blank"
+                            class="btn-whatsapp"
                             onclick="logClick('<?php echo addslashes($p['sku']); ?>', '<?php echo addslashes($p['description']); ?>')">
-                            <i class="fab fa-whatsapp"></i> Consultar
+                            <i class="fab fa-whatsapp"></i> Comprar
                         </a>
                     </div>
                 </div>
@@ -352,15 +304,13 @@ sort($brands);
 
     <footer
         style="text-align: center; padding: 4rem 1rem; color: var(--text-muted); border-top: 1px solid var(--border-color); margin-top: 4rem;">
-        <p>&copy; 2026 Vecino Seguro - Seguridad Electró³nica by Javier Gozzi</p>
-        <p style="font-size: 0.8rem; margin-top: 10px;">Los precios estó¡n sujetos a cambios sin previo aviso.</p>
+        <p>&copy; 2026 Vecino Seguro - Seguridad Electrónica</p>
     </footer>
 
     <script>
         const searchInput = document.getElementById('search-text');
         const categorySelect = document.getElementById('filter-category');
         const brandSelect = document.getElementById('filter-brand');
-        const grid = document.getElementById('product-grid');
         const cards = Array.from(document.getElementsByClassName('product-card'));
         const noResults = document.getElementById('no-results');
 
@@ -384,14 +334,6 @@ sort($brands);
             });
 
             noResults.style.display = visibleCount === 0 ? 'block' : 'none';
-        }
-
-        function logClick(sku, desc) {
-            fetch('ajax_log_catalog_click.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ sku: sku, desc: desc })
-            });
         }
 
         searchInput.addEventListener('input', filter);

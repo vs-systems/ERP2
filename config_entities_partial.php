@@ -32,7 +32,12 @@ $isAdmin = ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'admin');
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                 <?php
-                $entities = $db->query("SELECT * FROM entities ORDER BY name ASC LIMIT 50")->fetchAll();
+                // Use the entityType variable set by the parent
+                $typeFilter = $entityType ?? 'client';
+                $stmt = $db->prepare("SELECT * FROM entities WHERE type = ? ORDER BY name ASC LIMIT 50");
+                $stmt->execute([$typeFilter]);
+                $entities = $stmt->fetchAll();
+
                 foreach ($entities as $e): ?>
                     <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
                         <td class="px-6 py-4">
@@ -54,10 +59,17 @@ $isAdmin = ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'admin');
                                 <?php echo $e['email']; ?>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-6 py-4 text-right flex justify-end gap-2">
                             <a href="config_entities.php?type=<?php echo $e['type']; ?>&edit=<?php echo $e['id']; ?>"
                                 class="text-primary hover:underline font-bold text-xs uppercase">Editar</a>
-                            <!-- Add Delete Button here if needed -->
+
+                            <?php if ($isAdmin): ?>
+                                <form method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta entidad?');">
+                                    <input type="hidden" name="action" value="delete_entity">
+                                    <input type="hidden" name="id" value="<?php echo $e['id']; ?>">
+                                    <button class="text-red-500 hover:underline font-bold text-xs uppercase">Eliminar</button>
+                                </form>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

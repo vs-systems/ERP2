@@ -146,6 +146,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = 'success';
     }
 
+    // Delete Entity
+    if ($action === 'delete_entity' && $isAdmin) {
+        $db->prepare("DELETE FROM entities WHERE id = ?")->execute([$_POST['id']]);
+        $message = "Entidad eliminada correctamente.";
+        $status = 'success';
+    }
+
 }
 ?>
 <!DOCTYPE html>
@@ -488,7 +495,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
 
-                    <?php elseif ($currentSection === 'clients'): ?>
+                    <?php elseif ($currentSection === 'clients'): 
+                            $entityType = 'client';
+                    ?>
                             <!-- ABM CLIENTES (Redirect or Include) -->
                             <?php include 'config_entities_partial.php'; ?>
 
@@ -558,11 +567,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                     
                     <?php elseif ($currentSection === 'purchases'): 
-                         // Logic for Purchases ABM (placeholder for now)
+                         $entityType = 'supplier';
                     ?>
-                             <div class="bg-white dark:bg-[#16202e] p-8 rounded-2xl border border-slate-200 dark:border-[#233348] text-center py-20">
-                                <h3 class="text-xl font-bold uppercase text-slate-400">ABM Compras - Próximamente</h3>
-                            </div>
+                             <!-- ABM PROVEEDORES -->
+                             <?php include 'config_entities_partial.php'; ?>
 
                     <?php else: ?>
                             <!-- DEFAULT / FALLBACK -->
