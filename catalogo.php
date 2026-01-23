@@ -40,7 +40,7 @@ sort($brands);
 // Check Maintenance Mode
 $configPath = __DIR__ . '/config_catalogs.json';
 $catConfig = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : ['maintenance_mode' => 0];
-if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
+if (($catConfig['maintenance_mode'] ?? 0) == 1 && !isset($_SESSION['user_id'])) {
     ?>
     <!DOCTYPE html>
     <html lang="es">
@@ -284,10 +284,27 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
             </div>
         </div>
         <div class="header-right">
-            <a href="cotizador.php" class="btn-primary"
-                style="padding: 8px 15px; font-size: 0.8rem; text-decoration: none;">
-                <i class="fas fa-sign-in-alt"></i> ACCESO ERP
-            </a>
+            <div class="flex items-center gap-6">
+                <div
+                    class="hidden md:flex gap-4 text-[10px] font-bold text-slate-300 uppercase tracking-tighter overflow-hidden max-w-[500px]">
+                    <?php foreach (array_slice($brands, 0, 10) as $b): ?>
+                        <span class="hover:text-violet-400 transition-colors cursor-default"><?php echo $b; ?></span>
+                    <?php endforeach; ?>
+                </div>
+                <div class="h-6 w-px bg-slate-700 mx-2"></div>
+                <a href="login.php"
+                    class="text-white hover:text-violet-400 flex items-center gap-2 font-bold text-xs transition-colors">
+                    <span class="material-symbols-outlined text-sm">login</span>
+                    ACCESO ERP
+                </a>
+                <div class="h-6 w-px bg-slate-700 mx-2"></div>
+                <button class="relative text-white hover:text-violet-400 transition-colors" onclick="toggleCart()">
+                    <span class="material-symbols-outlined text-[28px]">shopping_bag</span>
+                    <span
+                        class="absolute -top-1 -right-1 bg-accent-green text-black text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-slate-900"
+                        id="cartBadge">0</span>
+                </button>
+            </div>
         </div>
     </header>
 
@@ -452,16 +469,64 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
                                 </div>
                             <?php endif; ?>
                         </div>
-                        <a href="https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=<?php echo urlencode("Hola! Me interesa este producto: " . $p['sku'] . " - " . $p['description']); ?>"
-                            target="_blank" class="btn-whatsapp"
-                            onclick="logClick('<?php echo addslashes($p['sku']); ?>', '<?php echo addslashes($p['description']); ?>')">
-                            <i class="fab fa-whatsapp"></i> Consultar
-                        </a>
+                        <div class="flex gap-2">
+                            <a href="https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=<?php echo urlencode("Hola! Me interesa este producto: " . $p['sku'] . " - " . $p['description']); ?>"
+                                target="_blank" class="btn-whatsapp"
+                                onclick="logClick('<?php echo addslashes($p['sku']); ?>', '<?php echo addslashes($p['description']); ?>')">
+                                <i class="fab fa-whatsapp"></i>
+                            </a>
+                            <?php
+                            // Prepare product data for JS
+                            $pData = [
+                                'sku' => $p['sku'],
+                                'description' => $p['description'],
+                                'image_url' => $p['image_url'],
+                                'price_final_usd' => number_format($priceMostradorArs / $currentRate, 2, '.', '')
+                            ];
+                            ?>
+                            <button onclick='addToCart(<?php echo json_encode($pData); ?>)'
+                                class="bg-emerald-500 hover:bg-emerald-600 text-white flex-1 py-2 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-emerald-500/10">
+                                <span class="material-symbols-outlined text-lg">add_shopping_cart</span>
+                                <span class="text-xs font-bold uppercase">Agregar</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>
         </div>
     </main>
+
+    <!-- Cart Sidebar / Modal -->
+    <div id="overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[2000] hidden" onclick="toggleCart()"></div>
+    <div id="cartModal"
+        class="fixed right-0 top-0 h-full w-full max-w-md bg-[#111827] border-l border-[#233348] z-[2001] translate-x-full transition-transform duration-500 shadow-2xl flex flex-col">
+        <div
+            class="p-6 border-b border-[#233348] flex items-center justify-between bg-[#111827]/50 backdrop-blur sticky top-0">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-[#3b82f6]">shopping_basket</span>
+                <h3 class="text-lg font-bold">Tu Selección</h3>
+            </div>
+            <button onclick="toggleCart()" class="text-slate-400 hover:text-white transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-4" id="cartContent">
+            <!-- Items injected by JS -->
+        </div>
+
+        <div class="p-6 border-t border-[#233348] bg-[#0d1117] space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-medium">Subtotal estimado</span>
+                <span class="text-2xl font-bold text-emerald-500" id="cartTotal">USD 0.00</span>
+            </div>
+            <button
+                class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-xl shadow-emerald-500/20"
+                onclick="showCheckout()">
+                CONTINUAR CON EL PEDIDO <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+        </div>
+    </div>
 
     <footer
         style="text-align: center; padding: 4rem 1rem; color: var(--text-muted); border-top: 1px solid var(--border-color); margin-top: 4rem;">
@@ -473,16 +538,17 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
         const searchInput = document.getElementById('search-text');
         const categorySelect = document.getElementById('filter-category');
         const brandSelect = document.getElementById('filter-brand');
-        const grid = document.getElementById('product-grid');
         const cards = Array.from(document.getElementsByClassName('product-card'));
         const noResults = document.getElementById('no-results');
 
         function filter() {
             const query = searchInput.value.toLowerCase();
-            const category = categorySelect.value;
+            const categoryValue = categorySelect.value;
             const brand = brandSelect.value;
             let visibleCount = 0;
 
+            let selectedCat = '';
+            let selectedSub = '';
             if (categoryValue.includes('|')) {
                 [selectedCat, selectedSub] = categoryValue.split('|');
             } else {
@@ -516,6 +582,78 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
             });
 
             noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        // Carrito Logic
+        let cart = [];
+
+        function toggleCart() {
+            const modal = document.getElementById('cartModal');
+            const overlay = document.getElementById('overlay');
+            modal.classList.toggle('translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function addToCart(product) {
+            const exists = cart.find(i => i.sku === product.sku);
+            if (exists) exists.qty++;
+            else cart.push({ ...product, qty: 1 });
+            updateUI();
+            if (!document.getElementById('cartModal').classList.contains('translate-x-full')) return;
+            toggleCart();
+        }
+
+        function updateUI() {
+            const badge = document.getElementById('cartBadge');
+            const content = document.getElementById('cartContent');
+            const total = document.getElementById('cartTotal');
+            if (badge) badge.innerText = cart.reduce((acc, i) => acc + i.qty, 0);
+            content.innerHTML = cart.length === 0 ? '<div class="h-64 flex flex-col items-center justify-center text-slate-500 gap-4"><span class="material-symbols-outlined text-5xl">shopping_cart_off</span><p class="font-medium text-sm">Tu carrito está vacío</p></div>' : '';
+            let sum = 0;
+            cart.forEach((item, idx) => {
+                sum += parseFloat(item.price_final_usd) * item.qty;
+                content.innerHTML += `
+                    <div class="bg-[#16202e] border border-[#233348] p-4 rounded-xl flex gap-4 group">
+                        <div class="h-16 w-16 bg-white p-2 rounded-lg flex items-center justify-center shrink-0">
+                            <img src="${item.image_url}" class="max-h-full mix-blend-multiply">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white text-xs font-bold truncate">${item.description}</p>
+                            <p class="text-emerald-500 text-xs font-bold mt-1">USD ${item.price_final_usd}</p>
+                            <div class="flex items-center gap-3 mt-2">
+                                <button onclick="changeQty(${idx}, -1)" class="h-6 w-6 flex items-center justify-center bg-[#0d1117] hover:bg-slate-800 rounded border border-[#233348] text-xs">-</button>
+                                <span class="text-xs font-bold">${item.qty}</span>
+                                <button onclick="changeQty(${idx}, 1)" class="h-6 w-6 flex items-center justify-center bg-[#0d1117] hover:bg-slate-800 rounded border border-[#233348] text-xs">+</button>
+                                <button onclick="removeItem(${idx})" class="ml-auto text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-lg">delete</span></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            total.innerText = `USD ${sum.toFixed(2)}`;
+        }
+
+        function changeQty(idx, delta) {
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            updateUI();
+        }
+
+        function removeItem(idx) {
+            cart.splice(idx, 1);
+            updateUI();
+        }
+
+        function showCheckout() {
+            if (cart.length === 0) return;
+            let text = "Hola! Quiero realizar un pedido:\n\n";
+            cart.forEach(item => {
+                text += `- ${item.sku} | ${item.description} (Cant: ${item.qty}) | USD ${item.price_final_usd}\n`;
+            });
+            const total = document.getElementById('cartTotal').innerText;
+            text += `\n*TOTAL ESTIMADO (DÓLARES): ${total}*`;
+            const url = `https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
         }
 
         function logClick(sku, desc) {

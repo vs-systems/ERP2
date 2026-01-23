@@ -88,19 +88,14 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
                             $catTree = $catalog->getCategoriesWithSubcategories();
                             foreach ($catTree as $cat => $subs):
                                 ?>
-                                <option value="<?php echo htmlspecialchars($cat); ?>"
-                                    class="font-bold bg-slate-200 text-black disabled" disabled>
-                                    — <?php echo htmlspecialchars($cat); ?> —
-                                </option>
                                 <option value="<?php echo htmlspecialchars($cat); ?>">
-                                    Todo en <?php echo htmlspecialchars($cat); ?>
+                                    <?php echo htmlspecialchars($cat); ?>
                                 </option>
-                                <?php foreach ($subs as $sub): ?>
-                                    <option value="<?php echo htmlspecialchars($cat . '|' . $sub); ?>">
-                                        &nbsp;&nbsp;&nbsp;<?php echo htmlspecialchars($sub); ?>
-                                    </option>
-                                <?php endforeach; ?>
                             <?php endforeach; ?>
+                        </select>
+                        <select id="filter-subcategory"
+                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-lg py-2 px-3 text-sm focus:ring-1 focus:ring-green-500 outline-none">
+                            <option value="">Todas las Subcategorías</option>
                         </select>
                         <input type="text" id="search-input" placeholder="Buscar..."
                             class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-lg py-2 px-3 text-sm focus:ring-1 focus:ring-green-500 outline-none min-w-[200px]">
@@ -203,48 +198,50 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
     <script>
         const searchInput = document.getElementById('search-input');
         const categorySelect = document.getElementById('filter-category');
+        const subcategorySelect = document.getElementById('filter-subcategory');
         const rows = document.querySelectorAll('tbody tr');
+        
+        const catTree = <?php echo json_encode($catalog->getCategoriesWithSubcategories()); ?>;
+
+        categorySelect.addEventListener('change', () => {
+            const cat = categorySelect.value;
+            subcategorySelect.innerHTML = '<option value="">Todas las Subcategorías</option>';
+            if (cat && catTree[cat]) {
+                catTree[cat].forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub;
+                    opt.innerText = sub;
+                    subcategorySelect.appendChild(opt);
+                });
+            }
+            filterItems();
+        });
 
         function filterItems() {
             const query = searchInput.value.toLowerCase();
-            const categoryValue = categorySelect.value;
-            let selectedCat = '';
-            let selectedSub = '';
+            const selectedCat = categorySelect.value;
+            const selectedSub = subcategorySelect.value;
 
-            if (categoryValue.includes('|')) {
-                [selectedCat, selectedSub] = categoryValue.split('|');
-            } else {
-                selectedCat = categoryValue;
-            }
+            // Use requestAnimationFrame for smoother performance on large lists
+            window.requestAnimationFrame(() => {
+                rows.forEach(row => {
+                    const sku = row.querySelector('td:nth-child(1)').innerText.toLowerCase();
+                    const brand = row.querySelector('td:nth-child(2)').innerText.toLowerCase();
+                    const desc = row.querySelector('td:nth-child(3)').innerText.toLowerCase();
+                    const cat = row.dataset.category;
+                    const sub = row.dataset.subcategory;
 
-            rows.forEach(row => {
-                const sku = row.querySelector('td:nth-child(1)').innerText.toLowerCase();
-                const brand = row.querySelector('td:nth-child(2)').innerText.toLowerCase();
-                const desc = row.querySelector('td:nth-child(3)').innerText.toLowerCase();
-                const cat = row.dataset.category;
-                const sub = row.dataset.subcategory; // We need to add this to TR
+                    const matchesSearch = !query || sku.includes(query) || brand.includes(query) || desc.includes(query);
+                    const matchesCategory = !selectedCat || cat === selectedCat;
+                    const matchesSub = !selectedSub || sub === selectedSub;
 
-                const matchesSearch = sku.includes(query) || brand.includes(query) || desc.includes(query);
-
-                let matchesCategory = true;
-                if (selectedCat) {
-                    if (selectedSub) {
-                        matchesCategory = (cat === selectedCat && sub === selectedSub);
-                    } else {
-                        matchesCategory = (cat === selectedCat);
-                    }
-                }
-
-                if (matchesSearch && matchesCategory) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
-                }
+                    row.style.display = (matchesSearch && matchesCategory && matchesSub) ? '' : 'none';
+                });
             });
         }
 
         searchInput.addEventListener('input', filterItems);
-        categorySelect.addEventListener('change', filterItems);
+        subcategorySelect.addEventListener('change', filterItems);
     </script>
 
 </html>

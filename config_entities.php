@@ -163,11 +163,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php echo $id ? 'Editar' : 'Nuevo'; ?>
                             <?php
                             if ($type == 'client')
-                                echo 'Cliente';
+                                echo ' Cliente';
                             elseif ($type == 'supplier')
-                                echo 'Proveedor';
+                                echo ' Proveedor';
                             else
-                                echo 'Transporte';
+                                echo ' Transporte';
                             ?>
                         </h2>
                         <span class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1">
@@ -400,7 +400,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-    async function geocodeCity() {
+        async function geocodeCity() {
             const city = document.getElementById('geo_city').value;
             const address = document.getElementsByName('address')[0].value;
             if (!city && !address) {
@@ -419,7 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (address) queryStr += address + ", ";
                 if (city) queryStr += city;
                 queryStr += ", Argentina";
-                
+
                 const query = encodeURIComponent(queryStr);
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
                 const data = await response.json();

@@ -41,7 +41,7 @@ sort($brands);
 // Check Maintenance Mode
 $configPath = __DIR__ . '/config_catalogs.json';
 $catConfig = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : ['maintenance_mode' => 0];
-if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
+if (($catConfig['maintenance_mode'] ?? 0) == 1 && !isset($_SESSION['user_id'])) {
     ?>
     <!DOCTYPE html>
     <html lang="es">
@@ -271,15 +271,30 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
                 <span style="font-size: 1.8rem;">Vecino Seguro</span>
                 <span
                     style="font-size: 0.9rem; font-weight: 600; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px;">Catálogo
-                    Web</span>
             </div>
         </div>
         <div class="header-right">
-            <a href="cotizador.php" class="btn-primary"
-                style="padding: 8px 15px; font-size: 0.8rem; text-decoration: none;">
-                <i class="fas fa-sign-in-alt"></i> ACCESO ERP
-            </a>
-        </div>
+            <div class="flex items-center gap-6">
+                <div
+                    class="hidden md:flex gap-4 text-[10px] font-bold text-slate-300 uppercase tracking-tighter overflow-hidden max-w-[500px]">
+                    <?php foreach (array_slice($brands, 0, 10) as $b): ?>
+                        <span class="hover:text-blue-400 transition-colors cursor-default"><?php echo $b; ?></span>
+                    <?php endforeach; ?>
+                </div>
+                <div class="h-6 w-px bg-slate-700 mx-2"></div>
+                <a href="login.php"
+                    class="text-white hover:text-blue-400 flex items-center gap-2 font-bold text-xs transition-colors">
+                    <span class="material-symbols-outlined text-sm">login</span>
+                    ACCESO ERP
+                </a>
+                <div class="h-6 w-px bg-slate-700 mx-2"></div>
+                <button class="relative text-white hover:text-blue-400 transition-colors" onclick="toggleCart()">
+                    <span class="material-symbols-outlined text-[28px]">shopping_bag</span>
+                    <span
+                        class="absolute -top-1 -right-1 bg-accent-green text-black text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-slate-900"
+                        id="cartBadge">0</span>
+                </button>
+            </div>
     </header>
 
     <div class="catalog-header">
@@ -436,13 +451,12 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
 
         function filter() {
             const query = searchInput.value.toLowerCase();
-            const categoryValue = categorySelect.value; // Format: "Cat" or "Cat|Sub"
+            const categoryValue = categorySelect.value;
             const brand = brandSelect.value;
             let visibleCount = 0;
 
             let selectedCat = '';
             let selectedSub = '';
-
             if (categoryValue.includes('|')) {
                 [selectedCat, selectedSub] = categoryValue.split('|');
             } else {
@@ -450,7 +464,7 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
             }
 
             cards.forEach(card => {
-                const text = card.dataset.search;
+                const text = card.dataset.search.toLowerCase();
                 const cardCat = card.dataset.category;
                 const cardSub = card.querySelector('.product-subcategory').innerText;
                 const cardBrand = card.dataset.brand;
@@ -461,10 +475,8 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
                 let matchesCategory = true;
                 if (selectedCat) {
                     if (selectedSub) {
-                        // Must match both
                         matchesCategory = (cardCat === selectedCat && cardSub === selectedSub);
                     } else {
-                        // Must match Main Category only
                         matchesCategory = (cardCat === selectedCat);
                     }
                 }
@@ -478,6 +490,86 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
             });
 
             noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+
+        // Carrito Logic
+        let cart = [];
+
+        function toggleCart() {
+            const modal = document.getElementById('cartModal');
+            const overlay = document.getElementById('overlay');
+            modal.classList.toggle('translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function addToCart(product) {
+            const exists = cart.find(i => i.sku === product.sku);
+            if (exists) exists.qty++;
+            else cart.push({ ...product, qty: 1 });
+            updateUI();
+            if (!document.getElementById('cartModal').classList.contains('translate-x-full')) return;
+            toggleCart();
+        }
+
+        function updateUI() {
+            const badge = document.getElementById('cartBadge');
+            const content = document.getElementById('cartContent');
+            const total = document.getElementById('cartTotal');
+            badge.innerText = cart.reduce((acc, i) => acc + i.qty, 0);
+            content.innerHTML = cart.length === 0 ? '<div class="h-64 flex flex-col items-center justify-center text-slate-500 gap-4"><span class="material-symbols-outlined text-5xl">shopping_cart_off</span><p class="font-medium text-sm">Tu carrito está vacío</p></div>' : '';
+            let sum = 0;
+            cart.forEach((item, idx) => {
+                sum += parseFloat(item.price_final_usd) * item.qty;
+                content.innerHTML += `
+                    <div class="bg-[#16202e] border border-[#233348] p-4 rounded-xl flex gap-4 group">
+                        <div class="h-16 w-16 bg-white p-2 rounded-lg flex items-center justify-center shrink-0">
+                            <img src="${item.image_url}" class="max-h-full mix-blend-multiply">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-white text-xs font-bold truncate">${item.description}</p>
+                            <p class="text-blue-500 text-xs font-bold mt-1">USD ${item.price_final_usd}</p>
+                            <div class="flex items-center gap-3 mt-2">
+                                <button onclick="changeQty(${idx}, -1)" class="h-6 w-6 flex items-center justify-center bg-[#0d1117] hover:bg-slate-800 rounded border border-[#233348] text-xs">-</button>
+                                <span class="text-xs font-bold">${item.qty}</span>
+                                <button onclick="changeQty(${idx}, 1)" class="h-6 w-6 flex items-center justify-center bg-[#0d1117] hover:bg-slate-800 rounded border border-[#233348] text-xs">+</button>
+                                <button onclick="removeItem(${idx})" class="ml-auto text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-lg">delete</span></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            total.innerText = `USD ${sum.toFixed(2)}`;
+        }
+
+        function changeQty(idx, delta) {
+            cart[idx].qty += delta;
+            if (cart[idx].qty <= 0) cart.splice(idx, 1);
+            updateUI();
+        }
+
+        function removeItem(idx) {
+            cart.splice(idx, 1);
+            updateUI();
+        }
+
+        function showCheckout() {
+             if (cart.length === 0) return;
+             let text = "Hola! Quiero realizar un pedido:\n\n";
+             cart.forEach(item => {
+                 text += `- ${item.sku} | ${item.description} (Cant: ${item.qty}) | USD ${item.price_final_usd}\n`;
+             });
+             const total = document.getElementById('cartTotal').innerText;
+             text += `\n*TOTAL ESTIMADO (DÓLARES): ${total}*`;
+             const url = `https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=${encodeURIComponent(text)}`;
+             window.open(url, '_blank');
+        }
+
+        function logClick(sku, desc) {
+            fetch('ajax_log_catalog_click.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sku: sku, desc: desc })
+            });
         }
 
         searchInput.addEventListener('input', filter);
