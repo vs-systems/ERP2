@@ -18,6 +18,8 @@ $userLib = new User();
 
 // Routing - Robust Default
 $section = (isset($_GET['section']) && $_GET['section'] !== '') ? $_GET['section'] : 'main';
+// DEBUG
+// var_dump($section); exit; 
 $action = $_POST['action'] ?? '';
 $message = '';
 $status = '';
