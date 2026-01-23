@@ -309,6 +309,17 @@ $stages = [
                             </div>
                         </div>
 
+                        <div>
+                            <h4
+                                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">compare_arrows</span> Estudios de
+                                Competencia
+                            </h4>
+                            <div id="legajoCompetitor" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <!-- Análisis via JS -->
+                            </div>
+                        </div>
+
                         <!-- Add Interaction form -->
                         <div
                             class="bg-slate-50 dark:bg-[#101822] p-4 rounded-2xl border border-slate-200 dark:border-white/5">
@@ -407,6 +418,30 @@ $stages = [
                 quotesDiv.appendChild(div);
             });
             if (data.quotations.length === 0) quotesDiv.innerHTML = '<p class="text-xs text-slate-500 italic">No hay presupuestos asociados.</p>';
+
+            // Render Competitor Analyses
+            const compDiv = document.getElementById('legajoCompetitor');
+            compDiv.innerHTML = '';
+            data.competitor_analyses.forEach(c => {
+                const div = document.createElement('div');
+                div.className = "p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 flex justify-between items-center";
+                div.innerHTML = `
+                    <div>
+                        <span class="text-[10px] font-black text-primary uppercase tracking-widest block mb-1">Análisis</span>
+                        <p class="text-xs font-bold dark:text-white">${c.analysis_number}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="analisis_competencia.php?id=${c.id}" class="p-2 text-slate-400 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-lg">edit_note</span>
+                        </a>
+                        <a href="imprimir_analisis_competencia.php?id=${c.id}" target="_blank" class="p-2 text-slate-400 hover:text-emerald-500 transition-colors">
+                            <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                        </a>
+                    </div>
+                `;
+                compDiv.appendChild(div);
+            });
+            if (data.competitor_analyses.length === 0) compDiv.innerHTML = '<p class="text-xs text-slate-500 italic col-span-2">No se han realizado análisis de competencia.</p>';
 
             // Render Contact
             const contactDiv = document.getElementById('legajoContact');

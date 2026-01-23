@@ -228,6 +228,13 @@ $quotes = $cot->getAllQuotations(100);
                                                     </a>
 
                                                     <!-- Analysis / Summary -->
+                                                    <a href="analisis_competencia.php?quote_id=<?php echo $q['id']; ?>"
+                                                        class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-amber-500 transition-all font-bold"
+                                                        title="Analizar Competencia">
+                                                        <span
+                                                            class="material-symbols-outlined text-lg">compare_arrows</span>
+                                                    </a>
+
                                                     <a href="analisis.php?id=<?php echo $q['id']; ?>"
                                                         class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-blue-500 transition-all"
                                                         title="Análisis de Rentabilidad (Costos vs Margen)">

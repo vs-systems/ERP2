@@ -42,11 +42,21 @@ try {
     $stmtQuotes->execute([$lead['name'], $lead['phone']]);
     $quotations = $stmtQuotes->fetchAll();
 
+    // 4. Get Competitor Analyses
+    $stmtComp = $db->prepare("SELECT id, analysis_number, created_at 
+                              FROM competitor_analysis 
+                              WHERE client_id IN (SELECT id FROM entities WHERE name = ?)
+                              OR quote_id IN (SELECT id FROM quotations WHERE client_id IN (SELECT id FROM entities WHERE name = ?))
+                              ORDER BY created_at DESC");
+    $stmtComp->execute([$lead['name'], $lead['name']]);
+    $compAnalyses = $stmtComp->fetchAll();
+
     echo json_encode([
         'success' => true,
         'lead' => $lead,
         'interactions' => $interactions,
-        'quotations' => $quotations
+        'quotations' => $quotations,
+        'competitor_analyses' => $compAnalyses
     ]);
 
 } catch (Exception $e) {
