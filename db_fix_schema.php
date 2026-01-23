@@ -17,12 +17,12 @@ try {
         $sql = "CREATE TABLE supplier_prices (
             id INT AUTO_INCREMENT PRIMARY KEY,
             product_id INT NOT NULL,
-            entity_id INT NOT NULL,
+            supplier_id INT NOT NULL,
             cost_usd DECIMAL(10,2) NOT NULL DEFAULT 0.00,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY product_entity (product_id, entity_id),
+            UNIQUE KEY product_supplier (product_id, supplier_id),
             KEY fk_product (product_id),
-            KEY fk_entity (entity_id)
+            KEY fk_supplier (supplier_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
         $db->exec($sql);
         echo "✅ Tabla 'supplier_prices' CREADA correctamente.<br>";
@@ -32,16 +32,16 @@ try {
         // Check columns
         $columns = $db->query("SHOW COLUMNS FROM supplier_prices")->fetchAll(PDO::FETCH_COLUMN);
 
-        if (!in_array('entity_id', $columns)) {
-            if (in_array('supplier_id', $columns)) {
-                $db->exec("ALTER TABLE supplier_prices CHANGE supplier_id entity_id INT NOT NULL");
-                echo "✅ Columna 'supplier_id' renombrada a 'entity_id'.<br>";
+        if (!in_array('supplier_id', $columns)) {
+            if (in_array('entity_id', $columns)) {
+                $db->exec("ALTER TABLE supplier_prices CHANGE entity_id supplier_id INT NOT NULL");
+                echo "✅ Columna 'entity_id' renombrada a 'supplier_id'.<br>";
             } else {
-                $db->exec("ALTER TABLE supplier_prices ADD COLUMN entity_id INT NOT NULL AFTER product_id");
-                echo "✅ Columna 'entity_id' AGREGADA.<br>";
+                $db->exec("ALTER TABLE supplier_prices ADD COLUMN supplier_id INT NOT NULL AFTER product_id");
+                echo "✅ Columna 'supplier_id' AGREGADA.<br>";
             }
         } else {
-            echo "✅ Columna 'entity_id' ya existe.<br>";
+            echo "✅ Columna 'supplier_id' ya existe.<br>";
         }
     }
 

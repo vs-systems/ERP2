@@ -23,6 +23,22 @@ class Catalog
         return $stmt->fetchAll();
     }
 
+    public function getProductById($id)
+    {
+        $stmt = $this->db->prepare("SELECT * FROM products WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch();
+    }
+
+    public function deleteProduct($id)
+    {
+        // First delete supplier prices
+        $this->db->prepare("DELETE FROM supplier_prices WHERE product_id = ?")->execute([$id]);
+        // Then delete the product
+        $stmt = $this->db->prepare("DELETE FROM products WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+
 
 
     public function getCategoriesWithSubcategories()
@@ -109,13 +125,13 @@ class Catalog
 
         // 3. Insert or Update supplier price
         if ($productId && isset($data['supplier_id']) && $data['supplier_id']) {
-            $sqlSup = "INSERT INTO supplier_prices (product_id, entity_id, cost_usd) 
-                       VALUES (:p_id, :e_id, :cost)
+            $sqlSup = "INSERT INTO supplier_prices (product_id, supplier_id, cost_usd) 
+                       VALUES (:p_id, :s_id, :cost)
                        ON DUPLICATE KEY UPDATE cost_usd = VALUES(cost_usd)";
             $stmtSup = $this->db->prepare($sqlSup);
             $stmtSup->execute([
                 ':p_id' => $productId,
-                ':e_id' => $data['supplier_id'],
+                ':s_id' => $data['supplier_id'],
                 ':cost' => $data['unit_cost_usd']
             ]);
 

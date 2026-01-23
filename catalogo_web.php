@@ -350,8 +350,8 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
                                 alt="<?php echo htmlspecialchars($p['description']); ?>"
                                 style="max-width: 100%; max-height: 100%; border-radius: 12px; object-fit: contain;">
                         <?php else: ?>
-                            <i
-                                class="fas <?php echo strpos(strtolower($p['category'] ?? ''), 'camara') !== false ? 'fa-video' : 'fa-box'; ?>"></i>
+                            <img src="https://www.vecinoseguro.com/src/img/VSLogo_v2.jpg" alt="Falta imagen"
+                                style="max-width: 80%; max-height: 80%; opacity: 0.5; filter: grayscale(1); border-radius: 12px; object-fit: contain;">
                         <?php endif; ?>
                     </div>
 
