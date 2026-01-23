@@ -169,6 +169,30 @@ class Purchases
 
         return $prefix . str_pad($seq, 4, '0', STR_PAD_LEFT);
     }
+    /**
+     * Get a single purchase by ID
+     */
+    public function getPurchase($id)
+    {
+        $sql = "SELECT p.*, e.name as supplier_name, e.tax_id, e.address, e.city, e.state, e.email, e.phone
+                FROM purchases p 
+                LEFT JOIN entities e ON p.entity_id = e.id 
+                WHERE p.id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch();
+    }
+
+    /**
+     * Get items for a purchase
+     */
+    public function getPurchaseItems($purchaseId)
+    {
+        $sql = "SELECT * FROM purchase_items WHERE purchase_id = :pid";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':pid' => $purchaseId]);
+        return $stmt->fetchAll();
+    }
 }
 
 
