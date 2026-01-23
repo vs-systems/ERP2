@@ -49,15 +49,6 @@ $menuStructure = [
         ]
     ],
     [
-        'label' => 'CONFIGURACION',
-        'id' => 'config',
-        'icon' => 'settings',
-        'items' => [
-            ['label' => 'Usuarios', 'href' => 'usuarios.php', 'icon' => 'manage_accounts', 'role' => 'Admin'],
-            ['label' => 'General / ABMs', 'href' => 'configuration.php?section=main', 'icon' => 'tune', 'role' => 'Admin'],
-        ]
-    ],
-    [
         'label' => 'CATALOGOS',
         'id' => 'catalogos',
         'icon' => 'menu_book',
@@ -160,14 +151,19 @@ $menuStructure = [
                 <p class="text-sm font-bold text-slate-800 dark:text-white truncate"><?php echo $userName; ?></p>
                 <p class="text-[10px] font-bold text-slate-400 uppercase"><?php echo $userRole; ?></p>
             </div>
-            <div class="flex flex-col gap-1">
-                <button onclick="toggleVsysTheme()" class="text-slate-400 hover:text-[#136dec]" title="Tema">
-                    <span class="material-symbols-outlined text-[18px] dark:hidden">dark_mode</span>
-                    <span class="material-symbols-outlined text-[18px] hidden dark:block">light_mode</span>
-                </button>
-                <a href="logout.php" class="text-slate-400 hover:text-red-500" title="Salir">
-                    <span class="material-symbols-outlined text-[18px]">logout</span>
+            <div class="flex flex-col gap-1 items-center">
+                <a href="configuration.php" class="text-slate-400 hover:text-[#136dec] mb-1" title="Configuración">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
                 </a>
+                <div class="flex gap-2">
+                    <button onclick="toggleVsysTheme()" class="text-slate-400 hover:text-[#136dec]" title="Tema">
+                        <span class="material-symbols-outlined text-[18px] dark:hidden">dark_mode</span>
+                        <span class="material-symbols-outlined text-[18px] hidden dark:block">light_mode</span>
+                    </button>
+                    <a href="logout.php" class="text-slate-400 hover:text-red-500" title="Salir">
+                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>

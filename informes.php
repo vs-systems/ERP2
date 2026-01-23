@@ -134,6 +134,15 @@ $db = \Vsys\Lib\Database::getInstance();
                                 <canvas id="clientsLocalityChart"></canvas>
                             </div>
                         </div>
+                        <div class="glass-card p-6 rounded-2xl">
+                            <h3 class="font-bold text-lg mb-4">Proveedores por Localidad</h3>
+                            <div class="chart-container">
+                                <canvas id="suppliersLocalityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div class="glass-card p-6 rounded-2xl flex flex-col justify-center items-center text-center">
                             <span class="material-symbols-outlined text-5xl text-emerald-500 mb-4">analytics</span>
                             <h3 class="font-bold text-xl mb-2">Análisis de Rentabilidad Global</h3>
@@ -274,7 +283,20 @@ $db = \Vsys\Lib\Database::getInstance();
                     const color = e.type === 'client' ? 'blue' : 'red';
                     if (e.type === 'client') cCount++; else sCount++;
 
-                    const marker = L.circleMarker([e.lat, e.lng], {
+                    // Robust parsing for coordinates (handle strings and malformed formats like "lat,lng,zoom")
+                    let lat = 0, lng = 0;
+                    if (typeof e.lat === 'string' && e.lat.includes(',')) {
+                        const parts = e.lat.split(',');
+                        lat = parseFloat(parts[0]);
+                        lng = parseFloat(parts[1]);
+                    } else {
+                        lat = parseFloat(e.lat);
+                        lng = parseFloat(e.lng);
+                    }
+
+                    if (isNaN(lat) || isNaN(lng)) return;
+
+                    const marker = L.circleMarker([lat, lng], {
                         radius: 8,
                         fillColor: color,
                         color: "#fff",
