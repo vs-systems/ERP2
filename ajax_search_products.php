@@ -23,21 +23,16 @@ $catalog = new Catalog();
 $priceList = new \Vsys\Modules\Config\PriceList();
 $results = $catalog->searchProducts($query);
 
-// Pre-fetch all margins to avoid N+1 queries
-$allMargins = [];
-foreach ($priceList->getAll() as $list) {
-    $allMargins[$list['name']] = (float) $list['margin_percent'];
-}
-
 // Inject calculated prices for each profile
+$margins = $priceList->getMargins(); // Returns ['gremio' => 25, 'web' => 40, 'mostrador' => 55]
+
 foreach ($results as &$r) {
     $cost = (float) $r['unit_cost_usd'];
 
-    // Use pre-fetched margins for speed
     $r['prices'] = [
-        'Gremio' => round($cost * (1 + (($allMargins['Gremio'] ?? 25) / 100)), 2),
-        'Web' => round($cost * (1 + (($allMargins['Web'] ?? 40) / 100)), 2),
-        'Mostrador' => round($cost * (1 + (($allMargins['Mostrador'] ?? 55) / 100)), 2)
+        'Gremio' => round($cost * (1 + (($margins['gremio'] ?? 25) / 100)), 2),
+        'Web' => round($cost * (1 + (($margins['web'] ?? 40) / 100)), 2),
+        'Mostrador' => round($cost * (1 + (($margins['mostrador'] ?? 55) / 100)), 2)
     ];
 
     $r['prices_by_name'] = $r['prices']; // Consolidate
