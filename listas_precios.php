@@ -199,8 +199,8 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
         const searchInput = document.getElementById('search-input');
         const categorySelect = document.getElementById('filter-category');
         const subcategorySelect = document.getElementById('filter-subcategory');
-        const rows = document.querySelectorAll('tbody tr');
-        
+        const rows = Array.from(document.querySelectorAll('tbody tr'));
+
         const catTree = <?php echo json_encode($catalog->getCategoriesWithSubcategories()); ?>;
 
         categorySelect.addEventListener('change', () => {
@@ -217,14 +217,30 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
             filterItems();
         });
 
+        let filterTimeout;
+        function debounceFilter() {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(filterItems, 300);
+        }
+
+        let currentIteration = 0;
         function filterItems() {
             const query = searchInput.value.toLowerCase();
             const selectedCat = categorySelect.value;
             const selectedSub = subcategorySelect.value;
 
-            // Use requestAnimationFrame for smoother performance on large lists
-            window.requestAnimationFrame(() => {
-                rows.forEach(row => {
+            // Incrementar ID de iteración para cancelar procesos previos si el usuario sigue escribiendo
+            const iterationId = ++currentIteration;
+            const chunkSize = 150; // Procesar de a 150 filas para no trabar el hilo principal
+            let index = 0;
+
+            function processChunk() {
+                if (iterationId !== currentIteration) return; // Cancelar si hay una nueva búsqueda
+
+                const end = Math.min(index + chunkSize, rows.length);
+
+                for (; index < end; index++) {
+                    const row = rows[index];
                     const sku = row.querySelector('td:nth-child(1)').innerText.toLowerCase();
                     const brand = row.querySelector('td:nth-child(2)').innerText.toLowerCase();
                     const desc = row.querySelector('td:nth-child(3)').innerText.toLowerCase();
@@ -236,11 +252,18 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
                     const matchesSub = !selectedSub || sub === selectedSub;
 
                     row.style.display = (matchesSearch && matchesCategory && matchesSub) ? '' : 'none';
-                });
-            });
+                }
+
+                if (index < rows.length) {
+                    // Ceder el hilo al navegador antes del siguiente bloque
+                    setTimeout(processChunk, 1);
+                }
+            }
+
+            processChunk();
         }
 
-        searchInput.addEventListener('input', filterItems);
+        searchInput.addEventListener('input', debounceFilter);
         subcategorySelect.addEventListener('change', filterItems);
     </script>
 

@@ -528,7 +528,7 @@ $today = date('d/m/y');
             }
 
             searchTimeout = setTimeout(() => {
-                fetch(`ajax_search_products.php?q=${query}`)
+                fetch(`ajax_search_products.php?q=${encodeURIComponent(query)}`)
                     .then(res => res.json())
                     .then(data => {
                         productResults.innerHTML = '';

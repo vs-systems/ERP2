@@ -70,15 +70,19 @@ class Catalog
 
     public function searchProducts($query)
     {
-        $sql = "SELECT * FROM products WHERE 
+        $sql = "SELECT *, 
+                (CASE WHEN sku LIKE ? THEN 1 ELSE 2 END) as priority
+                FROM products WHERE 
                 sku LIKE ? OR 
                 barcode LIKE ? OR 
                 provider_code LIKE ? OR 
                 description LIKE ? 
-                LIMIT 20";
+                ORDER BY priority ASC, description ASC
+                LIMIT 50";
         $searchTerm = "%$query%";
+        $exactTerm = "$query%";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([$searchTerm, $searchTerm, $searchTerm, $searchTerm]);
+        $stmt->execute([$exactTerm, $searchTerm, $searchTerm, $searchTerm, $searchTerm]);
         return $stmt->fetchAll();
     }
 
