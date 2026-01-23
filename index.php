@@ -103,7 +103,7 @@ require_once __DIR__ . '/src/config/config.php';
                     ['name' => 'RMA & Garantías', 'status' => 'Próximamente', 'icon' => 'build'],
                     ['name' => 'Proyectos', 'status' => 'Próximamente', 'icon' => 'account_tree'],
                     ['name' => 'Análisis Pliegos', 'status' => 'Próximamente', 'icon' => 'description'],
-                    ['name' => 'Competencia', 'status' => 'Próximamente', 'icon' => 'monitoring'],
+                    ['name' => 'Competencia', 'status' => 'Actual', 'icon' => 'monitoring'],
                     ['name' => 'Informes Glob.', 'status' => 'Actual', 'icon' => 'public'],
                 ];
 
