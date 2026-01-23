@@ -38,9 +38,24 @@ class Logistics
             $quoteNumber = trim($quoteNumber);
             error_log("Logistics: Attempting update for [$quoteNumber] to phase $newPhase");
 
+            // 0. Try to find company_id from quotation first
+            $stmtQ = $this->db->prepare("SELECT company_id FROM quotations WHERE quote_number = ? LIMIT 1");
+            $stmtQ->execute([$quoteNumber]);
+            $qInfo = $stmtQ->fetch();
+            $companyId = $qInfo ? $qInfo['company_id'] : null;
+
             // 1. Try to update existing record
-            $stmt = $this->db->prepare("UPDATE logistics_process SET current_phase = ?, updated_at = NOW() WHERE quote_number = ?");
-            $stmt->execute([$newPhase, $quoteNumber]);
+            $updateSql = "UPDATE logistics_process SET current_phase = ?, updated_at = NOW()";
+            $params = [$newPhase];
+            if ($companyId) {
+                $updateSql .= ", company_id = ?";
+                $params[] = $companyId;
+            }
+            $updateSql .= " WHERE quote_number = ?";
+            $params[] = $quoteNumber;
+
+            $stmt = $this->db->prepare($updateSql);
+            $stmt->execute($params);
 
             $rowCount = $stmt->rowCount();
             error_log("Logistics: UPDATE rowCount = $rowCount");
@@ -53,8 +68,8 @@ class Logistics
 
                 if (!$existing) {
                     error_log("Logistics: No record found for $quoteNumber, performing INSERT");
-                    $stmtIns = $this->db->prepare("INSERT INTO logistics_process (quote_number, current_phase, updated_at) VALUES (?, ?, NOW())");
-                    $res = $stmtIns->execute([$quoteNumber, $newPhase]);
+                    $stmtIns = $this->db->prepare("INSERT INTO logistics_process (quote_number, current_phase, updated_at, company_id) VALUES (?, ?, NOW(), ?)");
+                    $res = $stmtIns->execute([$quoteNumber, $newPhase, $companyId]);
                     error_log("Logistics: INSERT result = " . ($res ? "Success" : "Failure"));
                     return $res;
                 } else {
