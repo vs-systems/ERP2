@@ -153,6 +153,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = 'success';
     }
 
+    // Import Data handler
+    if ($action === 'import_csv' && $isAdmin && !empty($_FILES['csv_file']['tmp_name'])) {
+        $type = $_POST['import_type']; // products, clients, suppliers
+        $file = $_FILES['csv_file']['tmp_name'];
+        $handle = fopen($file, "r");
+        
+        if ($handle) {
+            $firstLine = fgets($handle);
+            $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
+            rewind($handle);
+            fgetcsv($handle, 1000, $delimiter); // Skip header row
+
+            $imported = 0;
+            $updated = 0;
+
+            if ($type === 'products') {
+                while (($data = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+                    if (count($data) < 4) continue;
+                    $sku = trim($data[0]);
+                    $desc = trim($data[1]);
+                    $brand = trim($data[2]);
+                    $cost = floatval(str_replace(',', '.', $data[3]));
+                    $iva = isset($data[4]) ? floatval(str_replace(',', '.', $data[4])) : 21.00;
+                    $cat = $data[5] ?? '';
+                    $subcat = $data[6] ?? '';
+                    $supplierName = trim($data[7] ?? '');
+
+                    // Find or create supplier if name provided
+                    $supplierId = null;
+                    if ($supplierName) {
+                        $stmtS = $db->prepare("SELECT id FROM entities WHERE name = ? AND (type = 'supplier' OR type = 'provider')");
+                        $stmtS->execute([$supplierName]);
+                        $supplierId = $stmtS->fetchColumn();
+                        if (!$supplierId) {
+                            $db->prepare("INSERT INTO entities (type, name, is_enabled) VALUES ('supplier', ?, 1)")->execute([$supplierName]);
+                            $supplierId = $db->lastInsertId();
+                        }
+                    }
+
+                    // Multi-supplier logic: check if exists
+                    $stmtCheck = $db->prepare("SELECT id FROM products WHERE sku = ?");
+                    $stmtCheck->execute([$sku]);
+                    $productId = $stmtCheck->fetchColumn();
+
+                    if (!$productId) {
+                        // NEW Product
+                        $catalog->addProduct([
+                            'sku' => $sku,
+                            'description' => $desc,
+                            'brand' => $brand,
+                            'unit_cost_usd' => $cost,
+                            'iva_rate' => $iva,
+                            'category' => $cat,
+                            'subcategory' => $subcat,
+                            'supplier_id' => $supplierId
+                        ]);
+                        $imported++;
+                    } else {
+                        // Product EXISTS
+                        if ($supplierId) {
+                            // Check if this supplier already has a price for this product
+                            $stmtCheckSup = $db->prepare("SELECT id FROM supplier_prices WHERE product_id = ? AND supplier_id = ?");
+                            $stmtCheckSup->execute([$productId, $supplierId]);
+                            if ($stmtCheckSup->fetchColumn()) {
+                                // SAME Supplier: Update price
+                                $db->prepare("UPDATE supplier_prices SET cost_usd = ? WHERE product_id = ? AND supplier_id = ?")
+                                   ->execute([$cost, $productId, $supplierId]);
+                            } else {
+                                // NEW Supplier for same SKU: Add as additional price
+                                $db->prepare("INSERT INTO supplier_prices (product_id, supplier_id, cost_usd) VALUES (?, ?, ?)")
+                                   ->execute([$productId, $supplierId, $cost]);
+                            }
+                            
+                            // Always recalculate minimum cost on main product
+                            $db->prepare("UPDATE products SET unit_cost_usd = (SELECT MIN(cost_usd) FROM supplier_prices WHERE product_id = ?) WHERE id = ?")
+                               ->execute([$productId, $productId]);
+                        }
+                        $updated++;
+                    }
+                }
+            } elseif ($type === 'clients' || $type === 'suppliers') {
+                $entityType = ($type === 'clients') ? 'client' : 'supplier';
+                while (($data = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+                    if (count($data) < 2) continue;
+                    $name = trim($data[0]);
+                    $taxId = trim($data[1]);
+                    $email = trim($data[2] ?? '');
+                    $phone = trim($data[3] ?? '');
+                    
+                    $sqlEnt = "INSERT INTO entities (type, name, tax_id, email, phone, is_enabled) VALUES (?, ?, ?, ?, ?, 1)
+                               ON DUPLICATE KEY UPDATE name = VALUES(name), email = VALUES(email), phone = VALUES(phone)";
+                    $db->prepare($sqlEnt)->execute([$entityType, $name, $taxId, $email, $phone]);
+                    $imported++;
+                }
+            }
+            fclose($handle);
+            $message = "Importación finalizada. Procesados: " . ($imported + $updated);
+            $status = 'success';
+        }
+    }
+
 }
 ?>
 <!DOCTYPE html>
@@ -293,6 +394,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <h3 class="font-bold text-lg mb-1">Informes</h3>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">Configuración de reportes del sistema.</p>
+                            </a>
+
+                            <!-- Importación (NUEVO) -->
+                            <a href="?section=import" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">upload_file</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">Importar Datos</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Productos, Clientes y Proveedores (CSV).</p>
                             </a>
                         </div>
                     
@@ -571,6 +681,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ?>
                              <!-- ABM PROVEEDORES -->
                              <?php include 'config_entities_partial.php'; ?>
+
+                    <?php elseif ($currentSection === 'import'): ?>
+                             <!-- IMPORTACION DE DATOS -->
+                             <div class="bg-white dark:bg-[#16202e] p-8 rounded-2xl border border-slate-200 dark:border-[#233348] max-w-2xl">
+                                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-rose-500">upload_file</span>
+                                    Importación masiva (CSV)
+                                </h3>
+                                
+                                <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                                    <input type="hidden" name="action" value="import_csv">
+                                    
+                                    <div class="space-y-2">
+                                        <label class="block text-xs font-bold uppercase text-slate-500">Tipo de Datos</label>
+                                        <div class="grid grid-cols-3 gap-3">
+                                            <label class="cursor-pointer">
+                                                <input type="radio" name="import_type" value="products" checked class="hidden peer">
+                                                <div class="p-3 text-center border border-slate-200 dark:border-white/5 rounded-xl peer-checked:bg-primary/10 peer-checked:border-primary peer-checked:text-primary transition-all">
+                                                    <span class="material-symbols-outlined block mb-1">inventory_2</span>
+                                                    <span class="text-[10px] font-bold uppercase">Productos</span>
+                                                </div>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="radio" name="import_type" value="clients" class="hidden peer">
+                                                <div class="p-3 text-center border border-slate-200 dark:border-white/5 rounded-xl peer-checked:bg-primary/10 peer-checked:border-primary peer-checked:text-primary transition-all">
+                                                    <span class="material-symbols-outlined block mb-1">groups</span>
+                                                    <span class="text-[10px] font-bold uppercase">Clientes</span>
+                                                </div>
+                                            </label>
+                                            <label class="cursor-pointer">
+                                                <input type="radio" name="import_type" value="suppliers" class="hidden peer">
+                                                <div class="p-3 text-center border border-slate-200 dark:border-white/5 rounded-xl peer-checked:bg-primary/10 peer-checked:border-primary peer-checked:text-primary transition-all">
+                                                    <span class="material-symbols-outlined block mb-1">local_shipping</span>
+                                                    <span class="text-[10px] font-bold uppercase">Proveedores</span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-6 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl text-center">
+                                        <label class="cursor-pointer block">
+                                            <input type="file" name="csv_file" accept=".csv" class="hidden" required>
+                                            <div class="text-slate-500">
+                                                <span class="material-symbols-outlined text-4xl mb-2">cloud_upload</span>
+                                                <p class="text-sm">Haz clic para seleccionar el archivo CSV</p>
+                                                <p class="text-[10px] uppercase font-bold mt-1">Formato: SKU;Descripción;Marca;Costo;IVA;Cat;Subcat;Proveedor</p>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="bg-blue-500/5 p-4 rounded-xl border border-blue-500/10">
+                                        <p class="text-xs text-blue-500 leading-relaxed">
+                                            <strong>Nota sobre productos:</strong> Si el SKU ya existe y el proveedor es distinto, se agregará como precio adicional para comparación. Si es el mismo proveedor, se actualizará el precio actual.
+                                        </p>
+                                    </div>
+
+                                    <div class="pt-4 flex justify-end">
+                                        <button class="bg-primary text-white px-8 py-3 rounded-xl font-bold uppercase text-sm shadow-lg hover:scale-105 transition-transform">Comenzar Importación</button>
+                                    </div>
+                                </form>
+                             </div>
 
                     <?php else: ?>
                             <!-- DEFAULT / FALLBACK -->

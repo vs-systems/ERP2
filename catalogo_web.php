@@ -19,7 +19,7 @@ $categories = $catalog->getCategories();
 
 // Fetch exchange rate
 $db = Vsys\Lib\Database::getInstance();
-$stmt = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'USD' ORDER BY date_rate DESC LIMIT 1");
+$stmt = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'ARS' ORDER BY fetched_at DESC LIMIT 1");
 $currentRate = $stmt->fetchColumn() ?: 1455.00;
 
 // Fetch unique brands for filtering
@@ -345,14 +345,14 @@ sort($brands);
             }
 
             cards.forEach(card => {
-                const text = card.dataset.search; 
+                const text = card.dataset.search;
                 const cardCat = card.dataset.category;
                 const cardSub = card.querySelector('.product-subcategory').innerText;
                 const cardBrand = card.dataset.brand;
 
                 const matchesSearch = text.includes(query);
                 const matchesBrand = !brand || cardBrand === brand;
-                
+
                 let matchesCategory = true;
                 if (selectedCat) {
                     if (selectedSub) {

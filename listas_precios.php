@@ -22,7 +22,7 @@ if (!in_array(strtolower($currentList), $validLists)) {
 }
 
 // Exchange Rate
-$currRateStmt = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'USD' ORDER BY date_rate DESC LIMIT 1");
+$currRateStmt = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'ARS' ORDER BY fetched_at DESC LIMIT 1");
 $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
 
 ?>

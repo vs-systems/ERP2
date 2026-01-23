@@ -20,7 +20,7 @@ $categories = $catalog->getCategories();
 
 // Fetch exchange rate
 $db = Vsys\Lib\Database::getInstance();
-$stmt = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'USD' ORDER BY date_rate DESC LIMIT 1");
+$stmt = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'ARS' ORDER BY fetched_at DESC LIMIT 1");
 $currentRate = $stmt->fetchColumn() ?: 1455.00;
 
 // Fetch unique brands for filtering

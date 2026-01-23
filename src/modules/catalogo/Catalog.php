@@ -18,7 +18,7 @@ class Catalog
 
     public function getAllProducts()
     {
-        $stmt = $this->db->prepare("SELECT p.*, c.name as category_name FROM products p LEFT JOIN categories c ON p.category_id = c.id ORDER BY p.description ASC");
+        $stmt = $this->db->prepare("SELECT * FROM products ORDER BY description ASC");
         $stmt->execute();
         return $stmt->fetchAll();
     }
