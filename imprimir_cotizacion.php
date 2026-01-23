@@ -5,6 +5,7 @@
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/lib/Utils.php';
+require_once __DIR__ . '/src/modules/cotizador/Cotizador.php';
 
 use Vsys\Modules\Cotizador\Cotizador;
 use Vsys\Lib\Utils;
