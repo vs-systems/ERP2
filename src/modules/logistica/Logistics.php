@@ -1,6 +1,8 @@
 <?php
 namespace Vsys\Modules\Logistica;
 
+require_once dirname(__DIR__, 2) . '/lib/Database.php';
+
 use Vsys\Lib\Database;
 
 class Logistics

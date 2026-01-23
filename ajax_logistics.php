@@ -8,12 +8,13 @@ ini_set('display_errors', 0);
 ini_set('html_errors', 0);
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/src/modules/logistica/Logistics.php';
+require_once __DIR__ . '/src/config/config.php';
+require_once LIB_PATH . '/Database.php';
+require_once MODULES_PATH . '/logistica/Logistics.php';
 
 use Vsys\Modules\Logistica\Logistics;
 
 try {
-    require_once __DIR__ . '/src/config/config.php';
 
     $logistics = new Logistics();
     $action = $_POST['action'] ?? '';
