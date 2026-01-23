@@ -8,6 +8,11 @@ require_once __DIR__ . '/src/modules/purchases/Purchases.php';
 
 use Vsys\Modules\Purchases\Purchases;
 
+// Debug
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $purchasesModule = new Purchases();
 $purchase = $purchasesModule->getPurchase($id);
@@ -161,9 +166,7 @@ if (!$purchase)
             <td class="entity-box">
                 <strong>Proveedor:</strong><br>
                 <?php echo $purchase['supplier_name']; ?><br>
-                <?php echo $purchase['tax_id'] ? "CUIT: " . $purchase['tax_id'] . "<br>" : ""; ?>
-                <?php echo $purchase['address'] ? $purchase['address'] . "<br>" : ""; ?>
-                <?php echo $purchase['city'] ? $purchase['city'] . ($purchase['state'] ? ", " . $purchase['state'] : "") : ""; ?>
+                <?php echo isset($purchase['tax_id']) && $purchase['tax_id'] ? "CUIT: " . $purchase['tax_id'] . "<br>" : ""; ?>
             </td>
         </tr>
     </table>

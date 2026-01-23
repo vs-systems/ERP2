@@ -174,7 +174,7 @@ class Purchases
      */
     public function getPurchase($id)
     {
-        $sql = "SELECT p.*, e.name as supplier_name, e.tax_id, e.address, e.city, e.state, e.email, e.phone
+        $sql = "SELECT p.*, e.name as supplier_name, e.tax_id
                 FROM purchases p 
                 LEFT JOIN entities e ON p.entity_id = e.id 
                 WHERE p.id = :id";
