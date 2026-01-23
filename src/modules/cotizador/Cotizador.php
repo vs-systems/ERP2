@@ -148,7 +148,7 @@ class Cotizador
 
     public function getQuotation($id)
     {
-        $stmt = $this->db->prepare("SELECT q.*, e.name as client_name, e.tax_id, e.address, e.email as client_email, e.phone, u.full_name as seller_name 
+        $stmt = $this->db->prepare("SELECT q.*, e.name as client_name, e.tax_id, e.address, e.email as client_email, e.phone, e.transport, u.full_name as seller_name 
                                     FROM quotations q 
                                     JOIN entities e ON q.client_id = e.id 
                                     JOIN users u ON q.user_id = u.id 

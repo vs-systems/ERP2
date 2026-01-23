@@ -15,6 +15,18 @@ $catalog = new Catalog();
 $priceListModule = new PriceList();
 
 $allProducts = $catalog->getAllProducts();
+
+// Sort: In stock first
+usort($allProducts, function ($a, $b) {
+    $sA = $a['stock_qty'] ?? 0;
+    $sB = $b['stock_qty'] ?? 0;
+    if ($sA > 0 && $sB <= 0)
+        return -1;
+    if ($sA <= 0 && $sB > 0)
+        return 1;
+    return strcmp($a['sku'], $b['sku']);
+});
+
 $categories = $catalog->getCategories();
 
 // Fetch exchange rate
@@ -25,6 +37,36 @@ $currentRate = $stmt->fetchColumn() ?: 1455.00;
 // Fetch unique brands for filtering
 $brands = array_unique(array_filter(array_column($allProducts, 'brand')));
 sort($brands);
+?>
+// Check Maintenance Mode
+$catConfig = json_decode(file_get_contents(__DIR__ . '/config_catalogs.json') ?: '{"maintenance_mode": 0}', true);
+if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
+    ?>
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Sito en Mantenimiento - Vecino Seguro</title>
+        <link rel="stylesheet" href="css/style_premium.css">
+        <style>
+            body { background: #020617; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; text-align: center; }
+            .maint-container { max-width: 500px; padding: 2rem; }
+            .maint-logo { width: 300px; margin-bottom: 2rem; }
+            h1 { font-size: 2rem; margin-bottom: 1rem; color: #3b82f6; }
+            p { color: #94a3b8; }
+        </style>
+    </head>
+    <body>
+        <div class="maint-container">
+            <img src="src/img/VSLogo_v2.jpg" alt="Vecino Seguro" class="maint-logo">
+            <h1>Sitio en mantenimiento</h1>
+            <p>Por favor regrese en unos minutos. Gracias.</p>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -93,6 +135,8 @@ sort($brands);
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(5px);
+            <?php if (($p['stock_qty'] ?? 0) <= 0)
+                echo 'opacity: 0.7; filter: grayscale(0.5); background: rgba(15, 23, 42, 0.6);'; ?>
         }
 
         .product-card:hover {
@@ -193,9 +237,12 @@ sort($brands);
 <body>
     <header>
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=2" alt="VS System" class="logo-large" style="height: 45px;">
-            <div style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.2rem;">
-                Vecino Seguro <span style="color: #3b82f6;">Web</span>
+            <div
+                style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.5rem; display: flex; flex-direction: column;">
+                <span style="font-size: 1.8rem;">Vecino Seguro</span>
+                <span
+                    style="font-size: 0.9rem; font-weight: 600; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px;">Catálogo
+                    Web</span>
             </div>
         </div>
         <div class="header-right">
@@ -286,6 +333,32 @@ sort($brands);
                     <span class="product-sku">
                         <?php echo htmlspecialchars($p['sku']); ?>
                     </span>
+
+                    <!-- Semáforo de Stock -->
+                    <?php
+                    $stock = (int) ($p['stock_qty'] ?? 0);
+                    $stockColor = 'bg-red-500';
+                    $statusText = 'Sin Stock';
+                    if ($stock > 0) {
+                        if ($stock <= 15)
+                            $stockColor = 'bg-red-500';
+                        elseif ($stock <= 50)
+                            $stockColor = 'bg-yellow-500';
+                        else
+                            $stockColor = 'bg-green-500';
+                        $statusText = $stock . ' unidades';
+                    }
+                    ?>
+                    <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;">
+                        <div
+                            style="height: 6px; width: 40px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden;">
+                            <div style="height: 100%; width: 100%;" class="<?php echo $stockColor; ?>"></div>
+                        </div>
+                        <span
+                            style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                            <?php echo $statusText; ?>
+                        </span>
+                    </div>
 
                     <div class="product-footer">
                         <div class="product-price-container">

@@ -159,7 +159,8 @@ if (!$quote)
             <td class="entity-box">
                 <strong>Para:</strong><br>
                 <?php echo $quote['client_name']; ?><br>
-                <?php echo $quote['tax_id'] ? "CUIT: " . $quote['tax_id'] : ""; ?>
+                <?php echo $quote['tax_id'] ? "CUIT: " . $quote['tax_id'] : ""; ?><br>
+                <?php echo !empty($quote['transport']) ? "Transporte: " . $quote['transport'] : ""; ?>
             </td>
         </tr>
     </table>

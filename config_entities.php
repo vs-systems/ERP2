@@ -40,7 +40,8 @@ $editData = [
     'is_verified' => 0,
     'city' => '',
     'lat' => '',
-    'lng' => ''
+    'lng' => '',
+    'transport' => ''
 ];
 
 if ($id) {
@@ -76,7 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'is_verified' => isset($_POST['is_verified']) ? 1 : 0,
         'city' => $_POST['city'] ?? null,
         'lat' => $_POST['lat'] ?? null,
-        'lng' => $_POST['lng'] ?? null
+        'lng' => $_POST['lng'] ?? null,
+        'transport' => $_POST['transport'] ?? null
     ];
 
     if ($clientModule->saveClient($data)) {
@@ -278,6 +280,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <label class="form-label-vsys">Longitud</label>
                                     <input type="text" id="geo_lng" name="lng" value="<?php echo $editData['lng']; ?>"
                                         class="form-input-vsys font-mono text-xs">
+                                </div>
+                                <div>
+                                    <label class="form-label-vsys">Transporte</label>
+                                    <input type="text" name="transport" value="<?php echo $editData['transport']; ?>"
+                                        placeholder="Empresa de transporte" class="form-input-vsys">
                                 </div>
                             </div>
                         </div>

@@ -14,6 +14,17 @@ $catalog = new Catalog();
 $priceListModule = new PriceList();
 $products = $catalog->getAllProducts();
 
+// Sort: In stock first
+usort($products, function ($a, $b) {
+    $sA = $a['stock_qty'] ?? 0;
+    $sB = $b['stock_qty'] ?? 0;
+    if ($sA > 0 && $sB <= 0)
+        return -1;
+    if ($sA <= 0 && $sB > 0)
+        return 1;
+    return strcmp($a['sku'], $b['sku']);
+});
+
 // Default list to show
 $currentList = $_GET['list'] ?? 'gremio';
 $validLists = ['gremio', 'web', 'mostrador'];
@@ -168,9 +179,14 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
                                             <?php echo $iva; ?>%
                                         </td>
                                         <td class="px-6 py-3 text-center">
+                                            <?php
+                                            $stockVal = $p['stock_qty'] ?? 0;
+                                            $stockColorClass = ($stockVal > 0) ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500';
+                                            $stockDisplay = ($stockVal > 0) ? $stockVal : 'Sin Stock';
+                                            ?>
                                             <span
-                                                class="px-2 py-1 rounded-full text-[10px] font-bold uppercase <?php echo ($p['stock_qty'] > 0) ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'; ?>">
-                                                <?php echo ($p['stock_qty'] > 0) ? $p['stock_qty'] : 'Sin Stock'; ?>
+                                                class="px-2 py-1 rounded-full text-[10px] font-bold uppercase <?php echo $stockColorClass; ?>">
+                                                <?php echo $stockDisplay; ?>
                                             </span>
                                         </td>
                                     </tr>

@@ -65,14 +65,14 @@ class Client
                     contact_person, email, phone, mobile, address, 
                     delivery_address, default_voucher_type, tax_category,
                     is_enabled, is_retention_agent, payment_condition, preferred_payment_method,
-                    seller_id, client_profile, is_verified, city, lat, lng
+                    seller_id, client_profile, is_verified, city, lat, lng, transport
                 ) 
                 VALUES (
                     :id, :type, :tax_id, :document_number, :name, :fantasy_name, 
                     :contact, :email, :phone, :mobile, :address, 
                     :delivery_address, :default_voucher, :tax_category,
                     :is_enabled, :retention, :payment_condition, :payment_method,
-                    :seller_id, :client_profile, :is_verified, :city, :lat, :lng
+                    :seller_id, :client_profile, :is_verified, :city, :lat, :lng, :transport
                 )
                 ON DUPLICATE KEY UPDATE 
                 document_number = VALUES(document_number),
@@ -95,7 +95,8 @@ class Client
                 is_verified = VALUES(is_verified),
                 city = VALUES(city),
                 lat = VALUES(lat),
-                lng = VALUES(lng)";
+                lng = VALUES(lng),
+                transport = VALUES(transport)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute($data);
     }

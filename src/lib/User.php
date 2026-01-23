@@ -15,6 +15,7 @@ class User
     private $username;
     private $role;
     private $entity_id;
+    private $full_name;
 
     public function __construct()
     {

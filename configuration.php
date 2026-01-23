@@ -146,6 +146,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = 'success';
     }
 
+    // Save Catalog Config (Maintenance Mode)
+    if ($action === 'save_catalog_config' && $isAdmin) {
+        $config = [
+            'maintenance_mode' => isset($_POST['maintenance_mode']) ? 1 : 0
+        ];
+        file_put_contents(__DIR__ . '/config_catalogs.json', json_encode($config));
+        $message = 'Configuración de catálogos actualizada.';
+        $status = 'success';
+    }
+
     // Delete Entity
     if ($action === 'delete_entity' && $isAdmin) {
         $db->prepare("DELETE FROM entities WHERE id = ?")->execute([$_POST['id']]);
@@ -403,6 +413,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                                 <h3 class="font-bold text-lg mb-1">Importar Datos</h3>
                                 <p class="text-xs text-slate-500 dark:text-slate-400">Productos, Clientes y Proveedores (CSV).</p>
+                            </a>
+
+                            <!-- ABM Catalogos (NUEVO) -->
+                            <a href="?section=catalogs" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-violet-500/10 text-violet-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">language</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM Catálogos</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Activar/Desactivar catálogo online.</p>
                             </a>
                         </div>
                     
@@ -739,6 +758,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                     <div class="pt-4 flex justify-end">
                                         <button class="bg-primary text-white px-8 py-3 rounded-xl font-bold uppercase text-sm shadow-lg hover:scale-105 transition-transform">Comenzar Importación</button>
+                                    </div>
+                                </form>
+                             </div>
+
+                    <?php elseif ($currentSection === 'catalogs'): 
+                            $catConfig = json_decode(file_get_contents(__DIR__ . '/config_catalogs.json') ?: '{"maintenance_mode": 0}', true);
+                    ?>
+                             <!-- ABM CATALOGOS -->
+                             <div class="bg-white dark:bg-[#16202e] p-8 rounded-2xl border border-slate-200 dark:border-[#233348] max-w-2xl">
+                                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-violet-500">language</span>
+                                    Gestión de Catálogos Online
+                                </h3>
+                                
+                                <form method="POST" class="space-y-6">
+                                    <input type="hidden" name="action" value="save_catalog_config">
+                                    
+                                    <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#101822] rounded-xl border border-slate-200 dark:border-[#233348]">
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-sm">Modo Mantenimiento</span>
+                                            <span class="text-xs text-slate-500">Si se activa, los catálogos públicos mostrarán un aviso y no serán accesibles.</span>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" name="maintenance_mode" value="1" <?php echo ($catConfig['maintenance_mode'] ?? 0) ? 'checked' : ''; ?> class="sr-only peer">
+                                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                                        </label>
+                                    </div>
+
+                                    <?php if ($catConfig['maintenance_mode'] ?? 0): ?>
+                                        <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center gap-3">
+                                            <span class="material-symbols-outlined text-amber-500">warning</span>
+                                            <span class="text-xs text-amber-500 font-bold uppercase tracking-tight">El catálogo está fuera de línea actualmente.</span>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <div class="pt-4 flex justify-end">
+                                        <button class="bg-primary text-white px-8 py-3 rounded-xl font-bold uppercase text-sm shadow-lg hover:scale-105 transition-transform">Guardar Cambios</button>
                                     </div>
                                 </form>
                              </div>
