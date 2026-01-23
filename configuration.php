@@ -250,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </form>
                             </div>
 
-                    <?php elseif ($section === 'budget'):
+                    <?php elseif ($currentSection === 'budget'):
                         $budgetConfig = json_decode(file_get_contents(__DIR__ . '/config_budget.json') ?: '{}', true);
                         ?>
                             <!-- ABM PRESUPUESTOS -->
@@ -272,7 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </form>
                             </div>
 
-                    <?php elseif ($section === 'users'):
+                    <?php elseif ($currentSection === 'users'):
                         $users = $db->query("SELECT * FROM users ORDER BY username")->fetchAll();
 
                         // Check for Edit Mode
@@ -384,7 +384,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </table>
                              </div>
 
-                    <?php elseif ($section === 'brands'):
+                    <?php elseif ($currentSection === 'brands'):
                         $brands = $db->query("SELECT * FROM brands ORDER BY name")->fetchAll();
                         ?>
                             <!-- ABM MARCAS -->
@@ -413,14 +413,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
 
-                    <?php elseif ($section === 'clients'): ?>
+                    <?php elseif ($currentSection === 'clients'): ?>
                             <!-- ABM CLIENTES (Redirect or Include) -->
                             <?php include 'config_entities_partial.php'; ?>
 
                     <?php else: ?>
                             <!-- DEFAULT / FALLBACK -->
                             <div class="text-center py-20">
-                                <h3 class="text-xl text-slate-400 font-bold uppercase">Sección no encontrada: <?php echo htmlspecialchars($section); ?></h3>
+                                <h3 class="text-xl text-slate-400 font-bold uppercase">Sección no encontrada: <?php echo htmlspecialchars($currentSection); ?></h3>
                                 <a href="configuration.php?section=main" class="text-primary mt-4 inline-block font-bold">Volver al Centro de Configuración</a>
                             </div>
                     <?php endif; ?>
