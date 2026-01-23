@@ -153,7 +153,14 @@ $quotes = $cot->getAllQuotations(100);
                                                 $ <?php echo number_format($q['total_ars'], 2, ',', '.'); ?>
                                             </td>
                                             <td class="px-6 py-5 text-center">
-                                                <?php if ($q['is_confirmed']): ?>
+                                                <?php if ($q['status'] === 'Perdido'): ?>
+                                                    <span
+                                                        class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/10 text-red-500 text-[10px] font-bold uppercase tracking-tight border border-red-500/20">
+                                                        <span
+                                                            class="material-symbols-outlined text-[12px] fill-1">cancel</span>
+                                                        Perdido
+                                                    </span>
+                                                <?php elseif ($q['is_confirmed']): ?>
                                                     <span
                                                         class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-green-500/10 text-green-500 text-[10px] font-bold uppercase tracking-tight border border-green-500/20">
                                                         <span
@@ -164,7 +171,7 @@ $quotes = $cot->getAllQuotations(100);
                                                     <span
                                                         class="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-500/10 text-slate-500 text-[10px] font-bold uppercase tracking-tight border border-slate-500/10">
                                                         <span class="material-symbols-outlined text-[12px]">draft</span>
-                                                        Borrador
+                                                        Pendiente
                                                     </span>
                                                 <?php endif; ?>
                                             </td>
@@ -186,6 +193,25 @@ $quotes = $cot->getAllQuotations(100);
                                                         <span
                                                             class="material-symbols-outlined text-[18px] <?php echo $q['is_confirmed'] ? 'fill-1' : ''; ?>">check_circle</span>
                                                     </button>
+
+                                                    <!-- Mark as Lost -->
+                                                    <?php if ($q['status'] !== 'Perdido'): ?>
+                                                        <button
+                                                            onclick="toggleStatus(<?php echo $q['id']; ?>, 'quotation', 'status', 'Perdido')"
+                                                            class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-all text-slate-400 hover:text-red-500"
+                                                            title="Marcar como Perdido">
+                                                            <span
+                                                                class="material-symbols-outlined text-[18px]">thumb_down</span>
+                                                        </button>
+                                                    <?php else: ?>
+                                                        <button
+                                                            onclick="toggleStatus(<?php echo $q['id']; ?>, 'quotation', 'status', 'Pendiente')"
+                                                            class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-all text-red-500"
+                                                            title="Reactivar (Marcar como Pendiente)">
+                                                            <span
+                                                                class="material-symbols-outlined text-[18px] fill-1">thumb_down</span>
+                                                        </button>
+                                                    <?php endif; ?>
 
                                                     <!-- Payment Toggle -->
                                                     <button

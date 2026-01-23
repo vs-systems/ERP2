@@ -31,6 +31,17 @@ try {
         $db->prepare("UPDATE $table SET is_confirmed = 1 WHERE id = ?")->execute([$id]);
     }
 
+    // Sync status and is_confirmed for quotations
+    if ($type === 'quotation') {
+        if ($field === 'status') {
+            $isConfirmed = ($value === 'Aceptado') ? 1 : 0;
+            $db->prepare("UPDATE quotations SET is_confirmed = ? WHERE id = ?")->execute([$isConfirmed, $id]);
+        } elseif ($field === 'is_confirmed') {
+            $status = ($value == 1) ? 'Aceptado' : 'Pendiente';
+            $db->prepare("UPDATE quotations SET status = ? WHERE id = ?")->execute([$status, $id]);
+        }
+    }
+
     echo json_encode(['success' => true]);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);

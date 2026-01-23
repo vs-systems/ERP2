@@ -153,11 +153,10 @@ class OperationAnalysis
     public function getStatusStats()
     {
         // Quotations Status
+        // Quotations Status
         $qConfirm = $this->db->query("SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1")->fetchColumn() ?: 0;
-        $qPend = $this->db->query("SELECT COUNT(*) FROM quotations WHERE is_confirmed = 0")->fetchColumn() ?: 0;
-        // Lost quotes - assuming they might be marked as is_confirmed=0 but maybe we need a dedicated status?
-        // Let's check CRM if there are 'Perdido' linked to quotes
-        $qLost = 0;
+        $qPend = $this->db->query("SELECT COUNT(*) FROM quotations WHERE is_confirmed = 0 AND (status != 'Perdido' OR status IS NULL)")->fetchColumn() ?: 0;
+        $qLost = $this->db->query("SELECT COUNT(*) FROM quotations WHERE status = 'Perdido'")->fetchColumn() ?: 0;
 
         // Purchases Status
         $pPend = $this->db->query("SELECT COUNT(*) FROM purchases WHERE status = 'Pendiente' AND is_confirmed = 0")->fetchColumn() ?: 0;
