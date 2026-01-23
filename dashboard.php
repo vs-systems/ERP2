@@ -130,12 +130,7 @@ $logisticsPhases = [
                 </div>
 
                 <div class="hidden lg:flex items-center flex-1 max-w-xl">
-                    <div class="relative w-full">
-                        <span
-                            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xl">search</span>
-                        <input type="text" placeholder="Buscar cliente, SKU o cotización..."
-                            class="w-full bg-slate-100 dark:bg-[#16202e] border-none rounded-lg py-2 pl-10 pr-4 text-sm dark:text-white text-slate-800 placeholder-slate-500 focus:ring-2 focus:ring-[#136dec] outline-none">
-                    </div>
+                    <!-- Global search removed as requested -->
                 </div>
 
                 <div class="flex items-center gap-4 ml-auto">
@@ -335,46 +330,7 @@ $logisticsPhases = [
                             </div>
                         </div>
 
-                        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function () {
-                                // Chart Settings
-                                const chartOptions = {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: { legend: { display: false } },
-                                    cutout: '70%'
-                                };
-
-                                // Quotations Chart
-                                new Chart(document.getElementById('quoteStatusChart'), {
-                                    type: 'doughnut',
-                                    data: {
-                                        labels: ['Confirmadas', 'Pendientes', 'Perdidas'],
-                                        datasets: [{
-                                            data: [<?php echo $statusStats['quotations']['confirmadas']; ?>, <?php echo $statusStats['quotations']['pendientes']; ?>, <?php echo $statusStats['quotations']['perdidas']; ?>],
-                                            backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
-                                            borderWidth: 0
-                                        }]
-                                    },
-                                    options: chartOptions
-                                });
-
-                                // Purchases Chart
-                                new Chart(document.getElementById('purchaseStatusChart'), {
-                                    type: 'doughnut',
-                                    data: {
-                                        labels: ['Confirmadas', 'Pagadas', 'Pendientes', 'Canceladas'],
-                                        datasets: [{
-                                            data: [<?php echo $statusStats['purchases']['confirmadas']; ?>, <?php echo $statusStats['purchases']['pagadas']; ?>, <?php echo $statusStats['purchases']['pendientes']; ?>, <?php echo $statusStats['purchases']['canceladas']; ?>],
-                                            backgroundColor: ['#3b82f6', '#a855f7', '#f59e0b', '#64748b'],
-                                            borderWidth: 0
-                                        }]
-                                    },
-                                    options: chartOptions
-                                });
-                            });
-                        </script>
+                        <!-- Chart Initialization Scripts Moved to Bottom -->
                     <?php endif; ?>
 
                     <!-- Charts & Ranking -->

@@ -18,7 +18,7 @@ if (strlen($query) < 2) {
 }
 
 $clientMod = new Client();
-$results = $clientMod->searchClients($query, 'all');
+$results = $clientMod->searchClients($query, 'client');
 
 // Transform and add 'origin' field
 $finalResults = [];
@@ -44,9 +44,11 @@ $leads->execute([$q]);
 
 // Helper to check if lead exists in clients
 $existingClientNames = array_map(function ($c) {
-    return strtolower($c['name']); }, $results);
+    return strtolower($c['name']);
+}, $results);
 $existingClientTaxIds = array_map(function ($c) {
-    return $c['tax_id']; }, $results);
+    return $c['tax_id'];
+}, $results);
 
 foreach ($leads->fetchAll() as $l) {
     // Deduplication Logic: Skip Lead if Name or Tax ID matches an existing Client

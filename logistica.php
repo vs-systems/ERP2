@@ -243,7 +243,8 @@ $phases = [
                                                         <button
                                                             class="bg-primary text-white py-2 px-4 rounded-xl text-xs font-extra-bold shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all flex items-center justify-center gap-2 mb-2"
                                                             onclick="despachar('<?php echo $p['quote_number']; ?>')">
-                                                            <span class="material-symbols-outlined text-sm">shipping</span>
+                                                            <span
+                                                                class="material-symbols-outlined text-sm">local_shipping</span>
                                                             DESPACHAR
                                                         </button>
                                                         <button

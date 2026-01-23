@@ -272,10 +272,181 @@ $stages = [
         </main>
     </div>
 
+    <!-- Legajo Modal (Operation Folder) -->
+    <div id="legajoModal"
+        class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div
+            class="bg-white dark:bg-[#16202e] w-full max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden flex flex-col shadow-2xl border border-slate-200 dark:border-[#233348]">
+            <div
+                class="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-[#101822]/50">
+                <div class="flex items-center gap-3">
+                    <div class="bg-primary/20 p-2 rounded-lg text-primary">
+                        <span class="material-symbols-outlined">folder_open</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-xl dark:text-white" id="legajoName">Legajo de Operación</h3>
+                        <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest" id="legajoStatus">
+                            Estado: Nuevo</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('legajoModal').style.display='none'"
+                    class="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left: Info & History -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <div>
+                            <h4
+                                class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">history</span> Historial de Conversación
+                            </h4>
+                            <div class="space-y-4" id="interactionHistory">
+                                <!-- Interacciones via JS -->
+                            </div>
+                        </div>
+
+                        <!-- Add Interaction form -->
+                        <div
+                            class="bg-slate-50 dark:bg-[#101822] p-4 rounded-2xl border border-slate-200 dark:border-white/5">
+                            <h4 class="text-[10px] font-bold text-primary uppercase tracking-widest mb-3">Registrar
+                                Nueva Interacción</h4>
+                            <div class="flex gap-2">
+                                <input type="text" id="newInteractionDesc"
+                                    placeholder="Escriba un resumen de lo conversado..."
+                                    class="flex-1 bg-white dark:bg-[#16202e] border-slate-200 dark:border-[#233348] rounded-xl text-sm p-3">
+                                <button onclick="saveInteraction()"
+                                    class="bg-primary text-white p-3 rounded-xl hover:scale-105 transition-transform">
+                                    <span class="material-symbols-outlined">send</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Quotes & Links -->
+                    <div class="space-y-6">
+                        <div
+                            class="bg-slate-50 dark:bg-[#101822] p-6 rounded-2xl border border-slate-200 dark:border-white/5">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Presupuestos
+                                Vinculados</h4>
+                            <div class="space-y-3" id="legajoQuotes">
+                                <!-- Cotizaciones via JS -->
+                            </div>
+                        </div>
+
+                        <div class="bg-primary/5 p-6 rounded-2xl border border-primary/10">
+                            <h4 class="text-xs font-bold text-primary uppercase tracking-widest mb-4">Datos de Contacto
+                            </h4>
+                            <div class="space-y-4" id="legajoContact">
+                                <!-- Datos via JS -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="hidden" id="currentLeadId">
+
     <script>
-        function openLead(id) {
-            console.log('Opening lead details:', id);
-            // Modal expansion planned for phase 14
+        async function openLead(id) {
+            document.getElementById('currentLeadId').value = id;
+            const modal = document.getElementById('legajoModal');
+            modal.style.display = 'flex';
+
+            const resp = await fetch(`ajax_crm_details.php?id=${id}`);
+            const data = await resp.json();
+
+            if (!data.success) {
+                alert(data.error);
+                return;
+            }
+
+            document.getElementById('legajoName').innerText = data.lead.name;
+            document.getElementById('legajoStatus').innerText = `Estado: ${data.lead.status}`;
+
+            // Render Interactions
+            const historyDiv = document.getElementById('interactionHistory');
+            historyDiv.innerHTML = '';
+            data.interactions.forEach(i => {
+                const div = document.createElement('div');
+                div.className = "flex gap-4 items-start";
+                div.innerHTML = `
+                    <div class="size-8 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">${i.user_name.charAt(0)}</div>
+                    <div class="flex-1 bg-slate-50 dark:bg-white/[0.03] p-3 rounded-2xl border border-slate-100 dark:border-white/5">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-[10px] font-bold text-primary uppercase">${i.type}</span>
+                            <span class="text-[9px] text-slate-500">${i.interaction_date}</span>
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${i.description}</p>
+                    </div>
+                `;
+                historyDiv.appendChild(div);
+            });
+            if (data.interactions.length === 0) historyDiv.innerHTML = '<p class="text-xs text-slate-500 italic">No hay interacciones registradas.</p>';
+
+            // Render Quotes
+            const quotesDiv = document.getElementById('legajoQuotes');
+            quotesDiv.innerHTML = '';
+            data.quotations.forEach(q => {
+                const div = document.createElement('div');
+                div.className = "p-3 bg-white dark:bg-[#16202e] rounded-xl border border-slate-100 dark:border-white/5 flex justify-between items-center";
+                div.innerHTML = `
+                    <div>
+                        <span class="text-xs font-bold dark:text-white">${q.quote_number}</span>
+                        <p class="text-[10px] text-slate-500">$${q.total_usd} USD</p>
+                    </div>
+                    <a href="imprimir_cotizacion.php?id=${q.id}" target="_blank" class="p-2 text-primary hover:bg-primary/10 rounded-lg">
+                        <span class="material-symbols-outlined text-lg">open_in_new</span>
+                    </a>
+                `;
+                quotesDiv.appendChild(div);
+            });
+            if (data.quotations.length === 0) quotesDiv.innerHTML = '<p class="text-xs text-slate-500 italic">No hay presupuestos asociados.</p>';
+
+            // Render Contact
+            const contactDiv = document.getElementById('legajoContact');
+            contactDiv.innerHTML = `
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">Persona</p>
+                    <p class="text-sm dark:text-white font-medium">${data.lead.contact_person || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">Teléfono</p>
+                    <p class="text-sm dark:text-white font-medium">${data.lead.phone || 'N/A'}</p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase">Email</p>
+                    <p class="text-sm dark:text-white font-medium truncate">${data.lead.email || 'N/A'}</p>
+                </div>
+            `;
+        }
+
+        async function saveInteraction() {
+            const id = document.getElementById('currentLeadId').value;
+            const desc = document.getElementById('newInteractionDesc').value;
+            if (!desc) return;
+
+            const formData = new FormData();
+            formData.append('action', 'log_interaction');
+            formData.append('entity_id', id);
+            formData.append('entity_type', 'lead');
+            formData.append('type', 'Nota Manual');
+            formData.append('description', desc);
+            formData.append('user_id', <?php echo $_SESSION['user_id']; ?>);
+
+            const resp = await fetch('ajax_crm_actions.php', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (data.success) {
+                document.getElementById('newInteractionDesc').value = '';
+                openLead(id);
+            } else {
+                alert(data.error);
+            }
         }
 
         async function moveLead(id, direction) {

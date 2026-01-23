@@ -289,9 +289,9 @@ $db = \Vsys\Lib\Database::getInstance();
                     if (e.type === 'client') {
                         cCount++;
                         color = 'blue';
-                    } else if (e.type === 'transport') {
+                    } else if (e.type === 'transport' || e.type === 'transportista') {
                         tCount++;
-                        color = '#064e3b'; // Dark Emerald
+                        color = '#10b981'; // Green
                     } else {
                         sCount++;
                         color = 'red';

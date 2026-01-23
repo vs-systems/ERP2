@@ -94,14 +94,15 @@ class CRM
     public function getSellerRanking()
     {
         try {
-            // Ranking based on quotes, leads converted (Won) and contacts (Interactions)
+            // Ranking based on confirmed quotations, total quotes and contacts
             $sql = "SELECT 
                         u.full_name as seller_name,
-                        (SELECT COUNT(*) FROM quotations WHERE seller_id = u.id) as total_quotes,
-                        (SELECT COUNT(*) FROM crm_leads WHERE name IN (SELECT name FROM entities WHERE seller_id = u.id) AND status = 'Ganado') as orders_closed,
+                        (SELECT COUNT(*) FROM quotations WHERE user_id = u.id) as total_quotes,
+                        (SELECT COUNT(*) FROM quotations WHERE user_id = u.id AND is_confirmed = 1) as orders_closed,
                         (SELECT COUNT(*) FROM crm_interactions WHERE user_id = u.id) as interactions
                     FROM users u
-                    WHERE u.role = 'Vendedor' OR u.role = 'Admin'
+                    WHERE u.role IN ('Vendedor', 'Admin', 'Sistemas')
+                    HAVING total_quotes > 0 OR interactions > 0
                     ORDER BY orders_closed DESC, total_quotes DESC
                     LIMIT 10";
             return $this->db->query($sql)->fetchAll();
