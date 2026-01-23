@@ -233,11 +233,23 @@ sort($brands);
             </div>
             <div class="filter-item">
                 <select id="filter-category" style="margin-top:0;">
-                    <option value="">Todas las Categoró­as</option>
-                    <?php foreach ($categories as $cat): ?>
-                        <option value="<?php echo htmlspecialchars($cat); ?>">
-                            <?php echo htmlspecialchars($cat); ?>
+                    <option value="">Todas las Categorías</option>
+                    <?php
+                    $catTree = $catalog->getCategoriesWithSubcategories();
+                    foreach ($catTree as $cat => $subs):
+                        ?>
+                        <option value="<?php echo htmlspecialchars($cat); ?>"
+                            class="font-bold bg-slate-200 text-black disabled" disabled>
+                            — <?php echo htmlspecialchars($cat); ?> —
                         </option>
+                        <option value="<?php echo htmlspecialchars($cat); ?>">
+                            Todo en <?php echo htmlspecialchars($cat); ?>
+                        </option>
+                        <?php foreach ($subs as $sub): ?>
+                            <option value="<?php echo htmlspecialchars($cat . '|' . $sub); ?>">
+                                &nbsp;&nbsp;&nbsp;<?php echo htmlspecialchars($sub); ?>
+                            </option>
+                        <?php endforeach; ?>
                     <?php endforeach; ?>
                 </select>
             </div>
@@ -282,6 +294,8 @@ sort($brands);
                     <h3 class="product-title">
                         <?php echo htmlspecialchars($p['description']); ?>
                     </h3>
+                    <!-- Hidden Subcategory for JS -->
+                    <span class="hidden product-subcategory"><?php echo htmlspecialchars($p['subcategory'] ?? ''); ?></span>
                     <span class="product-sku">
                         <?php echo htmlspecialchars($p['sku']); ?>
                     </span>
@@ -370,10 +384,29 @@ sort($brands);
             const brand = brandSelect.value;
             let visibleCount = 0;
 
+            if (categoryValue.includes('|')) {
+                [selectedCat, selectedSub] = categoryValue.split('|');
+            } else {
+                selectedCat = categoryValue;
+            }
+
             cards.forEach(card => {
-                const matchesSearch = card.dataset.search.includes(query);
-                const matchesCategory = !category || card.dataset.category === category;
-                const matchesBrand = !brand || card.dataset.brand === brand;
+                const text = card.dataset.search.toLowerCase();
+                const cardCat = card.dataset.category;
+                const cardSub = card.querySelector('.product-subcategory').innerText;
+                const cardBrand = card.dataset.brand;
+
+                const matchesSearch = text.includes(query);
+                const matchesBrand = !brand || cardBrand === brand;
+
+                let matchesCategory = true;
+                if (selectedCat) {
+                    if (selectedSub) {
+                        matchesCategory = (cardCat === selectedCat && cardSub === selectedSub);
+                    } else {
+                        matchesCategory = (cardCat === selectedCat);
+                    }
+                }
 
                 if (matchesSearch && matchesCategory && matchesBrand) {
                     card.style.display = 'flex';

@@ -69,6 +69,33 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
                 <!-- Toolbar -->
                 <div class="mb-6 flex items-center justify-between">
                     <div class="flex items-center gap-4">
+                        <label class="text-xs font-bold uppercase text-slate-500">Filtrar:</label>
+                        <select id="filter-category"
+                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-lg py-2 px-3 text-sm focus:ring-1 focus:ring-green-500 outline-none">
+                            <option value="">Todas las Categorías</option>
+                            <?php
+                            $catTree = $catalog->getCategoriesWithSubcategories();
+                            foreach ($catTree as $cat => $subs):
+                                ?>
+                                <option value="<?php echo htmlspecialchars($cat); ?>"
+                                    class="font-bold bg-slate-200 text-black disabled" disabled>
+                                    — <?php echo htmlspecialchars($cat); ?> —
+                                </option>
+                                <option value="<?php echo htmlspecialchars($cat); ?>">
+                                    Todo en <?php echo htmlspecialchars($cat); ?>
+                                </option>
+                                <?php foreach ($subs as $sub): ?>
+                                    <option value="<?php echo htmlspecialchars($cat . '|' . $sub); ?>">
+                                        &nbsp;&nbsp;&nbsp;<?php echo htmlspecialchars($sub); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </select>
+                        <input type="text" id="search-input" placeholder="Buscar..."
+                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-lg py-2 px-3 text-sm focus:ring-1 focus:ring-green-500 outline-none min-w-[200px]">
+                    </div>
+
+                    <div class="flex items-center gap-4">
                         <label class="text-xs font-bold uppercase text-slate-500">Seleccionar Lista:</label>
                         <div
                             class="flex bg-white dark:bg-[#16202e] rounded-lg border border-slate-200 dark:border-[#233348] p-1">
@@ -117,7 +144,9 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
                                     // Recalculate manually to get USD value
                                     $priceUsd = $priceArs / $dolar;
                                     ?>
-                                    <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02]">
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02]"
+                                        data-category="<?php echo htmlspecialchars($p['category']); ?>"
+                                        data-subcategory="<?php echo htmlspecialchars($p['subcategory'] ?? ''); ?>">
                                         <td class="px-6 py-3 font-mono text-xs text-slate-500">
                                             <?php echo $p['sku']; ?>
                                         </td>
@@ -147,12 +176,59 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
+                            </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-</body>
+
+    <script>
+        const searchInput = document.getElementById('search-input');
+        const categorySelect = document.getElementById('filter-category');
+        const rows = document.querySelectorAll('tbody tr');
+
+        function filterItems() {
+            const query = searchInput.value.toLowerCase();
+            const categoryValue = categorySelect.value;
+            let selectedCat = '';
+            let selectedSub = '';
+
+            if (categoryValue.includes('|')) {
+                [selectedCat, selectedSub] = categoryValue.split('|');
+            } else {
+                selectedCat = categoryValue;
+            }
+
+            rows.forEach(row => {
+                const sku = row.querySelector('td:nth-child(1)').innerText.toLowerCase();
+                const brand = row.querySelector('td:nth-child(2)').innerText.toLowerCase();
+                const desc = row.querySelector('td:nth-child(3)').innerText.toLowerCase();
+                const cat = row.dataset.category;
+                const sub = row.dataset.subcategory; // We need to add this to TR
+
+                const matchesSearch = sku.includes(query) || brand.includes(query) || desc.includes(query);
+
+                let matchesCategory = true;
+                if (selectedCat) {
+                    if (selectedSub) {
+                        matchesCategory = (cat === selectedCat && sub === selectedSub);
+                    } else {
+                        matchesCategory = (cat === selectedCat);
+                    }
+                }
+
+                if (matchesSearch && matchesCategory) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('input', filterItems);
+        categorySelect.addEventListener('change', filterItems);
+    </script>
 
 </html>

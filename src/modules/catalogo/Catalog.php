@@ -23,6 +23,28 @@ class Catalog
         return $stmt->fetchAll();
     }
 
+
+
+    public function getCategoriesWithSubcategories()
+    {
+        // Get all distinct category + subcategory pairs
+        $stmt = $this->db->query("SELECT DISTINCT category, subcategory FROM products WHERE category != '' ORDER BY category, subcategory");
+        $rows = $stmt->fetchAll();
+
+        $tree = [];
+        foreach ($rows as $row) {
+            $cat = $row['category'];
+            $sub = $row['subcategory'];
+            if (!isset($tree[$cat])) {
+                $tree[$cat] = [];
+            }
+            if ($sub && !in_array($sub, $tree[$cat])) {
+                $tree[$cat][] = $sub;
+            }
+        }
+        return $tree;
+    }
+
     public function getProviders()
     {
         $stmt = $this->db->prepare("SELECT id, name FROM entities WHERE type = 'provider' OR type = 'supplier' ORDER BY name ASC");

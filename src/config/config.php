@@ -8,11 +8,6 @@ error_reporting(0);
 ini_set('display_errors', 0);
 
 // Database configuration
-// Error reporting (Disable in production)
-error_reporting(0);
-ini_set('display_errors', 0);
-
-// Database configuration
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'u499089589_vsys');
 define('DB_USER', 'u499089589_admin');

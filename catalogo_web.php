@@ -216,18 +216,33 @@ sort($brands);
     <main class="content" style="max-width: 1400px; margin: 0 auto; padding-top: 0;">
         <div class="filter-container">
             <div class="filter-item">
-                <input type="text" id="search-text" placeholder="Buscar producto..." style="margin-top:0;">
+                <input type="text" id="search-text" placeholder="Buscar por SKU, Nombre..." style="margin-top:0;">
             </div>
+
+            <!-- Category Filter -->
             <div class="filter-item">
                 <select id="filter-category" style="margin-top:0;">
                     <option value="">Todas las Categorías</option>
-                    <?php foreach ($categories as $cat): ?>
-                        <option value="<?php echo htmlspecialchars($cat); ?>">
-                            <?php echo htmlspecialchars($cat); ?>
+                    <?php
+                    $catTree = $catalog->getCategoriesWithSubcategories();
+                    foreach ($catTree as $cat => $subs):
+                        ?>
+                        <option value="<?php echo htmlspecialchars($cat); ?>"
+                            class="font-bold bg-slate-200 text-black disabled" disabled>
+                            — <?php echo htmlspecialchars($cat); ?> —
                         </option>
+                        <option value="<?php echo htmlspecialchars($cat); ?>">
+                            Todo en <?php echo htmlspecialchars($cat); ?>
+                        </option>
+                        <?php foreach ($subs as $sub): ?>
+                            <option value="<?php echo htmlspecialchars($cat . '|' . $sub); ?>">
+                                &nbsp;&nbsp;&nbsp;<?php echo htmlspecialchars($sub); ?>
+                            </option>
+                        <?php endforeach; ?>
                     <?php endforeach; ?>
                 </select>
             </div>
+
             <div class="filter-item">
                 <select id="filter-brand" style="margin-top:0;">
                     <option value="">Todas las Marcas</option>
@@ -291,8 +306,8 @@ sort($brands);
                                     Efectivo)</span>
                             </div>
                         </div>
-                        <a href="https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=<?php echo urlencode("Hola! Me interesa este producto (Precio WEB): " . $p['sku'] . " - " . $p['description']); ?>" target="_blank"
-                            class="btn-whatsapp"
+                        <a href="https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=<?php echo urlencode("Hola! Me interesa este producto (Precio WEB): " . $p['sku'] . " - " . $p['description']); ?>"
+                            target="_blank" class="btn-whatsapp"
                             onclick="logClick('<?php echo addslashes($p['sku']); ?>', '<?php echo addslashes($p['description']); ?>')">
                             <i class="fab fa-whatsapp"></i> Comprar
                         </a>
@@ -316,14 +331,38 @@ sort($brands);
 
         function filter() {
             const query = searchInput.value.toLowerCase();
-            const category = categorySelect.value;
+            const categoryValue = categorySelect.value; // Format: "Cat" or "Cat|Sub"
             const brand = brandSelect.value;
             let visibleCount = 0;
 
+            let selectedCat = '';
+            let selectedSub = '';
+
+            if (categoryValue.includes('|')) {
+                [selectedCat, selectedSub] = categoryValue.split('|');
+            } else {
+                selectedCat = categoryValue;
+            }
+
             cards.forEach(card => {
-                const matchesSearch = card.dataset.search.includes(query);
-                const matchesCategory = !category || card.dataset.category === category;
-                const matchesBrand = !brand || card.dataset.brand === brand;
+                const text = card.dataset.search; 
+                const cardCat = card.dataset.category;
+                const cardSub = card.querySelector('.product-subcategory').innerText;
+                const cardBrand = card.dataset.brand;
+
+                const matchesSearch = text.includes(query);
+                const matchesBrand = !brand || cardBrand === brand;
+                
+                let matchesCategory = true;
+                if (selectedCat) {
+                    if (selectedSub) {
+                        // Must match both
+                        matchesCategory = (cardCat === selectedCat && cardSub === selectedSub);
+                    } else {
+                        // Must match Main Category only
+                        matchesCategory = (cardCat === selectedCat);
+                    }
+                }
 
                 if (matchesSearch && matchesCategory && matchesBrand) {
                     card.style.display = 'flex';

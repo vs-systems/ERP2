@@ -163,8 +163,37 @@ sort($brands);
                 <select id="catFilter"
                     class="bg-[#0d1117] border border-[#233348] rounded-xl py-3 px-4 text-sm text-slate-400 focus:ring-1 focus:ring-[#136dec] outline-none appearance-none min-w-[180px]">
                     <option value="">Todas las Categorías</option>
-                    <?php foreach ($categories as $cat)
-                        echo "<option value='" . strtolower($cat) . "'>$cat</option>"; ?>
+                    <?php
+                    // Build Tree on the fly since we have all products
+                    $catTree = [];
+                    foreach ($products as $pr) {
+                        $c = $pr['category'];
+                        $s = $pr['subcategory'] ?? '';
+                        if ($c) {
+                            if (!isset($catTree[$c]))
+                                $catTree[$c] = [];
+                            if ($s && !in_array($s, $catTree[$c]))
+                                $catTree[$c][] = $s;
+                        }
+                    }
+                    ksort($catTree);
+
+                    foreach ($catTree as $cat => $subs):
+                        sort($subs);
+                        ?>
+                        <option value="<?php echo htmlspecialchars(strtolower($cat)); ?>"
+                            class="font-bold bg-slate-800 text-white disabled" disabled>
+                            — <?php echo htmlspecialchars($cat); ?> —
+                        </option>
+                        <option value="<?php echo htmlspecialchars(strtolower($cat)); ?>">
+                            Todo en <?php echo htmlspecialchars($cat); ?>
+                        </option>
+                        <?php foreach ($subs as $sub): ?>
+                            <option value="<?php echo htmlspecialchars(strtolower($cat . '|' . $sub)); ?>">
+                                &nbsp;&nbsp;&nbsp;<?php echo htmlspecialchars($sub); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
                 </select>
                 <select id="brandFilter"
                     class="bg-[#0d1117] border border-[#233348] rounded-xl py-3 px-4 text-sm text-slate-400 focus:ring-1 focus:ring-[#136dec] outline-none appearance-none min-w-[150px]">
@@ -184,6 +213,7 @@ sort($brands);
                     data-description="<?php echo strtolower($p['description']); ?>"
                     data-sku="<?php echo strtolower($p['sku']); ?>"
                     data-category="<?php echo strtolower($p['category']); ?>"
+                    data-subcategory="<?php echo strtolower($p['subcategory'] ?? ''); ?>"
                     data-brand="<?php echo strtolower($p['brand']); ?>">
 
                     <div
@@ -325,10 +355,27 @@ sort($brands);
             cards.forEach(card => {
                 const text = card.dataset.description + ' ' + card.dataset.sku;
                 const matchesText = text.includes(q);
-                const matchesCat = !cat || card.dataset.category === cat;
-                const matchesBrand = !brand || card.dataset.brand === brand;
 
-                if (matchesText && matchesCat && matchesBrand) card.style.display = 'flex';
+                // Nested Logic
+                const cardCat = card.dataset.category;
+                const cardSub = card.dataset.subcategory;
+                const cardBrand = card.dataset.brand;
+
+                const brandFilter = document.getElementById('brandFilter').value;
+
+                let matchesCategory = true;
+                if (cat) {
+                    if (cat.includes('|')) {
+                        const [selCat, selSub] = cat.split('|');
+                        matchesCategory = (cardCat === selCat && cardSub === selSub);
+                    } else {
+                        matchesCategory = (cardCat === cat);
+                    }
+                }
+
+                const matchesBrand = !brandFilter || cardBrand === brandFilter;
+
+                if (matchesText && matchesCategory && matchesBrand) card.style.display = 'flex';
                 else card.style.display = 'none';
             });
         }
