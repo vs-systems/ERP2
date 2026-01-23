@@ -260,28 +260,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                         placeholder="Móvil / WhatsApp" class="form-input-vsys">
                                 </div>
                                 <div class="md:col-span-2 lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
+                                    <div class="relative group">
                                         <label class="form-label-vsys">Domicilio Fiscal</label>
-                                        <textarea name="address" rows="2"
-                                            class="form-input-vsys"><?php echo $editData['address']; ?></textarea>
+                                        <div class="flex gap-2">
+                                            <textarea name="address" id="geo_address" rows="2"
+                                                class="form-input-vsys"><?php echo $editData['address']; ?></textarea>
+                                            <button type="button" onclick="geocodeAddress('address')"
+                                                class="bg-slate-700 text-white px-3 rounded-xl hover:bg-primary transition-all flex items-center justify-center h-auto"
+                                                title="Buscar por dirección">
+                                                <span class="material-symbols-outlined text-lg">home_pin</span>
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div>
+                                    <div class="relative group">
                                         <label class="form-label-vsys">Lugar de Entrega</label>
-                                        <textarea name="delivery_address" rows="2"
-                                            class="form-input-vsys"><?php echo $editData['delivery_address']; ?></textarea>
+                                        <div class="flex gap-2">
+                                            <textarea name="delivery_address" rows="2"
+                                                class="form-input-vsys"><?php echo $editData['delivery_address']; ?></textarea>
+                                            <button type="button" onclick="geocodeAddress('delivery')"
+                                                class="bg-slate-700 text-white px-3 rounded-xl hover:bg-primary transition-all flex items-center justify-center h-auto"
+                                                title="Buscar por lugar de entrega">
+                                                <span class="material-symbols-outlined text-lg">local_shipping</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Geolocation -->
                                 <div>
                                     <label class="form-label-vsys">Ciudad / Localidad</label>
                                     <div class="flex gap-2">
                                         <input type="text" id="geo_city" name="city"
                                             value="<?php echo $editData['city']; ?>" class="form-input-vsys">
-                                        <button type="button" onclick="geocodeCity()"
-                                            class="bg-slate-700 text-white p-2 rounded-xl hover:bg-slate-600 transition-colors"
-                                            title="Buscar coordenadas">
-                                            <span class="material-symbols-outlined text-lg">location_on</span>
+                                        <button type="button" onclick="geocodeAddress('city')"
+                                            class="bg-slate-700 text-white p-2 rounded-xl hover:bg-primary transition-all"
+                                            title="Buscar por ciudad">
+                                            <span class="material-symbols-outlined text-lg">location_city</span>
                                         </button>
                                     </div>
                                 </div>
@@ -400,47 +413,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-        async function geocodeCity() {
+        async function geocodeAddress(mode) {
             const city = document.getElementById('geo_city').value;
-            const address = document.getElementsByName('address')[0].value;
-            if (!city && !address) {
-                alert('Por favor, ingrese una ciudad o domicilio.');
+            const address = document.getElementById('geo_address').value;
+            const deliveryAddress = document.getElementsByName('delivery_address')[0].value;
+
+            let queryStr = "";
+            let btn = event.currentTarget;
+
+            if (mode === 'address' && address) {
+                queryStr = address + (city ? ", " + city : "");
+            } else if (mode === 'delivery' && deliveryAddress) {
+                queryStr = deliveryAddress + (city ? ", " + city : "");
+            } else if (mode === 'city' && city) {
+                queryStr = city;
+            } else {
+                alert('Por favor, complete el campo correspondiente para buscar.');
                 return;
             }
 
-            const btn = event.currentTarget;
             const originalIcon = btn.innerHTML;
             btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-lg">sync</span>';
             btn.disabled = true;
 
             try {
-                // Combine address and city for better precision
-                let queryStr = "";
-                if (address) queryStr += address + ", ";
-                if (city) queryStr += city;
-                queryStr += ", Argentina";
+                // Combine with Argentina for better results
+                const query = encodeURIComponent(queryStr + ", Argentina");
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1&addressdetails=1`);
 
-                const query = encodeURIComponent(queryStr);
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
+                if (!response.ok) throw new Error('Network response was not ok');
+
                 const data = await response.json();
 
                 if (data && data.length > 0) {
-                    document.getElementById('geo_lat').value = parseFloat(data[0].lat).toFixed(6);
-                    document.getElementById('geo_lng').value = parseFloat(data[0].lon).toFixed(6);
+                    const result = data[0];
+                    document.getElementById('geo_lat').value = parseFloat(result.lat).toFixed(6);
+                    document.getElementById('geo_lng').value = parseFloat(result.lon).toFixed(6);
 
-                    // Add visual feedback
-                    document.getElementById('geo_lat').classList.add('bg-green-500/10', 'text-green-500');
-                    document.getElementById('geo_lng').classList.add('bg-green-500/10', 'text-green-500');
-                    setTimeout(() => {
-                        document.getElementById('geo_lat').classList.remove('bg-green-500/10', 'text-green-500');
-                        document.getElementById('geo_lng').classList.remove('bg-green-500/10', 'text-green-500');
-                    }, 2000);
+                    // Optional: Update city if it was empty and we found it
+                    if (!city && result.address) {
+                        const foundCity = result.address.city || result.address.town || result.address.village || result.address.state;
+                        if (foundCity) document.getElementById('geo_city').value = foundCity;
+                    }
+
+                    // Visual feedback
+                    ['geo_lat', 'geo_lng'].forEach(id => {
+                        const el = document.getElementById(id);
+                        el.classList.add('ring-2', 'ring-green-500', 'bg-green-500/10');
+                        setTimeout(() => el.classList.remove('ring-2', 'ring-green-500', 'bg-green-500/10'), 3000);
+                    });
                 } else {
-                    alert('No se encontraron coordenadas para esta ciudad.');
+                    alert('No se encontraron coordenadas para: ' + queryStr);
                 }
             } catch (error) {
                 console.error('Error geocoding:', error);
-                alert('Error al conectar con el servicio de geolocalización.');
+                alert('Error al conectar con el servicio de geolocalización. Verifique su conexión o intente más tarde.');
             } finally {
                 btn.innerHTML = originalIcon;
                 btn.disabled = false;

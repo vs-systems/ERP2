@@ -60,6 +60,10 @@ class Client
      */
     public function saveClient($data)
     {
+        // Sanitize lat/lng to be numeric or null
+        $data['lat'] = (!empty($data['lat']) && is_numeric($data['lat'])) ? (float) $data['lat'] : null;
+        $data['lng'] = (!empty($data['lng']) && is_numeric($data['lng'])) ? (float) $data['lng'] : null;
+
         $sql = "INSERT INTO entities (
                     id, type, tax_id, document_number, name, fantasy_name, 
                     contact_person, email, phone, mobile, address, 
