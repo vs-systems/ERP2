@@ -25,6 +25,7 @@ $menuStructure = [
             ['label' => 'Cotizar', 'href' => 'cotizador.php', 'icon' => 'add_shopping_cart'],
             ['label' => 'Listas de Precios', 'href' => 'listas_precios.php', 'icon' => 'price_check'],
             ['label' => 'CRM', 'href' => 'crm.php', 'icon' => 'group'],
+            ['label' => 'Análisis Rentabilidad', 'href' => 'analisis.php', 'icon' => 'analytics'],
             ['label' => 'Logística', 'href' => 'logistica.php', 'icon' => 'local_shipping'],
             ['label' => 'Calendario', 'href' => 'https://calendar.google.com/calendar/u/0/r?cid=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20', 'icon' => 'calendar_month', 'target' => '_blank'],
         ]

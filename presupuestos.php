@@ -228,6 +228,12 @@ $quotes = $cot->getAllQuotations(100);
                                                     </a>
 
                                                     <!-- Analysis / Summary -->
+                                                    <a href="analisis.php?id=<?php echo $q['id']; ?>"
+                                                        class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-blue-500 transition-all"
+                                                        title="Análisis de Rentabilidad (Costos vs Margen)">
+                                                        <span class="material-symbols-outlined text-lg">analytics</span>
+                                                    </a>
+
                                                     <a href="resumen_pedido.php?id=<?php echo $q['id']; ?>"
                                                         class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-blue-500 transition-all"
                                                         title="Resumen e Historial de Cambios">
