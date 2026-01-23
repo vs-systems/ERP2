@@ -1,76 +1,62 @@
 <?php
-/**
- * VS System ERP - Price List Module
- */
-
 namespace Vsys\Modules\Config;
-
-require_once __DIR__ . '/../../lib/Database.php';
-
-use Vsys\Lib\Database;
 
 class PriceList
 {
-    private $db;
+    private $config;
+    private $configFile;
 
     public function __construct()
     {
-        $this->db = Database::getInstance();
+        $this->configFile = dirname(__DIR__, 2) . '/../config_prices.json';
+        $this->loadConfig();
+    }
+
+    private function loadConfig()
+    {
+        if (file_exists($this->configFile)) {
+            $this->config = json_decode(file_get_contents($this->configFile), true);
+        } else {
+            // Default constants if file doesn't exist
+            $this->config = [
+                'gremio' => 25.0,
+                'web' => 40.0,
+                'mostrador' => 55.0
+            ];
+        }
     }
 
     /**
-     * Get all price lists
+     * Calculate price based on list name
+     * 
+     * @param float $costUsd Unit cost in USD
+     * @param float $ivaRate IVA rate (e.g., 10.5 or 21)
+     * @param string $listName 'Gremio', 'Web', or 'Mostrador'
+     * @param float $dollarRate Current exchange rate
+     * @param bool $includeIva Whether to include IVA in the final price
+     * @return float Price in ARS
      */
-    public function getAll()
+    public function getPriceByListName($costUsd, $ivaRate, $listName, $dollarRate, $includeIva = true)
     {
-        $stmt = $this->db->query("SELECT * FROM price_lists ORDER BY id ASC");
-        return $stmt->fetchAll();
-    }
+        $key = strtolower($listName);
+        $margin = $this->config[$key] ?? 0; // Default to 0 margin if list not found
 
-    /**
-     * Update margin for a specific list
-     */
-    public function updateMargin($id, $percent)
-    {
-        $stmt = $this->db->prepare("UPDATE price_lists SET margin_percent = ?, updated_at = NOW() WHERE id = ?");
-        return $stmt->execute([(float) $percent, $id]);
-    }
-
-    /**
-     * Calculate price based on cost and target list
-     */
-    public function calculatePrice($cost, $listId)
-    {
-        $stmt = $this->db->prepare("SELECT margin_percent FROM price_lists WHERE id = ?");
-        $stmt->execute([$listId]);
-        $margin = $stmt->fetchColumn();
-
-        if ($margin === false)
-            return $cost;
-
-        return $cost * (1 + ($margin / 100));
-    }
-
-    /**
-     * Get price by list name (Gremio, Web, Mostrador)
-     */
-    public function getPriceByListName($costUsd, $ivaPercent, $listName, $exchangeRate = 1.0, $includeIva = true)
-    {
-        $stmt = $this->db->prepare("SELECT margin_percent FROM price_lists WHERE name = ?");
-        $stmt->execute([$listName]);
-        $margin = $stmt->fetchColumn();
-
-        if ($margin === false)
-            $margin = 0;
+        // Base price calculation: Cost + Margin
+        // Note: Margin is usually applied to Cost. 
+        // Price = Cost * (1 + Margin/100)
 
         $priceUsd = $costUsd * (1 + ($margin / 100));
 
         if ($includeIva) {
-            $priceUsd *= (1 + ($ivaPercent / 100));
+            $priceUsd = $priceUsd * (1 + ($ivaRate / 100));
         }
 
-        return $priceUsd * $exchangeRate;
+        return $priceUsd * $dollarRate;
+    }
+
+    public function getMargins()
+    {
+        return $this->config;
     }
 }
-
-
+?>

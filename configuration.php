@@ -195,24 +195,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <!-- MAIN GRID LAYOUT -->
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             
-                                <!-- Datos Empresa -->
-                                <a href="?section=company" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
-                                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                        <span class="material-symbols-outlined text-3xl">domain</span>
-                                    </div>
-                                    <h3 class="font-bold text-lg mb-1">Datos Empresa</h3>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400">Razón social, logo, dirección y contacto.</p>
-                                </a>
-                                <!-- ... shortcuts ... -->
-                                 <!-- Informes -->
-                                 <a href="?section=reports" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
-                                    <div class="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                        <span class="material-symbols-outlined text-3xl">bar_chart</span>
-                                    </div>
-                                    <h3 class="font-bold text-lg mb-1">Informes</h3>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400">Configuración de reportes del sistema.</p>
-                                </a>
-                            </div>
+                            <!-- Datos Empresa -->
+                            <a href="?section=company" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">domain</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">Datos Empresa</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Razón social, logo, dirección y contacto.</p>
+                            </a>
+
+                            <!-- ABM Presupuestos -->
+                            <a href="?section=budget" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">request_quote</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM Presupuestos</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Configuración, validez y notas legales.</p>
+                            </a>
+
+                            <!-- ABM Clientes -->
+                            <a href="?section=clients" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-green-500/10 text-green-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">groups</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM Clientes</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Gestión de base de datos de clientes.</p>
+                            </a>
+
+                            <!-- ABM Usuarios -->
+                            <a href="?section=users" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">manage_accounts</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM Usuarios</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Administrar usuarios y permisos.</p>
+                            </a>
+
+                            <!-- ABM CRM -->
+                            <a href="?section=crm" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">filter_alt</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM CRM</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Pipelines, estados y orígenes.</p>
+                            </a>
+
+                            <!-- ABM Compras (NUEVO) -->
+                            <a href="?section=purchases" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">shopping_cart</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM Compras</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Gestión de compras y proveedores.</p>
+                            </a>
+
+                             <!-- ABM Marcas -->
+                            <a href="?section=brands" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">sell</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM Marcas</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Gestión de marcas de productos.</p>
+                            </a>
+                            
+                            <!-- Listas de Precios (NUEVO) -->
+                            <a href="?section=prices" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-yellow-500/10 text-yellow-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">price_change</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">Listas de Precios</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Configurar porcentajes Gremio, Web, Mostrador.</p>
+                            </a>
+
+                             <!-- Informes -->
+                             <a href="?section=reports" class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div class="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">bar_chart</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">Informes</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Configuración de reportes del sistema.</p>
+                            </a>
+                        </div>
                     
                     <?php elseif ($currentSection === 'company'):
                         $company = loadCompanyConfig();
@@ -282,6 +345,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 if ($u['id'] == $_GET['edit']) {
                                     $editUser = $u;
                                     break;
+
+            case 'save_price_config':
+                $priceConfig = [
+                    'gremio' => floatval($_POST['gremio']),
+                    'web' => floatval($_POST['web']),
+                    'mostrador' => floatval($_POST['mostrador'])
+                ];
+                file_put_contents(__DIR__ . '/config_prices.json', json_encode($priceConfig));
+                $message = 'Porcentajes de precios actualizados.';
+                $status = 'success';
+                break;
                                 }
                             }
                         }
@@ -416,6 +490,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php elseif ($currentSection === 'clients'): ?>
                             <!-- ABM CLIENTES (Redirect or Include) -->
                             <?php include 'config_entities_partial.php'; ?>
+
+                    <?php elseif ($currentSection === 'reports'): ?>
+                            <div class="bg-white dark:bg-[#16202e] p-8 rounded-2xl border border-slate-200 dark:border-[#233348] text-center py-20">
+                                <div class="inline-flex bg-cyan-500/10 p-4 rounded-full text-cyan-500 mb-4">
+                                    <span class="material-symbols-outlined text-4xl">bar_chart</span>
+                                </div>
+                                <h3 class="text-xl font-bold uppercase mb-2">Informes del Sistema</h3>
+                                <p class="text-slate-500 text-sm max-w-md mx-auto">Selecciona un informe desde el panel lateral "Contabilidad > Informes" para ver las estadísticas detalladas.</p>
+                            </div>
+
+                    <?php elseif ($currentSection === 'prices'): 
+                            // Load Price Config
+                            $priceConfig = json_decode(file_get_contents(__DIR__ . '/config_prices.json') ?: '{"gremio": 25, "web": 40, "mostrador": 55}', true);
+                    ?>
+                            <!-- CONFIGURACION PRECIOS -->
+                            <div class="bg-white dark:bg-[#16202e] p-8 rounded-2xl border border-slate-200 dark:border-[#233348] max-w-3xl">
+                                <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-yellow-500">price_change</span>
+                                    Configuración de Listas de Precios
+                                </h3>
+                                
+                                <form method="POST" class="space-y-6">
+                                    <input type="hidden" name="action" value="save_price_config">
+                                    
+                                    <div class="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/20 text-xs text-blue-600 dark:text-blue-400 mb-4">
+                                        <strong>Referencia:</strong> Los precios se calculan automáticamente sumando el porcentaje configurado al <strong>Costo de Compra</strong> del producto.
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Lista Gremio (%)</label>
+                                            <div class="relative">
+                                                <input type="number" name="gremio" step="0.1" value="<?php echo $priceConfig['gremio']; ?>" class="w-full pl-4 pr-8 py-2 bg-slate-50 dark:bg-[#101822] rounded-lg border-none font-bold">
+                                                <span class="absolute right-3 top-2 text-slate-400">%</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 mt-1">Costo + Margen</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Lista Web (%)</label>
+                                            <div class="relative">
+                                                <input type="number" name="web" step="0.1" value="<?php echo $priceConfig['web']; ?>" class="w-full pl-4 pr-8 py-2 bg-slate-50 dark:bg-[#101822] rounded-lg border-none font-bold">
+                                                <span class="absolute right-3 top-2 text-slate-400">%</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 mt-1">Transf. / Efectivo</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase text-slate-500 mb-2">Lista Mostrador (%)</label>
+                                            <div class="relative">
+                                                <input type="number" name="mostrador" step="0.1" value="<?php echo $priceConfig['mostrador']; ?>" class="w-full pl-4 pr-8 py-2 bg-slate-50 dark:bg-[#101822] rounded-lg border-none font-bold">
+                                                <span class="absolute right-3 top-2 text-slate-400">%</span>
+                                            </div>
+                                            <p class="text-[10px] text-slate-400 mt-1">Público General</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-4 border-t border-slate-100 dark:border-white/5 flex justify-end">
+                                        <button class="bg-primary text-white px-6 py-3 rounded-xl font-bold uppercase text-sm shadow-lg hover:scale-105 transition-transform">Guardar Porcentajes</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                    <?php elseif ($currentSection === 'crm'): ?>
+                             <div class="bg-white dark:bg-[#16202e] p-8 rounded-2xl border border-slate-200 dark:border-[#233348] text-center py-20">
+                                <h3 class="text-xl font-bold uppercase text-slate-400">ABM CRM - Próximamente</h3>
+                            </div>
+                    
+                    <?php elseif ($currentSection === 'purchases'): 
+                         // Logic for Purchases ABM (placeholder for now)
+                    ?>
+                             <div class="bg-white dark:bg-[#16202e] p-8 rounded-2xl border border-slate-200 dark:border-[#233348] text-center py-20">
+                                <h3 class="text-xl font-bold uppercase text-slate-400">ABM Compras - Próximamente</h3>
+                            </div>
 
                     <?php else: ?>
                             <!-- DEFAULT / FALLBACK -->
