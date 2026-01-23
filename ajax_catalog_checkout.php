@@ -44,9 +44,9 @@ try {
         // Let's assume $_SESSION['entity_id'] exists if they are a client login
         $clientId = $_SESSION['entity_id'] ?? null;
 
-        if (!$clientId && $_SESSION['role'] === 'admin') {
-            // Admin test? Create/Use a "Test Client" or link to entity ID 1
-            $clientId = 1;
+        if (!$clientId) {
+            // Fallback: search for first client or use ID 1
+            $clientId = $db->query("SELECT id FROM entities WHERE type='client' LIMIT 1")->fetchColumn() ?: 1;
         }
     } else {
         // Guest: Create or Find Entity as "Potencial Cliente" (Lead)
@@ -91,11 +91,18 @@ try {
                 'lng' => null,
                 'transport' => ''
             ];
-            $clientModule->saveClient($newEntityData);
-            $clientId = $db->lastInsertId();
+            if ($clientModule->saveClient($newEntityData)) {
+                $clientId = $db->lastInsertId();
+            }
         }
+    }
 
-        // 2. Create Lead in CRM
+    if (!$clientId) {
+        throw new Exception("No se pudo identificar un cliente para la cotización.");
+    }
+
+    // 2. Create Lead in CRM if guest
+    if (!isset($clientInfo['logged'])) {
         $crm = new CRM();
         $crm->saveLead([
             'name' => $name,
@@ -105,10 +112,6 @@ try {
             'notes' => "Pedido automático desde Catálogo " . ucfirst($catalogType) . "."
         ]);
         $leadId = $db->lastInsertId();
-    }
-
-    if (!$clientId) {
-        throw new Exception("No se pudo identificar un cliente para la cotización.");
     }
 
     // 3. Generate Quotation

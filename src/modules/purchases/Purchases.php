@@ -146,6 +146,19 @@ class Purchases
     }
 
     /**
+     * Get pending purchases (unconfirmed or unpaid)
+     */
+    public function getPendingPurchases()
+    {
+        $sql = "SELECT p.*, e.name as supplier_name 
+                FROM purchases p 
+                JOIN entities e ON p.entity_id = e.id 
+                WHERE p.is_confirmed = 0 OR p.payment_status != 'Pagado'
+                ORDER BY p.purchase_date ASC";
+        return $this->db->query($sql)->fetchAll();
+    }
+
+    /**
      * Get unique purchase number
      */
     public function generatePurchaseNumber()

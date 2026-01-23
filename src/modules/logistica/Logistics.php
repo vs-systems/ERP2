@@ -35,10 +35,20 @@ class Logistics
     public function updateOrderPhase($quoteNumber, $newPhase)
     {
         try {
-            $stmt = $this->db->prepare("INSERT INTO logistics_process (quote_number, current_phase) 
-                                       VALUES (?, ?) 
-                                       ON DUPLICATE KEY UPDATE current_phase = ?, updated_at = NOW()");
-            return $stmt->execute([$quoteNumber, $newPhase, $newPhase]);
+            // 1. Try to update existing record
+            $stmt = $this->db->prepare("UPDATE logistics_process SET current_phase = ?, updated_at = NOW() WHERE quote_number = ?");
+            $stmt->execute([$newPhase, $quoteNumber]);
+
+            if ($stmt->rowCount() === 0) {
+                // 2. If no record was updated, check if it exists or insert new
+                $stmtCheck = $this->db->prepare("SELECT id FROM logistics_process WHERE quote_number = ?");
+                $stmtCheck->execute([$quoteNumber]);
+                if (!$stmtCheck->fetch()) {
+                    $stmtIns = $this->db->prepare("INSERT INTO logistics_process (quote_number, current_phase, updated_at) VALUES (?, ?, NOW())");
+                    return $stmtIns->execute([$quoteNumber, $newPhase]);
+                }
+            }
+            return true;
         } catch (\Exception $e) {
             error_log("Logistics Update Error: " . $e->getMessage());
             return false;

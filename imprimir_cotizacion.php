@@ -4,9 +4,10 @@
  */
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
-require_once __DIR__ . '/src/modules/cotizador/Cotizador.php';
+require_once __DIR__ . '/src/lib/Utils.php';
 
 use Vsys\Modules\Cotizador\Cotizador;
+use Vsys\Lib\Utils;
 
 $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $cot = new Cotizador();
@@ -15,6 +16,12 @@ $items = $cot->getQuotationItems($id);
 
 if (!$quote)
     die("Presupuesto no encontrado.");
+
+// Function shorthand for cleaning
+function u($str)
+{
+    return Utils::cleanString($str);
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -30,7 +37,8 @@ if (!$quote)
             color: #333;
             margin: 0;
             padding: 20px;
-            font-size: 11px;
+            font-size: 13px;
+            text-transform: uppercase;
         }
 
         @page {
@@ -104,9 +112,9 @@ if (!$quote)
 
         .total-row {
             font-weight: bold;
-            font-size: 18px;
+            font-size: 22px;
             color: #5d2fc1;
-            border-top: 2px solid #5d2fc1;
+            border-top: 3px solid #5d2fc1;
         }
 
         .footer {
@@ -154,17 +162,17 @@ if (!$quote)
     <table class="entity-grid">
         <tr>
             <td class="entity-box">
-                <strong>De:</strong><br>
-                Vecino Seguro<br>
+                <strong>DE:</strong><br>
+                VECINO SEGURO<br>
                 CUIT: 20-25562186-7<br>
-                Email: vecinoseguro0@gmail.com
+                EMAIL: VECINOSEGURO0@GMAIL.COM
             </td>
-            <td width="10%"></td>
+            <td width="2%"></td>
             <td class="entity-box">
-                <strong>Para:</strong><br>
-                <span style="font-size: 13px; font-weight: bold;"><?php echo $quote['client_name']; ?></span><br>
+                <strong>PARA:</strong><br>
+                <span style="font-size: 16px; font-weight: 900;"><?php echo u($quote['client_name']); ?></span><br>
                 <?php echo $quote['tax_id'] ? "CUIT: " . $quote['tax_id'] . "<br>" : ""; ?>
-                <?php echo !empty($quote['transport']) ? "Transporte: " . $quote['transport'] : ""; ?>
+                <?php echo !empty($quote['transport']) ? "TRANSPORTE: " . u($quote['transport']) : ""; ?>
             </td>
         </tr>
     </table>
@@ -186,15 +194,15 @@ if (!$quote)
                         <?php echo $item['quantity']; ?>
                     </td>
                     <td>
-                        <?php echo $item['sku']; ?>
+                        <?php echo u($item['sku']); ?>
                     </td>
                     <td>
-                        <?php echo $item['description']; ?>
+                        <div style="font-weight: bold; font-size: 14px;"><?php echo u($item['description']); ?></div>
                     </td>
-                    <td style="text-align: right;">$
+                    <td style="text-align: right;">USD
                         <?php echo number_format($item['unit_price_usd'], 2); ?>
                     </td>
-                    <td style="text-align: right;">$
+                    <td style="text-align: right;">USD
                         <?php echo number_format($item['subtotal_usd'], 2); ?>
                     </td>
                 </tr>

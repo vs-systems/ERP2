@@ -3,6 +3,9 @@
 $tab = $_GET['tab'] ?? 'entidades';
 $db = Vsys\Lib\Database::getInstance();
 $isAdmin = ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'admin');
+
+// Use the entityType variable set by the parent
+$typeFilter = $entityType ?? 'client';
 ?>
 <div class="space-y-6">
     <div class="flex items-center justify-between">
@@ -39,8 +42,6 @@ $isAdmin = ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'admin');
             </thead>
             <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                 <?php
-                // Use the entityType variable set by the parent
-                $typeFilter = $entityType ?? 'client';
                 $stmt = $db->prepare("SELECT * FROM entities WHERE type = ? ORDER BY name ASC LIMIT 50");
                 $stmt->execute([$typeFilter]);
                 $entities = $stmt->fetchAll();

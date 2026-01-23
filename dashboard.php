@@ -110,7 +110,7 @@ $logisticsPhases = [
 </head>
 
 <body
-    class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white antialiased overflow-hidden transition-colors duration-300">
+    class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white antialiased overflow-hidden transition-colors duration-300 uppercase">
     <div class="flex h-screen w-full">
         <!-- Sidebar Inclusion -->
         <?php include 'sidebar.php'; ?>
@@ -461,9 +461,11 @@ $logisticsPhases = [
                                             ?>
                                             <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                                                 <td class="px-5 py-3 text-xs font-bold dark:text-slate-300">
-                                                    <?php echo $pl['quote_number']; ?></td>
+                                                    <?php echo $pl['quote_number']; ?>
+                                                </td>
                                                 <td class="px-5 py-3 text-[10px] text-slate-500 truncate max-w-[120px]">
-                                                    <?php echo $pl['client_name']; ?></td>
+                                                    <?php echo $pl['client_name']; ?>
+                                                </td>
                                                 <td class="px-5 py-3 text-center">
                                                     <span
                                                         class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase <?php echo $stData['color']; ?>">
@@ -483,14 +485,15 @@ $logisticsPhases = [
                             </div>
                         </div>
 
-                        <!-- Recent Pending Quotes -->
+                        <!-- Recent Pending Purchases / Quotes -->
                         <div
                             class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-sm">
                             <div
                                 class="p-5 border-b border-slate-100 dark:border-white/5 flex justify-between items-center">
-                                <h3 class="text-sm font-bold dark:text-white uppercase tracking-widest">Cotizaciones
-                                    Pendientes</h3>
-                                <a href="presupuestos.php"
+                                <h3 class="text-sm font-bold dark:text-white uppercase tracking-widest">
+                                    <?php echo ($userRole === 'Admin' || $userRole === 'Sistemas') ? 'Compras Pendientes' : 'Cotizaciones Recientes'; ?>
+                                </h3>
+                                <a href="<?php echo ($userRole === 'Admin' || $userRole === 'Sistemas') ? 'purchases.php' : 'presupuestos.php'; ?>"
                                     class="text-[10px] font-bold text-primary hover:underline">VER TODAS</a>
                             </div>
                             <div class="overflow-x-auto">
@@ -499,24 +502,39 @@ $logisticsPhases = [
                                         <tr
                                             class="text-[9px] uppercase font-bold text-slate-400 bg-slate-50/50 dark:bg-white/5">
                                             <th class="px-5 py-3">Ref</th>
-                                            <th class="px-5 py-3">Cliente</th>
+                                            <th class="px-5 py-3">Proveedor / Cliente</th>
                                             <th class="px-5 py-3 text-right">Total USD</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-100 dark:divide-white/5">
                                         <?php
-                                        $quotations = $db->query("SELECT q.*, e.name as client_name FROM quotations q JOIN entities e ON q.client_id = e.id ORDER BY q.id DESC LIMIT 6")->fetchAll();
-                                        foreach ($quotations as $r):
+                                        if ($userRole === 'Admin' || $userRole === 'Sistemas') {
+                                            require_once __DIR__ . '/src/modules/purchases/Purchases.php';
+                                            $purchModule = new \Vsys\Modules\Purchases\Purchases();
+                                            $pendingP = $purchModule->getPendingPurchases();
+                                            $displayItems = array_slice($pendingP, 0, 6);
+                                        } else {
+                                            $displayItems = $db->query("SELECT q.quote_number as ref, e.name as extra, q.total_usd FROM quotations q JOIN entities e ON q.client_id = e.id ORDER BY q.id DESC LIMIT 6")->fetchAll();
+                                        }
+
+                                        foreach ($displayItems as $r):
+                                            $ref = $r['purchase_number'] ?? ($r['quote_number'] ?? ($r['ref'] ?? 'N/A'));
+                                            $name = $r['supplier_name'] ?? ($r['client_name'] ?? ($r['extra'] ?? 'N/A'));
+                                            $total = $r['total_usd'];
                                             ?>
                                             <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                                <td class="px-5 py-3 text-xs font-bold"><?php echo $r['quote_number']; ?>
-                                                </td>
-                                                <td class="px-5 py-3 text-[10px] text-slate-500">
-                                                    <?php echo $r['client_name']; ?></td>
+                                                <td class="px-5 py-3 text-xs font-bold"><?php echo $ref; ?></td>
+                                                <td class="px-5 py-3 text-[10px] text-slate-500"><?php echo $name; ?></td>
                                                 <td class="px-5 py-3 text-right text-xs font-mono">
-                                                    $<?php echo number_format($r['total_usd'], 2); ?></td>
+                                                    $<?php echo number_format($total, 2); ?></td>
                                             </tr>
                                         <?php endforeach; ?>
+                                        <?php if (empty($displayItems)): ?>
+                                            <tr>
+                                                <td colspan="3" class="p-8 text-center text-xs text-slate-500 italic">No hay
+                                                    registros pendientes</td>
+                                            </tr>
+                                        <?php endif; ?>
                                     </tbody>
                                 </table>
                             </div>

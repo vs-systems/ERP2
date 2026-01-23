@@ -212,10 +212,9 @@ $phases = [
                                                     </div>
                                                     <div class="flex items-center justify-between gap-4">
                                                         <span class="text-[10px] font-bold text-slate-500 uppercase">Flete
-                                                            USD</span>
+                                                            ARS</span>
                                                         <input type="number" class="cost-input"
-                                                            id="cost-<?php echo $p['quote_number']; ?>" value="0.00"
-                                                            step="0.01">
+                                                            id="cost-<?php echo $p['quote_number']; ?>" value="0" step="1">
                                                     </div>
                                                 </div>
                                             </td>
@@ -244,10 +243,16 @@ $phases = [
                                                         </button>
                                                     <?php elseif ($currPhase === 'Disponible'): ?>
                                                         <button
-                                                            class="bg-primary text-white py-2 px-4 rounded-xl text-xs font-extra-bold shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all flex items-center justify-center gap-2"
+                                                            class="bg-primary text-white py-2 px-4 rounded-xl text-xs font-extra-bold shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all flex items-center justify-center gap-2 mb-2"
                                                             onclick="despachar('<?php echo $p['quote_number']; ?>')">
                                                             <span class="material-symbols-outlined text-sm">shipping</span>
                                                             DESPACHAR
+                                                        </button>
+                                                        <button
+                                                            class="bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white py-2 px-4 rounded-xl text-xs font-bold transition-all border border-blue-500/20 flex items-center justify-center gap-2"
+                                                            onclick="subirGuia('<?php echo $p['quote_number']; ?>')">
+                                                            <span class="material-symbols-outlined text-sm">file_present</span>
+                                                            SUBIR GUÍA/REMITO
                                                         </button>
                                                     <?php elseif ($currPhase === 'En su transporte'): ?>
                                                         <button
@@ -286,7 +291,7 @@ $phases = [
         async function despachar(quoteNumber) {
             const qty = document.getElementById('qty-' + quoteNumber).value;
             const cost = document.getElementById('cost-' + quoteNumber).value;
-            const transportId = prompt("Ingrese ID de Transportista (1-5):", "1");
+            const transportId = prompt("Ingrese ID de Transportista (ID Entidad):", "1");
             if (!transportId) return;
             const formData = new FormData();
             formData.append('action', 'despachar');

@@ -67,6 +67,18 @@ $menuStructure = [
 <!-- Material Symbols -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet" />
+<style>
+    body {
+        text-transform: uppercase !important;
+    }
+
+    input,
+    textarea,
+    select,
+    .normal-case {
+        text-transform: none !important;
+    }
+</style>
 
 <!-- Mobile Overlay -->
 <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] md:hidden hidden"
