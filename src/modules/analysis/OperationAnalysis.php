@@ -225,4 +225,53 @@ class OperationAnalysis
             'avg_margin' => round($avgMargin, 2)
         ];
     }
+
+    /**
+     * Get monthly metrics for the chart
+     */
+    public function getMonthlyProfitability($months = 6)
+    {
+        $data = [];
+        for ($i = $months - 1; $i >= 0; $i--) {
+            $monthStart = date('Y-m-01', strtotime("-$i months"));
+            $monthEnd = date('Y-m-t', strtotime("-$i months"));
+
+            // Map English months to Spanish for UI
+            $monthsEs = [
+                'Jan' => 'Ene',
+                'Feb' => 'Feb',
+                'Mar' => 'Mar',
+                'Apr' => 'Abr',
+                'May' => 'May',
+                'Jun' => 'Jun',
+                'Jul' => 'Jul',
+                'Aug' => 'Ago',
+                'Sep' => 'Sep',
+                'Oct' => 'Oct',
+                'Nov' => 'Nov',
+                'Dec' => 'Dic'
+            ];
+            $monthLabel = $monthsEs[date('M', strtotime("-$i months"))];
+
+            // Sales this month (USD)
+            $salesSql = "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1 AND created_at >= :start AND created_at <= :end";
+            $salesStmt = $this->db->prepare($salesSql);
+            $salesStmt->execute([':start' => $monthStart . ' 00:00:00', ':end' => $monthEnd . ' 23:59:59']);
+            $sales = $salesStmt->fetchColumn() ?: 0;
+
+            // Purchases this month (USD)
+            $purchasesSql = "SELECT SUM(subtotal_usd) FROM purchases WHERE is_confirmed = 1 AND purchase_date >= :start AND purchase_date <= :end";
+            $purchStmt = $this->db->prepare($purchasesSql);
+            $purchStmt->execute([':start' => $monthStart, ':end' => $monthEnd]);
+            $purchases = $purchStmt->fetchColumn() ?: 0;
+
+            $data[] = [
+                'month' => $monthLabel,
+                'sales' => (float) $sales,
+                'purchases' => (float) $purchases,
+                'profit' => (float) ($sales - $purchases)
+            ];
+        }
+        return $data;
+    }
 }

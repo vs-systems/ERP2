@@ -19,6 +19,7 @@ $userName = $_SESSION['full_name'] ?? ($_SESSION['user_name'] ?? 'Usuario');
 $stats = ['total_sales' => 0, 'pending_collections' => 0, 'total_purchases' => 0, 'pending_payments' => 0, 'effectiveness' => 0];
 $sellerStats = ['total' => 0, 'converted' => 0];
 $shipStats = [];
+$monthlyStats = [];
 
 // Get current exchange rate for display
 $db = \Vsys\Lib\Database::getInstance();
@@ -34,6 +35,7 @@ if ($userRole === 'Vendedor') {
     $shipStats = $logistics->getShippingStats() ?: $shipStats;
     $crmLeadStats = $crm->getLeadsStats();
     $sellerRanking = $crm->getSellerRanking();
+    $monthlyStats = $analysis->getMonthlyProfitability(6);
 }
 
 $effectivenessStats = $analysis->getDashboardSummary();
@@ -609,18 +611,25 @@ $logisticsPhases = [
                 new Chart(ctxOps, {
                     type: 'bar',
                     data: {
-                        labels: ['Ventas', 'Compras', 'Ingreso Neto'],
-                        datasets: [{
-                            data: [
-                                <?php echo $stats['total_sales']; ?>,
-                                <?php echo $stats['total_purchases']; ?>,
-                                <?php echo ($stats['total_sales'] - $stats['total_purchases']); ?>
-                            ],
-                            backgroundColor: ['rgba(19, 109, 236, 0.7)', 'rgba(239, 68, 68, 0.7)', 'rgba(16, 185, 129, 0.7)'],
-                            borderColor: ['#136dec', '#ef4444', '#10b981'],
-                            borderWidth: 1,
-                            borderRadius: 12,
-                        }]
+                        labels: [<?php echo "'" . implode("','", array_column($monthlyStats, 'month')) . "'"; ?>],
+                        datasets: [
+                            {
+                                label: 'Ventas',
+                                data: [<?php echo implode(",", array_column($monthlyStats, 'sales')); ?>],
+                                backgroundColor: 'rgba(19, 109, 236, 0.7)',
+                                borderColor: '#136dec',
+                                borderWidth: 1,
+                                borderRadius: 8,
+                            },
+                            {
+                                label: 'Compras',
+                                data: [<?php echo implode(",", array_column($monthlyStats, 'purchases')); ?>],
+                                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                                borderColor: '#ef4444',
+                                borderWidth: 1,
+                                borderRadius: 8,
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
@@ -629,7 +638,7 @@ $logisticsPhases = [
                             y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.03)' }, border: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
                             x: { grid: { display: false }, border: { display: false }, ticks: { color: '#64748b', font: { size: 10, weight: 'bold' } } }
                         },
-                        plugins: { legend: { display: false } }
+                        plugins: { legend: { display: true, labels: { color: '#64748b', font: { size: 10, weight: 'bold' } } } }
                     }
                 });
             }

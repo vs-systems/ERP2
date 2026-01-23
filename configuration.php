@@ -400,6 +400,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     legales.</p>
                             </a>
 
+                            <!-- Gestión Financiera (NEW) -->
+                            <a href="abm_billing.php"
+                                class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">receipt_long</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM Facturación</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Eliminar o corregir facturas emitidas.
+                                </p>
+                            </a>
+
+                            <a href="abm_cuentas_corrientes.php"
+                                class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">account_balance_wallet</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM Ctas. Corrientes</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Corregir movimientos y saldos
+                                    históricos.</p>
+                            </a>
+
                             <!-- ABM Clientes -->
                             <a href="?section=clients"
                                 class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
