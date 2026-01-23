@@ -14,7 +14,11 @@ $action = $_POST['action'] ?? '';
 try {
     switch ($action) {
         case 'update_phase':
-            $success = $logistics->updateOrderPhase($_POST['quote_number'], $_POST['phase']);
+            $quoteNumber = $_POST['quote_number'] ?? '';
+            $phase = $_POST['phase'] ?? '';
+            error_log("AJAX Logistics: update_phase requested for $quoteNumber to $phase");
+            $success = $logistics->updateOrderPhase($quoteNumber, $phase);
+            error_log("AJAX Logistics: update_phase result: " . ($success ? "Success" : "Failure"));
             echo json_encode(['success' => $success]);
             break;
 

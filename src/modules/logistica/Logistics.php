@@ -35,17 +35,30 @@ class Logistics
     public function updateOrderPhase($quoteNumber, $newPhase)
     {
         try {
+            $quoteNumber = trim($quoteNumber);
+            error_log("Logistics: Attempting update for [$quoteNumber] to phase $newPhase");
+
             // 1. Try to update existing record
             $stmt = $this->db->prepare("UPDATE logistics_process SET current_phase = ?, updated_at = NOW() WHERE quote_number = ?");
             $stmt->execute([$newPhase, $quoteNumber]);
 
-            if ($stmt->rowCount() === 0) {
+            $rowCount = $stmt->rowCount();
+            error_log("Logistics: UPDATE rowCount = $rowCount");
+
+            if ($rowCount === 0) {
                 // 2. If no record was updated, check if it exists or insert new
-                $stmtCheck = $this->db->prepare("SELECT id FROM logistics_process WHERE quote_number = ?");
+                $stmtCheck = $this->db->prepare("SELECT id, current_phase FROM logistics_process WHERE quote_number = ?");
                 $stmtCheck->execute([$quoteNumber]);
-                if (!$stmtCheck->fetch()) {
+                $existing = $stmtCheck->fetch();
+
+                if (!$existing) {
+                    error_log("Logistics: No record found for $quoteNumber, performing INSERT");
                     $stmtIns = $this->db->prepare("INSERT INTO logistics_process (quote_number, current_phase, updated_at) VALUES (?, ?, NOW())");
-                    return $stmtIns->execute([$quoteNumber, $newPhase]);
+                    $res = $stmtIns->execute([$quoteNumber, $newPhase]);
+                    error_log("Logistics: INSERT result = " . ($res ? "Success" : "Failure"));
+                    return $res;
+                } else {
+                    error_log("Logistics: Record already exists for $quoteNumber with phase " . ($existing['current_phase'] ?? 'NULL') . ". No rows were updated (possibly same phase).");
                 }
             }
             return true;
