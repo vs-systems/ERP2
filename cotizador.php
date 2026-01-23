@@ -622,7 +622,9 @@ $today = date('d/m/y');
                             class="w-24 h-10 text-right bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-lg text-sm text-primary font-mono font-bold focus:ring-primary/30">
                     </td>
                     <td class="px-6 py-4 text-right">
-                        <div class="text-sm dark:text-white/80 text-slate-500 font-mono font-medium">$ ${(adjustedUnitPrice * bnaRate).toFixed(2)}</div>
+                        <input type="number" step="0.01" value="${(adjustedUnitPrice * bnaRate).toFixed(2)}" 
+                            onchange="updatePrice(${index}, this.value, 'ars')" 
+                            class="w-24 h-10 text-right bg-slate-50 dark:bg-[#101822] border-slate-200 dark:border-[#233348] rounded-lg text-sm text-green-600 dark:text-green-400 font-mono font-bold focus:ring-green-500/30">
                     </td>
                     <td class="px-6 py-4 text-center font-bold text-slate-400 text-[11px] uppercase">${item.iva}%</td>
                     <td class="px-6 py-4 text-right">

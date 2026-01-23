@@ -12,7 +12,7 @@ $clientModule = new Client();
 $db = Vsys\Lib\Database::getInstance();
 
 $type = $_GET['type'] ?? 'client'; // 'client' or 'supplier'
-$id = $_GET['edit'] ?? null;
+$id = $_GET['id'] ?? $_GET['edit'] ?? null;
 $message = '';
 $status = '';
 

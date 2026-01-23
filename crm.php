@@ -164,26 +164,6 @@ $stages = [
 
                     <!-- Follow-up Alerts -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div
-                            class="bg-amber-500/5 border border-amber-500/20 p-4 rounded-2xl flex items-start gap-4 hover:bg-amber-500/10 transition-colors">
-                            <div class="bg-amber-500/20 p-3 rounded-xl text-amber-500">
-                                <span class="material-symbols-outlined text-xl">call</span>
-                            </div>
-                            <div class="flex-1">
-                                <div class="flex justify-between items-center mb-1">
-                                    <span class="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Llamar
-                                        Cliente</span>
-                                    <span class="text-[10px] text-slate-500 font-medium">Hace 2 días</span>
-                                </div>
-                                <h5 class="text-sm font-bold dark:text-slate-200 text-slate-700">Seguimiento Presupuesto
-                                    #882</h5>
-                                <p class="text-[11px] text-slate-500 truncate mb-3">Cliente: Juan Perez - Pendiente de
-                                    feedback</p>
-                                <button
-                                    class="w-full bg-amber-500 text-white text-[10px] font-bold py-1.5 rounded-lg active:scale-95 transition-transform uppercase tracking-widest">Llamar
-                                    Ahora</button>
-                            </div>
-                        </div>
                         <!-- More dynamic alerts would be rendered here -->
                     </div>
 

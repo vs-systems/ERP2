@@ -6,10 +6,14 @@ require_once 'auth_check.php';
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/analysis/OperationAnalysis.php';
+require_once __DIR__ . '/src/lib/BCRAClient.php';
 
 use Vsys\Modules\Analysis\OperationAnalysis;
+use Vsys\Lib\BCRAClient;
 
 $analyzer = new OperationAnalysis();
+$currency = new BCRAClient();
+$bnaRate = $currency->getCurrentRate('oficial') ?? 1000.00;
 $quotationId = $_GET['id'] ?? null;
 $analysis = null;
 if ($quotationId) {
@@ -229,6 +233,9 @@ if ($quotationId) {
                                 <p
                                     class="text-3xl font-black <?php echo $analysis['profit'] >= 0 ? 'text-green-500' : 'text-red-500'; ?> font-mono">
                                     $<?php echo number_format($analysis['profit'], 2); ?>
+                                </p>
+                                <p class="text-[10px] font-bold text-slate-400 mt-1 font-mono">
+                                    ≈ ARS <?php echo number_format($analysis['profit'] * $bnaRate, 2, ',', '.'); ?>
                                 </p>
                             </div>
                         </div>

@@ -31,6 +31,8 @@ if ($userRole === 'Vendedor') {
     $stats = $analysis->getDashboardSummary() ?: $stats;
     $shipStats = $logistics->getShippingStats() ?: $shipStats;
 }
+
+$effectivenessStats = $analysis->getDashboardSummary();
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="es">
@@ -211,154 +213,204 @@ if ($userRole === 'Vendedor') {
                                     <span
                                         class="text-[#136dec] text-[10px] font-bold bg-[#136dec]/10 px-2 py-1 rounded-full uppercase">Eficiencia</span>
                                 </div>
-                                <h3 class="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">
+                                <h3 class="text-3xl font-black text-primary font-mono tracking-tighter">
                                     <?php echo $stats['effectiveness']; ?>%
                                 </h3>
                                 <p class="text-slate-500 text-xs mt-2">Cierre de presupuestos</p>
                             </div>
 
                             <div
-                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-xl p-5 hover:border-amber-500/50 transition-all group shadow-sm dark:shadow-none">
-                                <div class="flex justify-between items-start mb-3">
-                                    <div
-                                        class="p-2.5 bg-amber-500/10 rounded-lg text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                                        <span class="material-symbols-outlined">local_shipping</span>
+                                class="lg:col-span-2 bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-xl p-5 hover:border-[#136dec]/50 transition-all group shadow-sm dark:shadow-none flex items-center justify-between">
+                                <div class="flex flex-col">
+                                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                                        Efectividad Comercial</p>
+                                    <div class="flex items-baseline gap-2">
+                                        <span
+                                            class="text-2xl font-black text-primary"><?php echo $effectivenessStats['effectiveness']; ?>%</span>
+                                        <span class="text-[10px] text-slate-400">Conversión</span>
                                     </div>
-                                    <span
-                                        class="text-amber-500 text-[10px] font-bold bg-amber-500/10 px-2 py-1 rounded-full uppercase">Logística</span>
+                                    <div class="flex items-center gap-3 mt-2">
+                                        <div class="flex flex-col">
+                                            <span class="text-[9px] font-bold text-slate-400 uppercase">Emitidas</span>
+                                            <span
+                                                class="text-xs font-bold dark:text-white"><?php echo $effectivenessStats['quotations_total']; ?></span>
+                                        </div>
+                                        <div class="flex flex-col border-l border-slate-200 dark:border-[#233348] pl-3">
+                                            <span class="text-[9px] font-bold text-slate-400 uppercase">Aceptadas</span>
+                                            <span
+                                                class="text-xs font-bold text-green-500"><?php echo $effectivenessStats['orders_total']; ?></span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <h3 class="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">
-                                    <?php echo $shipStats['pending'] ?? 0; ?> envíos
-                                </h3>
-                                <p class="text-slate-500 text-xs mt-2">Procesos pendientes este mes</p>
+                                <div class="relative w-24 h-24">
+                                    <canvas id="effectivenessChart"></canvas>
+                                </div>
                             </div>
                         </div>
-                    <?php endif; ?>
 
-                    <!-- Secondary Row: Charts & Tables -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Left: Main Chart -->
+                        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                const ctxEffect = document.getElementById('effectivenessChart').getContext('2d');
+                                new Chart(ctxEffect, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: ['Aceptadas', 'Pendientes'],
+                                        datasets: [{
+                                            data: [<?php echo $effectivenessStats['orders_total']; ?>, <?php echo max(0, $effectivenessStats['quotations_total'] - $effectivenessStats['orders_total']); ?>],
+                                            backgroundColor: ['#136dec', 'rgba(19, 109, 236, 0.1)'],
+                                            borderWidth: 0,
+                                            cutout: '75%'
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: { legend: { display: false }, tooltip: { enabled: true } }
+                                    }
+                                });
+                            });
+                        </script>
                         <div
-                            class="lg:col-span-2 bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none transition-colors duration-300">
-                            <div class="flex justify-between items-center mb-8">
-                                <div>
-                                    <h3 class="text-lg font-bold dark:text-white text-slate-800">Flujo Operativo (Real)
-                                    </h3>
-                                    <p class="text-slate-500 text-sm">Resumen de ingresos vs egresos acumulados</p>
+                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-xl p-5 hover:border-amber-500/50 transition-all group shadow-sm dark:shadow-none">
+                            <div class="flex justify-between items-start mb-3">
+                                <div
+                                    class="p-2.5 bg-amber-500/10 rounded-lg text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                                    <span class="material-symbols-outlined">local_shipping</span>
                                 </div>
-                                <div class="flex gap-2">
-                                    <span class="size-3 rounded-full bg-[#136dec]"></span>
-                                    <span class="size-3 rounded-full bg-red-500"></span>
-                                    <span class="size-3 rounded-full bg-green-500"></span>
-                                </div>
+                                <span
+                                    class="text-amber-500 text-[10px] font-bold bg-amber-500/10 px-2 py-1 rounded-full uppercase">Logística</span>
                             </div>
-                            <div class="h-[320px] w-full mt-4">
-                                <canvas id="opsChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- Right: Quick Activity + Calendar -->
-                        <div class="space-y-6">
-                            <div
-                                class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-sm dark:shadow-none transition-colors duration-300">
-                                <h3 class="font-bold dark:text-white text-slate-800 mb-4 flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[#136dec]">event_note</span> Agenda del
-                                    Día
-                                </h3>
-                                <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-[#233348]">
-                                    <iframe
-                                        src="https://calendar.google.com/calendar/embed?src=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20&ctz=America%2FArgentina%2FBuenos_Aires&showTitle=0&showNav=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0&mode=AGENDA"
-                                        class="w-full h-[250px] bg-white dark:invert dark:hue-rotate-180"
-                                        frameborder="0" scrolling="no"></iframe>
-                                </div>
-                                <a href="https://calendar.google.com" target="_blank"
-                                    class="block text-center mt-3 text-xs text-slate-500 hover:text-[#136dec] transition-colors underline">Ver
-                                    calendario completo</a>
-                            </div>
-
-                            <div
-                                class="bg-gradient-to-br from-[#136dec]/20 to-transparent border border-[#136dec]/30 rounded-2xl p-6">
-                                <h3 class="font-bold text-[#136dec] mb-2 uppercase text-xs tracking-widest">Acceso
-                                    Directo</h3>
-                                <p class="text-slate-600 dark:text-white text-sm font-medium mb-4">Consulta el
-                                    inventario y actualiza
-                                    precios de mercado en tiempo real.</p>
-                                <a href="catalogo.php"
-                                    class="inline-flex items-center gap-2 text-white bg-[#136dec] px-4 py-2 rounded-lg text-sm font-bold w-full justify-center hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20">
-                                    <span class="material-symbols-outlined text-lg">category</span> IR AL CATÁLOGO
-                                </a>
-                            </div>
+                            <h3 class="text-2xl font-bold dark:text-white text-slate-800 tracking-tight">
+                                <?php echo $shipStats['pending'] ?? 0; ?> envíos
+                            </h3>
+                            <p class="text-slate-500 text-xs mt-2">Procesos pendientes este mes</p>
                         </div>
                     </div>
+                <?php endif; ?>
 
-                    <!-- Bottom: Recent Operations Table -->
+                <!-- Secondary Row: Charts & Tables -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left: Main Chart -->
                     <div
-                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-xl dark:shadow-none transition-colors duration-300">
-                        <div
-                            class="p-6 border-b border-slate-200 dark:border-[#233348] flex justify-between items-center">
-                            <h3 class="text-lg font-bold dark:text-white text-slate-800">Cotizaciones Recientes</h3>
-                            <a href="presupuestos.php" class="text-xs text-[#136dec] hover:underline font-bold">VER
-                                TODAS</a>
+                        class="lg:col-span-2 bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-xl dark:shadow-none transition-colors duration-300">
+                        <div class="flex justify-between items-center mb-8">
+                            <div>
+                                <h3 class="text-lg font-bold dark:text-white text-slate-800">Flujo Operativo (Real)
+                                </h3>
+                                <p class="text-slate-500 text-sm">Resumen de ingresos vs egresos acumulados</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <span class="size-3 rounded-full bg-[#136dec]"></span>
+                                <span class="size-3 rounded-full bg-red-500"></span>
+                                <span class="size-3 rounded-full bg-green-500"></span>
+                            </div>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead class="bg-slate-50 dark:bg-[#101822]/50 transition-colors">
-                                    <tr>
-                                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">Referencia
-                                        </th>
-                                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">Cliente
-                                        </th>
-                                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase text-right">
-                                            Monto USD</th>
-                                        <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">Estado</th>
-                                        <th
-                                            class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase text-center">
-                                            Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 dark:divide-[#233348] transition-colors">
-                                    <?php
-                                    $db = \Vsys\Lib\Database::getInstance();
-                                    $quotations = ($userRole === 'Vendedor') ? $recentQuotations : $db->query("SELECT q.*, e.name as client_name FROM quotations q JOIN entities e ON q.client_id = e.id ORDER BY q.id DESC LIMIT 8")->fetchAll();
-                                    foreach ($quotations as $r):
-                                        $statusColor = ($r['status'] === 'Pedido') ? 'text-green-500 bg-green-500/10' : 'text-slate-400 bg-white/5';
-                                        ?>
-                                        <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
-                                            <td class="px-6 py-4">
-                                                <span
-                                                    class="text-sm font-bold dark:text-white text-slate-800 group-hover:text-[#136dec] transition-colors"><?php echo $r['quote_number']; ?></span>
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <span class="text-sm text-slate-400"><?php echo $r['client_name']; ?></span>
-                                            </td>
-                                            <td class="px-6 py-4 text-right">
-                                                <span
-                                                    class="text-sm font-mono text-white">$<?php echo number_format($r['total_usd'], 2); ?></span>
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                <span
-                                                    class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase <?php echo $statusColor; ?>">
-                                                    <?php echo $r['status']; ?>
-                                                </span>
-                                            </td>
-                                            <td class="px-6 py-4 text-center">
-                                                <a href="analisis.php?id=<?php echo $r['id']; ?>"
-                                                    class="p-1.5 text-slate-400 hover:text-[#136dec] transition-colors">
-                                                    <span class="material-symbols-outlined text-xl">monitoring</span>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                        <div class="h-[320px] w-full mt-4">
+                            <canvas id="opsChart"></canvas>
                         </div>
                     </div>
 
+                    <!-- Right: Quick Activity + Calendar -->
+                    <div class="space-y-6">
+                        <div
+                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-sm dark:shadow-none transition-colors duration-300">
+                            <h3 class="font-bold dark:text-white text-slate-800 mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[#136dec]">event_note</span> Agenda del
+                                Día
+                            </h3>
+                            <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-[#233348]">
+                                <iframe
+                                    src="https://calendar.google.com/calendar/embed?src=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20&ctz=America%2FArgentina%2FBuenos_Aires&showTitle=0&showNav=0&showPrint=0&showTabs=0&showCalendars=0&showTz=0&mode=AGENDA"
+                                    class="w-full h-[250px] bg-white dark:invert dark:hue-rotate-180" frameborder="0"
+                                    scrolling="no"></iframe>
+                            </div>
+                            <a href="https://calendar.google.com" target="_blank"
+                                class="block text-center mt-3 text-xs text-slate-500 hover:text-[#136dec] transition-colors underline">Ver
+                                calendario completo</a>
+                        </div>
+
+                        <div
+                            class="bg-gradient-to-br from-[#136dec]/20 to-transparent border border-[#136dec]/30 rounded-2xl p-6">
+                            <h3 class="font-bold text-[#136dec] mb-2 uppercase text-xs tracking-widest">Acceso
+                                Directo</h3>
+                            <p class="text-slate-600 dark:text-white text-sm font-medium mb-4">Consulta el
+                                inventario y actualiza
+                                precios de mercado en tiempo real.</p>
+                            <a href="catalogo.php"
+                                class="inline-flex items-center gap-2 text-white bg-[#136dec] px-4 py-2 rounded-lg text-sm font-bold w-full justify-center hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/20">
+                                <span class="material-symbols-outlined text-lg">category</span> IR AL CATÁLOGO
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <!-- Spacing at bottom -->
-                <div class="h-10"></div>
+
+                <!-- Bottom: Recent Operations Table -->
+                <div
+                    class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-xl dark:shadow-none transition-colors duration-300">
+                    <div class="p-6 border-b border-slate-200 dark:border-[#233348] flex justify-between items-center">
+                        <h3 class="text-lg font-bold dark:text-white text-slate-800">Cotizaciones Recientes</h3>
+                        <a href="presupuestos.php" class="text-xs text-[#136dec] hover:underline font-bold">VER
+                            TODAS</a>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 dark:bg-[#101822]/50 transition-colors">
+                                <tr>
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">Referencia
+                                    </th>
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">Cliente
+                                    </th>
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase text-right">
+                                        Monto USD</th>
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">Estado</th>
+                                    <th class="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase text-center">
+                                        Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-[#233348] transition-colors">
+                                <?php
+                                $db = \Vsys\Lib\Database::getInstance();
+                                $quotations = ($userRole === 'Vendedor') ? $recentQuotations : $db->query("SELECT q.*, e.name as client_name FROM quotations q JOIN entities e ON q.client_id = e.id ORDER BY q.id DESC LIMIT 8")->fetchAll();
+                                foreach ($quotations as $r):
+                                    $statusColor = ($r['status'] === 'Pedido') ? 'text-green-500 bg-green-500/10' : 'text-slate-400 bg-white/5';
+                                    ?>
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="text-sm font-bold dark:text-white text-slate-800 group-hover:text-[#136dec] transition-colors"><?php echo $r['quote_number']; ?></span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="text-sm text-slate-400"><?php echo $r['client_name']; ?></span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <span
+                                                class="text-sm font-mono text-white">$<?php echo number_format($r['total_usd'], 2); ?></span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase <?php echo $statusColor; ?>">
+                                                <?php echo $r['status']; ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <a href="analisis.php?id=<?php echo $r['id']; ?>"
+                                                class="p-1.5 text-slate-400 hover:text-[#136dec] transition-colors">
+                                                <span class="material-symbols-outlined text-xl">monitoring</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
-        </main>
+            <!-- Spacing at bottom -->
+            <div class="h-10"></div>
+    </div>
+    </main>
     </div>
 
     <!-- Charts Script -->
