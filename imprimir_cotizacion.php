@@ -141,8 +141,8 @@ function u($str)
 <body>
     <div class="no-print" style="margin-bottom: 20px; text-align: center;">
         <button onclick="window.print()"
-            style="padding: 10px 20px; background: #5d2fc1; color: white; border: none; border-radius: 5px; cursor: pointer;">
-            ðŸ–¨ï¸ IMPRIMIR / GUARDAR PDF
+            style="padding: 12px 24px; background: #5d2fc1; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+            IMPRIMIR / GUARDAR PDF
         </button>
     </div>
 

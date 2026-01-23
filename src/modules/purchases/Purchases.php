@@ -6,8 +6,10 @@
 namespace Vsys\Modules\Purchases;
 
 require_once __DIR__ . '/../../lib/Database.php';
+require_once __DIR__ . '/../billing/ProviderAccounts.php';
 
 use Vsys\Lib\Database;
+use Vsys\Modules\Billing\ProviderAccounts;
 
 class Purchases
 {
@@ -125,6 +127,19 @@ class Purchases
             }
 
             $this->db->commit();
+
+            // 3. Register movement in Provider Account if confirmed
+            if (!empty($data['is_confirmed'])) {
+                $providerAccounts = new ProviderAccounts();
+                $providerAccounts->addMovement(
+                    $data['entity_id'],
+                    'Compra',
+                    $purchaseId,
+                    $data['total_ars'],
+                    "Compra #{$data['purchase_number']}"
+                );
+            }
+
             return $purchaseId;
         } catch (\Exception $e) {
             $this->db->rollBack();

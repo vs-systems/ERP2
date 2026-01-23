@@ -37,6 +37,8 @@ $menuStructure = [
             ['label' => 'Compras', 'href' => 'compras.php', 'icon' => 'shopping_cart_checkout'],
             ['label' => 'Facturación', 'href' => 'facturacion.php', 'icon' => 'receipt'],
             ['label' => 'Ctas. Corrientes', 'href' => 'cuentas_corrientes.php', 'icon' => 'account_balance_wallet'],
+            ['label' => 'Ctas. Corrientes Prov.', 'href' => 'cuentas_corrientes_proveedores.php', 'icon' => 'payments'],
+            ['label' => 'Tesorería', 'href' => 'tesoreria.php', 'icon' => 'account_balance_wallet'],
             ['label' => 'Informes', 'href' => 'informes.php', 'icon' => 'bar_chart'],
         ]
     ],

@@ -41,11 +41,11 @@ $recentInvoices = $billing->getRecentInvoices(20);
                     </button>
                     <h2 class="dark:text-white text-slate-800 font-bold text-lg uppercase">Módulo de Facturación</h2>
                 </div>
-                <button onclick="openInvoiceModal()"
+                <a href="nueva_factura.php"
                     class="bg-[#136dec] hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm uppercase flex items-center gap-2 shadow-lg shadow-blue-500/20">
                     <span class="material-symbols-outlined">add</span>
                     Nueva Factura
-                </button>
+                </a>
             </header>
 
             <!-- Content -->
@@ -77,9 +77,11 @@ $recentInvoices = $billing->getRecentInvoices(20);
                                             <td class="px-6 py-3 font-mono font-bold"><?php echo $inv['invoice_number']; ?>
                                             </td>
                                             <td class="px-6 py-3 text-sm text-slate-500">
-                                                <?php echo date('d/m/Y', strtotime($inv['date'])); ?></td>
+                                                <?php echo date('d/m/Y', strtotime($inv['date'])); ?>
+                                            </td>
                                             <td class="px-6 py-3 font-bold">
-                                                <?php echo htmlspecialchars($inv['client_name']); ?></td>
+                                                <?php echo htmlspecialchars($inv['client_name']); ?>
+                                            </td>
                                             <td class="px-6 py-3 text-center">
                                                 <span
                                                     class="w-6 h-6 inline-flex items-center justify-center rounded bg-slate-100 dark:bg-[#101822] border border-slate-200 dark:border-[#233348] font-bold text-xs">
@@ -113,16 +115,6 @@ $recentInvoices = $billing->getRecentInvoices(20);
         </main>
     </div>
 
-    <!-- Invoice Modal (Simplified for now) -->
-    <script>
-        function openInvoiceModal() {
-            Swal.fire({
-                title: 'Nueva Factura',
-                text: 'La creación manual de facturas se habilitará en la próxima actualización. Por ahora, genera facturas confirmando cotizaciones.',
-                icon: 'info'
-            });
-        }
-    </script>
 </body>
 
 </html>

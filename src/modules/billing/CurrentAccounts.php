@@ -67,7 +67,20 @@ class CurrentAccounts
                 $notes
             ]);
 
-            return $this->db->lastInsertId();
+            $lastId = $this->db->lastInsertId();
+
+            // --- TREASURY INTEGRATION ---
+            if ($type === 'Recibo' || $type === 'Pago') {
+                try {
+                    $this->db->prepare("INSERT INTO treasury_movements (type, category, amount, notes, reference_id, reference_type) VALUES (?, ?, ?, ?, ?, ?)")
+                        ->execute(['Ingreso', 'Ventas', $amount, $notes, $lastId, 'client_payment']);
+                } catch (\Exception $te) {
+                    // Silently fail if table not migrated yet
+                    error_log("Treasury Auto-Log Error: " . $te->getMessage());
+                }
+            }
+
+            return $lastId;
 
         } catch (Exception $e) {
             error_log("CurrentAccounts Error: " . $e->getMessage());

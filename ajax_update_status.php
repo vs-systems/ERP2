@@ -66,6 +66,31 @@ try {
                              VALUES (?, 'En reserva') 
                              ON DUPLICATE KEY UPDATE updated_at = NOW()")
                     ->execute([$quote['quote_number']]);
+
+                // --- CURRENT ACCOUNT INTEGRATION (Payment) ---
+                // Register a Credit (Haber) movement in the current account
+                require_once __DIR__ . '/src/modules/billing/CurrentAccounts.php';
+                $currentAccounts = new \Vsys\Modules\Billing\CurrentAccounts();
+
+                // Fetch full quote details for total_ars
+                $stmtFull = $db->prepare("SELECT total_ars FROM quotations WHERE id = ?");
+                $stmtFull->execute([$id]);
+                $totalArs = $stmtFull->fetchColumn();
+
+                if ($totalArs > 0) {
+                    // Check if a payment for this quote was already registered to avoid duplicates
+                    $stmtCheck = $db->prepare("SELECT id FROM client_movements WHERE reference_id = ? AND type = 'Recibo'");
+                    $stmtCheck->execute([$id]);
+                    if (!$stmtCheck->fetch()) {
+                        $currentAccounts->addMovement(
+                            $quote['client_id'],
+                            'Recibo',
+                            $id,
+                            $totalArs,
+                            "Cobro automático de Presupuesto #{$quote['quote_number']}"
+                        );
+                    }
+                }
             }
         }
     }
@@ -132,6 +157,21 @@ try {
 
                     $billing->createInvoice($billingData);
                 }
+            }
+        }
+    }
+
+    if ($type === 'purchase' && $field === 'is_confirmed' && $value == 1) {
+        require_once __DIR__ . '/src/modules/billing/ProviderAccounts.php';
+        require_once __DIR__ . '/src/modules/purchases/Purchases.php';
+        $purchasesModule = new \Vsys\Modules\Purchases\Purchases();
+        $purchase = $purchasesModule->getPurchase($id);
+        if ($purchase) {
+            $checkStmt = $db->prepare("SELECT id FROM provider_movements WHERE reference_id = ? AND type = 'Compra'");
+            $checkStmt->execute([$id]);
+            if (!$checkStmt->fetch()) {
+                $providerAccounts = new \Vsys\Modules\Billing\ProviderAccounts();
+                $providerAccounts->addMovement($purchase['entity_id'], 'Compra', $id, $purchase['total_ars'], "Compra #{$purchase['purchase_number']}");
             }
         }
     }

@@ -196,7 +196,8 @@ $logisticsPhases = [
                                     <?php echo number_format($stats['total_sales'], 2); ?>
                                 </h3>
                                 <p class="text-slate-500 text-xs mt-2">Pendiente de cobro: <span
-                                        class="text-slate-400 dark:text-slate-300 font-medium">$<?php echo number_format($stats['pending_collections'] ?? 0, 2); ?></span>
+                                        class="text-emerald-500 font-bold">ARS
+                                        <?php echo number_format($stats['pending_collections'] ?? 0, 2, ',', '.'); ?></span>
                                 </p>
                             </div>
 
@@ -215,7 +216,8 @@ $logisticsPhases = [
                                     <?php echo number_format($stats['total_purchases'], 2); ?>
                                 </h3>
                                 <p class="text-slate-500 text-xs mt-2">Pendiente de pago: <span
-                                        class="text-slate-400 dark:text-slate-300 font-medium">$<?php echo number_format($stats['pending_payments'] ?? 0, 2); ?></span>
+                                        class="text-red-500 font-bold">ARS
+                                        <?php echo number_format($stats['pending_payments'] ?? 0, 2, ',', '.'); ?></span>
                                 </p>
                             </div>
 

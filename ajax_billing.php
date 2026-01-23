@@ -60,6 +60,19 @@ try {
             );
             $response = ['success' => true, 'receipt_id' => $receiptId];
             break;
+
+        case 'register_provider_payment':
+            require_once __DIR__ . '/src/modules/billing/ProviderAccounts.php';
+            $providerAccounts = new \Vsys\Modules\Billing\ProviderAccounts();
+            $pId = $providerAccounts->addMovement(
+                $_POST['provider_id'],
+                'Pago',
+                null,
+                $_POST['amount'],
+                $_POST['notes']
+            );
+            $response = ['success' => true, 'movement_id' => $pId];
+            break;
     }
 
 } catch (Exception $e) {

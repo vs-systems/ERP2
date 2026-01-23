@@ -122,25 +122,16 @@ class OperationAnalysis
         $acceptedQuotes = $this->db->query($acceptedQuotesSql)->fetchColumn() ?: 0;
         $effectiveness = $totalQuotes > 0 ? ($acceptedQuotes / $totalQuotes) * 100 : 0;
 
-        // Commercial Status Summaries
-        $pendingCollections = 0;
-        if ($hasQuoteConfirmed && $hasQuotePaymentStatus) {
-            $pendingCollSql = "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1 AND (payment_status = 'Pendiente' OR payment_status IS NULL)";
-            $pendingCollections = $this->db->query($pendingCollSql)->fetchColumn() ?: 0;
-        }
-
-        $pendingPayments = 0;
-        if ($hasPurchaseConfirmed && $hasPurchasePaymentStatus) {
-            $pendingPaySql = "SELECT SUM(subtotal_usd) FROM purchases WHERE is_confirmed = 1 AND (payment_status = 'Pendiente' OR payment_status IS NULL)";
-            $pendingPayments = $this->db->query($pendingPaySql)->fetchColumn() ?: 0;
-        }
+        // Commercial Status Summaries (Real data from Current Accounts)
+        $pendingCollections = $this->db->query("SELECT SUM(debit) - SUM(credit) FROM client_movements")->fetchColumn() ?: 0;
+        $pendingPayments = $this->db->query("SELECT SUM(debit) - SUM(credit) FROM provider_movements")->fetchColumn() ?: 0;
 
         return [
             'total_sales' => $totalSales,
             'total_purchases' => $totalPurchases,
             'total_profit' => $totalSales - $totalPurchases,
-            'pending_collections' => $pendingCollections,
-            'pending_payments' => $pendingPayments,
+            'pending_collections' => (float) $pendingCollections,
+            'pending_payments' => (float) $pendingPayments,
             'quotations_total' => $totalQuotes,
             'orders_total' => $acceptedQuotes,
             'effectiveness' => round($effectiveness, 2)
