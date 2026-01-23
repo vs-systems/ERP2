@@ -36,8 +36,8 @@ class Billing
 
             // 2. Insert Header
             $sql = "INSERT INTO invoices 
-                    (company_id, client_id, quote_id, invoice_number, invoice_type, date, due_date, status, total_net, total_iva, total_amount, notes, created_at) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
+                    (company_id, client_id, quote_id, invoice_number, invoice_type, date, due_date, status, total_net, total_iva, total_amount, currency, exchange_rate, notes, created_at) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
 
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
@@ -52,6 +52,8 @@ class Billing
                 $data['total_net'],
                 $data['total_iva'],
                 $data['total_amount'],
+                $data['currency'] ?? 'ARS',
+                $data['exchange_rate'] ?? 1,
                 $data['notes'] ?? ''
             ]);
 
@@ -75,11 +77,14 @@ class Billing
             }
 
             // 4. Register Movement in Current Account (Debit)
+            // Use ARS amount for the movement balance if provided, otherwise use the header total
+            $movementAmount = $data['total_amount_ars'] ?? $data['total_amount'];
+
             $this->currentAccounts->addMovement(
                 $data['client_id'],
                 'Factura',
                 $invoiceId,
-                $data['total_amount'],
+                $movementAmount,
                 "Factura $invoiceNumber"
             );
 

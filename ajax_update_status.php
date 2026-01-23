@@ -4,6 +4,11 @@
  */
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
+require_once __DIR__ . '/src/modules/billing/Billing.php';
+require_once __DIR__ . '/src/modules/cotizador/Cotizador.php';
+
+use Vsys\Modules\Billing\Billing;
+use Vsys\Modules\Cotizador\Cotizador;
 
 header('Content-Type: application/json');
 
@@ -70,9 +75,64 @@ try {
         if ($field === 'status') {
             $isConfirmed = ($value === 'Aceptado' || $value === 'Pedido') ? 1 : 0;
             $db->prepare("UPDATE quotations SET is_confirmed = ? WHERE id = ?")->execute([$isConfirmed, $id]);
+            $triggerBilling = ($isConfirmed == 1);
         } elseif ($field === 'is_confirmed') {
             $status = ($value == 1) ? 'Aceptado' : 'Pendiente';
             $db->prepare("UPDATE quotations SET status = ? WHERE id = ?")->execute([$status, $id]);
+            $triggerBilling = ($value == 1);
+        }
+
+        // --- AUTOMATIC BILLING & CURRENT ACCOUNT ---
+        if (isset($triggerBilling) && $triggerBilling) {
+            // Check if already invoiced to avoid duplicates
+            $stmtCheck = $db->prepare("SELECT id FROM invoices WHERE quote_id = ?");
+            $stmtCheck->execute([$id]);
+            if (!$stmtCheck->fetch()) {
+                $cotizador = new Cotizador();
+                $quote = $cotizador->getQuotation($id);
+                $items = $cotizador->getQuotationItems($id);
+
+                if ($quote) {
+                    $billing = new Billing();
+
+                    // Prepare items for billing module
+                    $billItems = [];
+                    foreach ($items as $item) {
+                        $billItems[] = [
+                            'description' => $item['description'],
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['unit_price_usd'],
+                            'iva_rate' => $item['iva_rate'],
+                            'subtotal' => $item['subtotal_usd']
+                        ];
+                    }
+
+                    $billingData = [
+                        'client_id' => $quote['client_id'],
+                        'quote_id' => $id,
+                        'type' => 'X', // 'X' for internal/proforma
+                        'date' => date('Y-m-d'),
+                        'total_net' => $quote['subtotal_usd'],
+                        'total_iva' => $quote['total_usd'] - $quote['subtotal_usd'],
+                        'total_amount' => $quote['total_usd'],
+                        'currency' => 'USD',
+                        'exchange_rate' => $quote['exchange_rate_usd'],
+                        'items' => $billItems,
+                        'notes' => "Generada automáticamente desde Presupuesto {$quote['quote_number']}"
+                    ];
+
+                    // For Current Account, we use ARS if it's the primary tracking currency
+                    // But our createInvoice uses total_amount for addMovement.
+                    // Let's modify the total_amount to ARS if we want the movement in ARS.
+                    // Actually, let's keep the invoice in USD but the MOVEMENT in ARS.
+                    // To do this, I need to modify Billing.php or pass ARS to addMovement manually.
+
+                    // Improved approach: Pass ARS to Billing so it uses it for the movement.
+                    $billingData['total_amount_ars'] = $quote['total_ars'];
+
+                    $billing->createInvoice($billingData);
+                }
+            }
         }
     }
 
