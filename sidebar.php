@@ -1,10 +1,11 @@
 ﻿<?php
-// sidebar.php - Rediseño basado en Stitch (Tailwind + Material Symbols) con Soporte de Temas
+// sidebar.php - Rediseño con Menús Desplegables (Collapsible)
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/lib/User.php';
 
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
+// normalize for configuration sections if needed, but handled by href matching usually
 
 if (!isset($userAuth)) {
     $userAuth = new \Vsys\Lib\User();
@@ -13,51 +14,64 @@ if (!isset($userAuth)) {
 $userName = $_SESSION['full_name'] ?? ($_SESSION['username'] ?? 'Usuario');
 $userRole = $_SESSION['role'] ?? 'Invitado';
 
-$menu = [
-    ['id' => 'index', 'href' => 'dashboard.php', 'icon' => 'dashboard', 'label' => 'Inicio'],
+// New Menu Structure
+$menuStructure = [
     [
-        'label' => 'Ventas',
-        'icon' => 'receipt_long',
+        'label' => 'VENTAS',
+        'id' => 'ventas',
+        'icon' => 'attach_money',
         'items' => [
-            ['id' => 'presupuestos', 'href' => 'presupuestos.php', 'icon' => 'history', 'label' => 'Historial'],
-            ['id' => 'cotizador', 'href' => 'cotizador.php', 'icon' => 'add_shopping_cart', 'label' => 'Generar Cotiz.'],
-            ['id' => 'productos', 'href' => 'productos.php', 'icon' => 'inventory_2', 'label' => 'Productos/Stock'],
+            ['label' => 'Historial', 'href' => 'presupuestos.php', 'icon' => 'history'],
+            ['label' => 'Cotizar', 'href' => 'cotizador.php', 'icon' => 'add_shopping_cart'],
+            ['label' => 'CRM', 'href' => 'crm.php', 'icon' => 'group'],
+            ['label' => 'Logística', 'href' => 'logistica.php', 'icon' => 'local_shipping'],
+            ['label' => 'Calendario', 'href' => 'https://calendar.google.com/calendar/u/0/r?cid=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20', 'icon' => 'calendar_month', 'target' => '_blank'],
         ]
     ],
     [
-        'label' => 'Contabilidad',
-        'icon' => 'payments',
+        'label' => 'CONTABILIDAD',
+        'id' => 'contabilidad',
+        'icon' => 'account_balance',
         'items' => [
-            ['id' => 'compras', 'href' => 'compras.php', 'icon' => 'shopping_cart_checkout', 'label' => 'Compras'],
-            ['id' => 'facturacion', 'href' => 'facturacion.php', 'icon' => 'description', 'label' => 'Facturación'],
-            ['id' => 'analizador', 'href' => 'analizador.php', 'icon' => 'query_stats', 'label' => 'Análisis OP.'],
+            ['label' => 'Compras', 'href' => 'compras.php', 'icon' => 'shopping_cart_checkout'],
+            ['label' => 'Facturación', 'href' => 'facturacion.php', 'icon' => 'receipt'],
+            ['label' => 'Informes', 'href' => 'informes.php', 'icon' => 'bar_chart'],
         ]
     ],
-    ['id' => 'crm', 'href' => 'crm.php', 'icon' => 'group', 'label' => 'CRM'],
-    ['id' => 'logistica', 'href' => 'logistica.php', 'icon' => 'local_shipping', 'label' => 'Logística'],
-    ['id' => 'clientes', 'href' => 'clientes.php', 'icon' => 'badge', 'label' => 'Clientes'],
-    ['id' => 'proveedores', 'href' => 'proveedores.php', 'icon' => 'factory', 'label' => 'Proveedores'],
-    ['id' => 'informes', 'href' => 'informes.php', 'icon' => 'insert_chart', 'label' => 'Informes'],
-    ['id' => 'configuration', 'href' => 'configuration.php', 'icon' => 'settings', 'label' => 'Configuración', 'role' => 'Admin'],
-    ['id' => 'usuarios', 'href' => 'usuarios.php', 'icon' => 'admin_panel_settings', 'label' => 'Usuarios', 'role' => 'Admin'],
+    [
+        'label' => 'BASES DE DATOS',
+        'id' => 'bdd',
+        'icon' => 'database',
+        'items' => [
+            ['label' => 'Clientes', 'href' => 'clientes.php', 'icon' => 'groups'],
+            ['label' => 'Proveedores', 'href' => 'proveedores.php', 'icon' => 'factory'],
+        ]
+    ],
+    [
+        'label' => 'CONFIGURACION',
+        'id' => 'config',
+        'icon' => 'settings',
+        'items' => [
+            ['label' => 'Usuarios', 'href' => 'usuarios.php', 'icon' => 'manage_accounts', 'role' => 'Admin'],
+            ['label' => 'General / ABMs', 'href' => 'configuration.php', 'icon' => 'tune', 'role' => 'Admin'],
+        ]
+    ],
+    [
+        'label' => 'CATALOGOS',
+        'id' => 'catalogos',
+        'icon' => 'menu_book',
+        'items' => [
+            ['label' => 'Público', 'href' => 'catalogo_publico.php', 'icon' => 'public', 'target' => '_blank'],
+            ['label' => 'Gremio', 'href' => '#', 'icon' => 'engineering', 'target' => '_blank'], // Placeholder
+        ]
+    ]
 ];
-// Cargar preferencia del sistema
-$settingsFile = __DIR__ . '/src/config/settings.json';
-$sysSettings = ['default_theme' => 'auto'];
-if (file_exists($settingsFile)) {
-    $sysSettings = json_decode(file_get_contents($settingsFile), true);
-}
-$defaultTheme = $sysSettings['default_theme'] ?? 'auto';
+
 ?>
 
-<!-- Theme Handler (Prevent FOUC) -->
-<script>
-    // Inyectar preferencia del sistema para que theme_handler.js la use
-    window.vsys_default_theme = "<?php echo $defaultTheme; ?>";
-</script>
+<!-- Theme Handler -->
 <script src="js/theme_handler.js"></script>
-
-<!-- Material Symbols Font -->
+<!-- Material Symbols -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
     rel="stylesheet" />
 
@@ -66,9 +80,10 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
     onclick="toggleVsysSidebar()"></div>
 
 <aside id="mainSidebar"
-    class="fixed md:relative inset-y-0 left-0 w-64 h-full bg-white dark:bg-[#101822] border-r border-slate-200 dark:border-[#233348] flex-shrink-0 overflow-y-auto transition-all duration-300 z-[50] -translate-x-full md:translate-x-0 flex flex-col">
-    <!-- Brand Logo Section -->
-    <div class="p-6 flex items-center gap-3">
+    class="fixed md:relative inset-y-0 left-0 w-64 h-full bg-white dark:bg-[#101822] border-r border-slate-200 dark:border-[#233348] flex-shrink-0 overflow-hidden transition-all duration-300 z-[50] -translate-x-full md:translate-x-0 flex flex-col">
+
+    <!-- Header Logo -->
+    <div class="p-6 flex items-center gap-3 flex-shrink-0">
         <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec] flex items-center justify-center">
             <span class="material-symbols-outlined text-2xl">shield</span>
         </div>
@@ -78,116 +93,139 @@ $defaultTheme = $sysSettings['default_theme'] ?? 'auto';
         </div>
     </div>
 
-    <!-- Navigation Menu -->
-    <nav class="flex-1 px-4 py-2 space-y-1">
-        <?php foreach ($menu as $section): ?>
-            <?php
-            if (isset($section['role']) && !$userAuth->hasRole($section['role']))
-                continue;
+    <!-- Scrollable Menu -->
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden px-4 py-2 space-y-2 custom-scrollbar">
+        <!-- Dashboard Link (Always visible) -->
+        <a href="dashboard.php"
+            class="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 <?php echo $currentPage === 'dashboard' ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#16202e] hover:text-[#136dec]'; ?>">
+            <span class="material-symbols-outlined">dashboard</span>
+            <span class="font-bold text-sm">Inicio</span>
+        </a>
 
-            $isActiveParent = false;
-            if (isset($section['items'])) {
-                foreach ($section['items'] as $sub) {
-                    if ($currentPage === $sub['id']) {
-                        $isActiveParent = true;
-                        break;
-                    }
-                }
-            } else {
-                $isActiveParent = ($currentPage === $section['id']);
-            }
-            ?>
+        <?php foreach ($menuStructure as $section): ?>
+            <div class="border border-slate-100 dark:border-[#233348] rounded-2xl overflow-hidden mb-2">
+                <!-- Toggle Button -->
+                <button onclick="toggleMenu('<?php echo $section['id']; ?>')"
+                    class="w-full flex items-center justify-between px-4 py-3 bg-slate-50/50 dark:bg-[#16202e]/50 hover:bg-slate-100 dark:hover:bg-[#1c2a3b] transition-colors group">
+                    <div class="flex items-center gap-3">
+                        <span
+                            class="material-symbols-outlined text-slate-400 group-hover:text-[#136dec] transition-colors"><?php echo $section['icon']; ?></span>
+                        <span
+                            class="font-bold text-xs text-slate-600 dark:text-slate-300 uppercase tracking-wider group-hover:text-[#136dec] transition-colors"><?php echo $section['label']; ?></span>
+                    </div>
+                    <!-- Toggle Icon (X / + / Chevron) -->
+                    <span id="icon-<?php echo $section['id']; ?>"
+                        class="material-symbols-outlined text-slate-400 text-lg transition-transform duration-300">expand_more</span>
+                </button>
 
-            <?php if (isset($section['items'])): ?>
-                <div class="pt-4 pb-1">
-                    <p class="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 font-display">
-                        <?php echo $section['label']; ?>
-                    </p>
+                <!-- Submenu Items -->
+                <div id="menu-<?php echo $section['id']; ?>"
+                    class="hidden bg-white dark:bg-[#101822] border-t border-slate-100 dark:border-[#233348]">
                     <?php foreach ($section['items'] as $item): ?>
                         <?php if (isset($item['role']) && !$userAuth->hasRole($item['role']))
                             continue; ?>
-                        <a href="<?php echo $item['href']; ?>"
-                            class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 <?php echo ($currentPage === $item['id']) ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-500 dark:text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
-                            <span class="material-symbols-outlined text-[20px]"><?php echo $item['icon']; ?></span>
-                            <span class="text-sm font-medium"><?php echo $item['label']; ?></span>
+
+                        <?php
+                        $isActive = ($currentPage === basename($item['href'], '.php'));
+                        // Logic to keep menu open if active
+                        if ($isActive) {
+                            echo "<script>document.addEventListener('DOMContentLoaded', () => toggleMenu('{$section['id']}', true));</script>";
+                        }
+                        ?>
+
+                        <a href="<?php echo $item['href']; ?>" <?php echo isset($item['target']) ? 'target="' . $item['target'] . '"' : ''; ?>
+                            class="flex items-center gap-3 px-4 py-2.5 pl-11 text-sm font-medium transition-colors border-l-2 <?php echo $isActive ? 'border-[#136dec] text-[#136dec] bg-[#136dec]/5' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-[#136dec] hover:bg-slate-50 dark:hover:bg-[#16202e]'; ?>">
+                            <!-- Optional: small dot or icon for subitems -->
+                            <?php if ($isActive): ?>
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#136dec] absolute left-6"></span>
+                            <?php endif; ?>
+                            <?php echo $item['label']; ?>
                         </a>
                     <?php endforeach; ?>
                 </div>
-            <?php else: ?>
-                <a href="<?php echo $section['href']; ?>"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 <?php echo $isActiveParent ? 'bg-[#136dec] text-white shadow-lg shadow-[#136dec]/20' : 'text-slate-500 dark:text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] dark:hover:text-white'; ?>">
-                    <span class="material-symbols-outlined text-[20px]"><?php echo $section['icon']; ?></span>
-                    <span class="text-sm font-medium"><?php echo $section['label']; ?></span>
-                </a>
-            <?php endif; ?>
+            </div>
         <?php endforeach; ?>
-
-        <!-- External Links -->
-        <div class="pt-6 border-t border-slate-200 dark:border-[#233348] mt-4">
-            <a href="catalogo_publico.php" target="_blank"
-                class="flex items-center gap-3 px-3 py-2 rounded-lg text-emerald-600 dark:text-[#10b981] hover:bg-emerald-50 dark:hover:bg-[#10b981]/10 transition-all font-bold">
-                <span class="material-symbols-outlined text-[20px]">open_in_new</span>
-                <span class="text-xs uppercase tracking-tight">Catálogo Público</span>
-            </a>
-            <a href="https://calendar.google.com/calendar/u/0/r?cid=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20" target="_blank"
-                class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-[#136dec] hover:bg-slate-100 dark:hover:bg-[#233348] transition-all">
-                <span class="material-symbols-outlined text-[20px]">calendar_month</span>
-                <span class="text-sm font-medium">Calendario</span>
-            </a>
-        </div>
     </nav>
 
-    <!-- User Section -->
-    <div class="p-4 border-t border-slate-200 dark:border-[#233348]">
-        <div class="flex items-center gap-3 px-2 py-3">
+    <!-- User Profile Footer -->
+    <div class="p-4 border-t border-slate-200 dark:border-[#233348] bg-slate-50/50 dark:bg-[#16202e]/50">
+        <div class="flex items-center gap-3">
             <div
-                class="size-9 rounded-full bg-[#136dec]/20 border border-[#136dec]/30 flex items-center justify-center text-[#136dec]">
-                <span class="material-symbols-outlined text-[20px]">account_circle</span>
+                class="size-10 rounded-full bg-[#136dec] flex items-center justify-center text-white shadow-lg shadow-[#136dec]/20">
+                <span class="font-bold"><?php echo strtoupper(substr($userName, 0, 1)); ?></span>
             </div>
             <div class="flex-1 min-w-0">
-                <p class="dark:text-white text-slate-800 text-sm font-bold truncate"><?php echo $userName; ?></p>
-                <p class="text-slate-500 text-[10px] uppercase font-bold tracking-tighter"><?php echo $userRole; ?></p>
+                <p class="text-sm font-bold text-slate-800 dark:text-white truncate"><?php echo $userName; ?></p>
+                <p class="text-[10px] font-bold text-slate-400 uppercase"><?php echo $userRole; ?></p>
             </div>
-
-            <!-- Theme Toggle -->
-            <button onclick="toggleVsysTheme()" class="text-slate-400 hover:text-[#136dec] transition-colors p-1"
-                title="Cambiar Tema">
-                <span class="material-symbols-outlined text-[20px] dark:hidden">dark_mode</span>
-                <span class="material-symbols-outlined text-[20px] hidden dark:block">light_mode</span>
-            </button>
-
-            <a href="logout.php" class="ml-2 text-slate-500 hover:text-red-400 transition-colors" title="Cerrar Sesión">
-                <span class="material-symbols-outlined text-[18px]">logout</span>
-            </a>
+            <div class="flex flex-col gap-1">
+                <button onclick="toggleVsysTheme()" class="text-slate-400 hover:text-[#136dec]" title="Tema">
+                    <span class="material-symbols-outlined text-[18px] dark:hidden">dark_mode</span>
+                    <span class="material-symbols-outlined text-[18px] hidden dark:block">light_mode</span>
+                </button>
+                <a href="logout.php" class="text-slate-400 hover:text-red-500" title="Salir">
+                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                </a>
+            </div>
         </div>
     </div>
 </aside>
 
 <script>
-    function toggleVsysTheme() {
-        const current = localStorage.getItem('vsys_theme') || 'auto';
-        let next = 'dark';
+    function toggleMenu(id, forceOpen = false) {
+        const menu = document.getElementById('menu-' + id);
+        const icon = document.getElementById('icon-' + id);
 
-        if (current === 'dark') next = 'light';
-        else if (current === 'light') next = 'dark';
-        else {
-            next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+        if (!menu) return;
+
+        if (forceOpen) {
+            menu.classList.remove('hidden');
+            icon.classList.add('rotate-180'); // Use rotate for chevron, or switch icon
+            // User asked for "X". Let's change icon logic if requested, but rotate is cleaner.
+            // If strictly "X":
+            // icon.innerText = 'close';
+            return;
         }
 
+        if (menu.classList.contains('hidden')) {
+            menu.classList.remove('hidden');
+            icon.classList.add('rotate-180');
+        } else {
+            menu.classList.add('hidden');
+            icon.classList.remove('rotate-180');
+        }
+    }
+
+    function toggleVsysTheme() {
+        const current = localStorage.getItem('vsys_theme') || 'auto';
+        let next = (current === 'dark' || (current === 'auto' && document.documentElement.classList.contains('dark'))) ? 'light' : 'dark';
         window.setVsysTheme(next);
     }
 
     function toggleVsysSidebar() {
         const sidebar = document.getElementById('mainSidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        const isOpen = !sidebar.classList.contains('-translate-x-full');
-
-        if (isOpen) {
-            sidebar.classList.add('-translate-x-full');
-            overlay.classList.add('hidden');
-        } else {
-            sidebar.classList.remove('-translate-x-full');
-            overlay.classList.remove('hidden');
-        }
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
     }
 </script>
+
+<style>
+    /* Custom Scrollbar for Sidebar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 2px;
+    }
+
+    .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #334155;
+    }
+</style>
