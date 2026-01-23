@@ -62,7 +62,7 @@ $menuStructure = [
         'icon' => 'menu_book',
         'items' => [
             ['label' => 'Público', 'href' => 'catalogo_publico.php', 'icon' => 'public', 'target' => '_blank'],
-            ['label' => 'Gremio', 'href' => '#', 'icon' => 'engineering', 'target' => '_blank'], // Placeholder
+            ['label' => 'Gremio', 'href' => 'catalogo.php', 'icon' => 'engineering', 'target' => '_blank'],
         ]
     ]
 ];

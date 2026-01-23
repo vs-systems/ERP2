@@ -134,6 +134,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = 'success';
     }
 
+    // Save Price Config
+    if ($action === 'save_price_config' && $isAdmin) {
+        $priceConfig = [
+            'gremio' => floatval($_POST['gremio']),
+            'web' => floatval($_POST['web']),
+            'mostrador' => floatval($_POST['mostrador'])
+        ];
+        file_put_contents(__DIR__ . '/config_prices.json', json_encode($priceConfig));
+        $message = 'Porcentajes de precios actualizados.';
+        $status = 'success';
+    }
+
 }
 ?>
 <!DOCTYPE html>
@@ -345,17 +357,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 if ($u['id'] == $_GET['edit']) {
                                     $editUser = $u;
                                     break;
-
-            case 'save_price_config':
-                $priceConfig = [
-                    'gremio' => floatval($_POST['gremio']),
-                    'web' => floatval($_POST['web']),
-                    'mostrador' => floatval($_POST['mostrador'])
-                ];
-                file_put_contents(__DIR__ . '/config_prices.json', json_encode($priceConfig));
-                $message = 'Porcentajes de precios actualizados.';
-                $status = 'success';
-                break;
                                 }
                             }
                         }
