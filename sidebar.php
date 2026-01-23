@@ -53,7 +53,7 @@ $menuStructure = [
         'icon' => 'settings',
         'items' => [
             ['label' => 'Usuarios', 'href' => 'usuarios.php', 'icon' => 'manage_accounts', 'role' => 'Admin'],
-            ['label' => 'General / ABMs', 'href' => 'configuration.php', 'icon' => 'tune', 'role' => 'Admin'],
+            ['label' => 'General / ABMs', 'href' => 'configuration.php?section=main', 'icon' => 'tune', 'role' => 'Admin'],
         ]
     ],
     [

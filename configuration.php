@@ -439,8 +439,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php else: ?>
                         <!-- DEFAULT / FALLBACK -->
                         <div class="text-center py-20">
-                            <h3 class="text-xl text-slate-400 font-bold uppercase">Sección no encontrada</h3>
-                            <a href="configuration.php" class="text-primary mt-4 inline-block font-bold">Volver al Centro de Configuración</a>
+                            <h3 class="text-xl text-slate-400 font-bold uppercase">Sección no encontrada: <?php echo htmlspecialchars($section); ?></h3>
+                            <a href="configuration.php?section=main" class="text-primary mt-4 inline-block font-bold">Volver al Centro de Configuración</a>
                         </div>
                     <?php endif; ?>
 
