@@ -115,15 +115,6 @@ sort($brands);
         </div>
 
         <div class="flex items-center gap-6">
-            <div
-                class="hidden md:flex gap-4 text-[10px] font-bold text-slate-500 uppercase tracking-tighter overflow-hidden max-w-[400px]">
-                <?php foreach (array_slice($brands, 0, 6) as $b): ?>
-                    <a href="#"
-                        onclick="document.getElementById('brandFilter').value='<?php echo strtolower($b); ?>'; filterProducts(); return false;"
-                        class="hover:text-[#136dec] transition-colors whitespace-nowrap"><?php echo $b; ?></a>
-                <?php endforeach; ?>
-            </div>
-            <div class="h-6 w-px bg-slate-800 mx-2"></div>
             <button class="relative text-white hover:text-[#136dec] transition-colors" onclick="toggleCart()">
                 <span class="material-symbols-outlined text-[28px]">shopping_bag</span>
                 <span
