@@ -36,7 +36,7 @@ define('LIB_PATH', BASE_PATH . '/src/lib');
 // SMTP Configuration (Gmail)
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_USER', 'vecinoseguro0@gmail.com');
-define('SMTP_PASS', 'Milla6397@@');
+define('SMTP_PASS', 'Picabea260205@');
 define('SMTP_PORT', 465);
 define('SMTP_SECURE', 'ssl');
 

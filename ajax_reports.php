@@ -18,7 +18,10 @@ try {
             // Suppliers by Locality
             $suppliers = $db->query("SELECT city as locality, COUNT(*) as count FROM entities WHERE type IN ('supplier', 'provider') AND city IS NOT NULL AND city != '' GROUP BY city ORDER BY count DESC LIMIT 10")->fetchAll();
 
-            echo json_encode(['clients' => $clients, 'suppliers' => $suppliers]);
+            // Transports by Locality
+            $transports = $db->query("SELECT city as locality, COUNT(*) as count FROM entities WHERE type = 'transport' AND city IS NOT NULL AND city != '' GROUP BY city ORDER BY count DESC LIMIT 10")->fetchAll();
+
+            echo json_encode(['clients' => $clients, 'suppliers' => $suppliers, 'transports' => $transports]);
             break;
 
         case 'map_entities':

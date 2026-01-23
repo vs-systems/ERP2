@@ -98,7 +98,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
         <?php echo $id ? 'Editar' : 'Nuevo'; ?>
-        <?php echo $type == 'client' ? 'Cliente' : 'Proveedor'; ?> - VS System
+        <?php
+        if ($type == 'client')
+            echo 'Cliente';
+        elseif ($type == 'supplier')
+            echo 'Proveedor';
+        else
+            echo 'Transporte';
+        ?> - VS System
     </title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -154,7 +161,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <h2
                             class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight leading-none">
                             <?php echo $id ? 'Editar' : 'Nuevo'; ?>
-                            <?php echo $type == 'client' ? 'Cliente' : 'Proveedor'; ?>
+                            <?php
+                            if ($type == 'client')
+                                echo 'Cliente';
+                            elseif ($type == 'supplier')
+                                echo 'Proveedor';
+                            else
+                                echo 'Transporte';
+                            ?>
                         </h2>
                         <span class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1">
                             Gestión de Entidades
@@ -386,10 +400,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <script>
-        async function geocodeCity() {
+    async function geocodeCity() {
             const city = document.getElementById('geo_city').value;
-            if (!city) {
-                alert('Por favor, ingrese una ciudad.');
+            const address = document.getElementsByName('address')[0].value;
+            if (!city && !address) {
+                alert('Por favor, ingrese una ciudad o domicilio.');
                 return;
             }
 
@@ -399,8 +414,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             btn.disabled = true;
 
             try {
-                // We add ", Argentina" to narrow down search results
-                const query = encodeURIComponent(city + ', Argentina');
+                // Combine address and city for better precision
+                let queryStr = "";
+                if (address) queryStr += address + ", ";
+                if (city) queryStr += city;
+                queryStr += ", Argentina";
+                
+                const query = encodeURIComponent(queryStr);
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
                 const data = await response.json();
 

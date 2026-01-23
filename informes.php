@@ -115,6 +115,11 @@ $db = \Vsys\Lib\Database::getInstance();
                             <p class="text-3xl font-black text-red-500" id="count-geo-suppliers">...</p>
                         </div>
                         <div class="glass-card p-5 rounded-xl">
+                            <h3 class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">Transportes
+                                Geolocalizados</h3>
+                            <p class="text-3xl font-black text-emerald-800" id="count-geo-transports">...</p>
+                        </div>
+                        <div class="glass-card p-5 rounded-xl">
                             <h3 class="text-slate-500 text-xs font-bold uppercase tracking-widest mb-2">Zonas de
                                 Influencia</h3>
                             <p class="text-3xl font-black text-emerald-500" id="count-zones">...</p>
@@ -162,7 +167,8 @@ $db = \Vsys\Lib\Database::getInstance();
                                     <span class="material-symbols-outlined text-primary">map</span>
                                     Mapa de Distribución y Calor
                                 </h3>
-                                <p class="text-slate-400 text-sm">Visualización de clientes (Azul), proveedores (Rojo) y
+                                <p class="text-slate-400 text-sm">Visualización de clientes (Azul), proveedores (Rojo),
+                                    transportes (Verde) y
                                     densidad de compras.</p>
                             </div>
                             <div class="flex gap-2">
@@ -276,12 +282,20 @@ $db = \Vsys\Lib\Database::getInstance();
                 const response = await fetch('ajax_reports.php?action=map_entities');
                 const entities = await response.json();
 
-                let cCount = 0, sCount = 0;
-
+                let cCount = 0, sCount = 0, tCount = 0;
                 markerLayer.clearLayers();
                 entities.forEach(e => {
-                    const color = e.type === 'client' ? 'blue' : 'red';
-                    if (e.type === 'client') cCount++; else sCount++;
+                    let color = 'blue';
+                    if (e.type === 'client') {
+                        cCount++;
+                        color = 'blue';
+                    } else if (e.type === 'transport') {
+                        tCount++;
+                        color = '#064e3b'; // Dark Emerald
+                    } else {
+                        sCount++;
+                        color = 'red';
+                    }
 
                     // Robust parsing for coordinates (handle strings and malformed formats like "lat,lng,zoom")
                     let lat = 0, lng = 0;
@@ -310,6 +324,7 @@ $db = \Vsys\Lib\Database::getInstance();
 
                 document.getElementById('count-geo-clients').innerText = cCount;
                 document.getElementById('count-geo-suppliers').innerText = sCount;
+                document.getElementById('count-geo-transports').innerText = tCount;
 
                 // Load Heatmap data in background
                 const heatResponse = await fetch('ajax_reports.php?action=heatmap_data');

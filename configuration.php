@@ -456,6 +456,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <p class="text-xs text-slate-500 dark:text-slate-400">Gestión de marcas de productos.</p>
                             </a>
 
+                            <!-- ABM Transportes (NUEVO) -->
+                            <a href="?section=transports"
+                                class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-emerald-500/50 transition-all hover:shadow-lg hover:shadow-emerald-500/10">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">local_shipping</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">ABM Transportes</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Gestión de empresas de transporte.</p>
+                            </a>
+
                             <!-- Listas de Precios (NUEVO) -->
                             <a href="?section=prices"
                                 class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-primary/50 transition-all hover:shadow-lg hover:shadow-primary/10">
@@ -628,7 +639,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="hidden" name="id" value="<?php echo $editUser['id']; ?>">
                                     <div class="mb-4 flex items-center justify-between">
                                         <h4 class="text-sm font-bold uppercase text-primary">Editando Usuario:
-                                            <?php echo $editUser['username']; ?></h4>
+                                            <?php echo $editUser['username']; ?>
+                                        </h4>
                                         <a href="configuration.php?section=users"
                                             class="text-xs bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-lg">Cancelar
                                             Edición</a>
@@ -876,7 +888,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <?php if ($editProductSelected): ?>
                                     <div class="mb-4 flex items-center justify-between">
                                         <h4 class="text-sm font-bold uppercase text-primary">Editando:
-                                            <?php echo htmlspecialchars($editProductSelected['sku']); ?></h4>
+                                            <?php echo htmlspecialchars($editProductSelected['sku']); ?>
+                                        </h4>
                                         <a href="configuration.php?section=products"
                                             class="text-xs bg-slate-200 dark:bg-slate-700 px-3 py-1 rounded-lg">Nueva Carga</a>
                                     </div>
@@ -1002,9 +1015,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                     </div>
                                                 </td>
                                                 <td class="py-2 px-2 text-xs font-bold">
-                                                    <?php echo htmlspecialchars($pObj['sku']); ?></td>
+                                                    <?php echo htmlspecialchars($pObj['sku']); ?>
+                                                </td>
                                                 <td class="py-2 px-2 text-xs max-w-[200px] truncate">
-                                                    <?php echo htmlspecialchars($pObj['description']); ?></td>
+                                                    <?php echo htmlspecialchars($pObj['description']); ?>
+                                                </td>
                                                 <td class="py-2 px-2 text-xs"><?php echo htmlspecialchars($pObj['brand']); ?>
                                                 </td>
                                                 <td class="py-2 px-2 text-xs font-bold">
@@ -1031,6 +1046,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </tbody>
                                 </table>
                             </div>
+                        </div>
+
+                    <?php elseif ($currentSection === 'transports'):
+                        $entityType = 'transport';
+                        ?>
+                        <!-- ABM TRANSPORTES -->
+                        <div
+                            class="bg-white dark:bg-[#16202e] p-8 rounded-2xl border border-slate-200 dark:border-[#233348]">
+                            <?php include 'config_entities_partial.php'; ?>
                         </div>
 
                     <?php elseif ($currentSection === 'crm'): ?>
@@ -1167,7 +1191,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <!-- DEFAULT / FALLBACK -->
                         <div class="text-center py-20">
                             <h3 class="text-xl text-slate-400 font-bold uppercase">Sección no encontrada:
-                                <?php echo htmlspecialchars($currentSection); ?></h3>
+                                <?php echo htmlspecialchars($currentSection); ?>
+                            </h3>
                             <a href="configuration.php?section=main" class="text-primary mt-4 inline-block font-bold">Volver
                                 al Centro de Configuración</a>
                         </div>

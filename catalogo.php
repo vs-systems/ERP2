@@ -38,7 +38,8 @@ $brands = array_unique(array_filter(array_column($allProducts, 'brand')));
 sort($brands);
 
 // Check Maintenance Mode
-$catConfig = json_decode(file_get_contents(__DIR__ . '/config_catalogs.json') ?: '{"maintenance_mode": 0}', true);
+$configPath = __DIR__ . '/config_catalogs.json';
+$catConfig = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : ['maintenance_mode' => 0];
 if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
     ?>
     <!DOCTYPE html>

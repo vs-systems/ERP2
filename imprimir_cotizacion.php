@@ -29,18 +29,24 @@ if (!$quote)
             font-family: 'Inter', sans-serif;
             color: #333;
             margin: 0;
-            padding: 40px;
+            padding: 20px;
+            font-size: 11px;
+        }
+
+        @page {
+            size: A4;
+            margin: 1cm;
         }
 
         .header-table {
             width: 100%;
             border-bottom: 2px solid #5d2fc1;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
         }
 
         .logo {
-            width: 250px;
+            width: 180px;
         }
 
         .quote-info {
@@ -55,7 +61,7 @@ if (!$quote)
 
         .entity-grid {
             width: 100%;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         .entity-box {
@@ -69,18 +75,19 @@ if (!$quote)
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
         }
 
         .items-table th {
             background: #5d2fc1;
             color: white;
-            padding: 12px;
+            padding: 8px;
             text-align: left;
+            font-size: 10px;
         }
 
         .items-table td {
-            padding: 12px;
+            padding: 8px;
             border-bottom: 1px solid #eee;
         }
 
@@ -136,13 +143,10 @@ if (!$quote)
             <td><img src="logo_v2.jpg" class="logo" style="width: 250px; height: auto;"></td>
             <td class="quote-info">
                 <h1>PRESUPUESTO</h1>
-                <p><strong>Nº:</strong>
-                    <?php echo $quote['quote_number']; ?>
-                </p>
-                <p><strong>Fecha:</strong>
-                    <?php echo date('d/m/Y', strtotime($quote['created_at'])); ?>
-                </p>
-                <p><strong>Validez:</strong> 48 Horas</p>
+                <p style="margin: 2px 0;"><strong>Nº:</strong> <?php echo $quote['quote_number']; ?></p>
+                <p style="margin: 2px 0;"><strong>Fecha:</strong>
+                    <?php echo date('d/m/Y', strtotime($quote['created_at'])); ?></p>
+                <p style="margin: 2px 0;"><strong>Validez:</strong> 48 Horas</p>
             </td>
         </tr>
     </table>
@@ -158,8 +162,8 @@ if (!$quote)
             <td width="10%"></td>
             <td class="entity-box">
                 <strong>Para:</strong><br>
-                <?php echo $quote['client_name']; ?><br>
-                <?php echo $quote['tax_id'] ? "CUIT: " . $quote['tax_id'] : ""; ?><br>
+                <span style="font-size: 13px; font-weight: bold;"><?php echo $quote['client_name']; ?></span><br>
+                <?php echo $quote['tax_id'] ? "CUIT: " . $quote['tax_id'] . "<br>" : ""; ?>
                 <?php echo !empty($quote['transport']) ? "Transporte: " . $quote['transport'] : ""; ?>
             </td>
         </tr>

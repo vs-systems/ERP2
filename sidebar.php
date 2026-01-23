@@ -206,6 +206,71 @@ $menuStructure = [
         sidebar.classList.toggle('-translate-x-full');
         overlay.classList.toggle('hidden');
     }
+
+    // Auto-Logout Logic
+    let inactivityTimeout;
+    let countdownInterval;
+    const INACTIVITY_TIME = 10 * 60 * 1000; // 10 minutes
+    const COUNTDOWN_TIME = 60; // 60 seconds
+
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimeout);
+        clearInterval(countdownInterval);
+        hideLogoutModal();
+        inactivityTimeout = setTimeout(startLogoutCountdown, INACTIVITY_TIME - (COUNTDOWN_TIME * 1000));
+    }
+
+    function startLogoutCountdown() {
+        let timeLeft = COUNTDOWN_TIME;
+        showLogoutModal(timeLeft);
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+            updateLogoutModal(timeLeft);
+            if (timeLeft <= 0) {
+                window.location.href = 'logout.php';
+            }
+        }, 1000);
+    }
+
+    function showLogoutModal(seconds) {
+        let modal = document.getElementById('vsys-logout-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'vsys-logout-modal';
+            modal.className = 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl">
+                    <div class="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                        <span class="material-symbols-outlined text-4xl">timer</span>
+                    </div>
+                    <h2 class="text-xl font-bold dark:text-white text-slate-800 mb-2">¡Sesión por Caducar!</h2>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm mb-6">Su sesión se cerrará automáticamente en <span id="vsys-logout-timer" class="font-bold text-amber-500">60</span> segundos debido a inactividad.</p>
+                    <button onclick="resetInactivityTimer()" class="w-full bg-primary text-white font-bold py-3 rounded-xl hover:scale-105 transition-transform shadow-lg shadow-primary/20">SEGUIR TRABAJANDO</button>
+                    <button onclick="window.location.href='logout.php'" class="w-full mt-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-bold text-xs uppercase tracking-widest">CERRAR SESIÓN AHORA</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        modal.classList.remove('hidden');
+    }
+
+    function updateLogoutModal(seconds) {
+        const timerSpan = document.getElementById('vsys-logout-timer');
+        if (timerSpan) timerSpan.innerText = seconds;
+    }
+
+    function hideLogoutModal() {
+        const modal = document.getElementById('vsys-logout-modal');
+        if (modal) modal.classList.add('hidden');
+    }
+
+    // Event listeners for activity
+    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
+        document.addEventListener(evt, resetInactivityTimer, true);
+    });
+
+    // Initial start
+    resetInactivityTimer();
 </script>
 
 <style>
