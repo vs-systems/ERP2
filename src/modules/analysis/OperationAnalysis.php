@@ -125,13 +125,13 @@ class OperationAnalysis
         // Commercial Status Summaries
         $pendingCollections = 0;
         if ($hasQuoteConfirmed && $hasQuotePaymentStatus) {
-            $pendingCollSql = "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1 AND payment_status = 'Pendiente'";
+            $pendingCollSql = "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1 AND (payment_status = 'Pendiente' OR payment_status IS NULL)";
             $pendingCollections = $this->db->query($pendingCollSql)->fetchColumn() ?: 0;
         }
 
         $pendingPayments = 0;
         if ($hasPurchaseConfirmed && $hasPurchasePaymentStatus) {
-            $pendingPaySql = "SELECT SUM(subtotal_usd) FROM purchases WHERE is_confirmed = 1 AND payment_status = 'Pendiente'";
+            $pendingPaySql = "SELECT SUM(subtotal_usd) FROM purchases WHERE is_confirmed = 1 AND (payment_status = 'Pendiente' OR payment_status IS NULL)";
             $pendingPayments = $this->db->query($pendingPaySql)->fetchColumn() ?: 0;
         }
 
@@ -144,6 +144,84 @@ class OperationAnalysis
             'quotations_total' => $totalQuotes,
             'orders_total' => $acceptedQuotes,
             'effectiveness' => round($effectiveness, 2)
+        ];
+    }
+
+    /**
+     * Get counts for status charts
+     */
+    public function getStatusStats()
+    {
+        // Quotations Status
+        $qConfirm = $this->db->query("SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1")->fetchColumn() ?: 0;
+        $qPend = $this->db->query("SELECT COUNT(*) FROM quotations WHERE is_confirmed = 0")->fetchColumn() ?: 0;
+        // Lost quotes - assuming they might be marked as is_confirmed=0 but maybe we need a dedicated status?
+        // Let's check CRM if there are 'Perdido' linked to quotes
+        $qLost = 0;
+
+        // Purchases Status
+        $pPend = $this->db->query("SELECT COUNT(*) FROM purchases WHERE status = 'Pendiente' AND is_confirmed = 0")->fetchColumn() ?: 0;
+        $pConfirmed = $this->db->query("SELECT COUNT(*) FROM purchases WHERE is_confirmed = 1 AND payment_status != 'Pagado'")->fetchColumn() ?: 0;
+        $pPaid = $this->db->query("SELECT COUNT(*) FROM purchases WHERE payment_status = 'Pagado'")->fetchColumn() ?: 0;
+        $pCanceled = $this->db->query("SELECT COUNT(*) FROM purchases WHERE status = 'Cancelado'")->fetchColumn() ?: 0;
+
+        return [
+            'quotations' => [
+                'confirmadas' => (int) $qConfirm,
+                'pendientes' => (int) $qPend,
+                'perdidas' => (int) $qLost
+            ],
+            'purchases' => [
+                'pendientes' => (int) $pPend,
+                'confirmadas' => (int) $pConfirmed,
+                'pagadas' => (int) $pPaid,
+                'canceladas' => (int) $pCanceled
+            ]
+        ];
+    }
+
+    /**
+     * Global Profitability Report Data
+     */
+    public function getGlobalProfitabilitySummary()
+    {
+        // Total of ALL quotes revenue (confirmed)
+        $sql = "SELECT SUM(subtotal_usd) FROM quotations WHERE is_confirmed = 1";
+        $totalRevenue = $this->db->query($sql)->fetchColumn() ?: 0;
+
+        // Calculate total cost of all items in confirmed quotes
+        $sqlItems = "SELECT qi.product_id, qi.quantity, p.sku, p.unit_cost_usd as catalog_cost 
+                     FROM quotation_items qi
+                     JOIN quotations q ON qi.quotation_id = q.id
+                     LEFT JOIN products p ON qi.product_id = p.id
+                     WHERE q.is_confirmed = 1";
+        $items = $this->db->query($sqlItems)->fetchAll();
+
+        $totalCost = 0;
+        foreach ($items as $item) {
+            // Priority: Real purchase cost, then catalog cost
+            $sqlP = "SELECT unit_price_usd FROM purchase_items pi 
+                     JOIN purchases p ON pi.purchase_id = p.id 
+                     WHERE pi.product_id = ? ORDER BY p.purchase_date DESC LIMIT 1";
+            $realCost = $this->db->prepare($sqlP);
+            $realCost->execute([$item['product_id']]);
+            $cost = $realCost->fetchColumn();
+
+            if ($cost === false) {
+                $cost = $item['catalog_cost'] ?: 0;
+            }
+
+            $totalCost += ($cost * $item['quantity']);
+        }
+
+        $profit = $totalRevenue - $totalCost;
+        $avgMargin = $totalRevenue > 0 ? ($profit / $totalRevenue) * 100 : 0;
+
+        return [
+            'total_revenue' => $totalRevenue,
+            'total_cost' => $totalCost,
+            'total_profit' => $profit,
+            'avg_margin' => round($avgMargin, 2)
         ];
     }
 }

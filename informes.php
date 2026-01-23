@@ -134,11 +134,14 @@ $db = \Vsys\Lib\Database::getInstance();
                                 <canvas id="clientsLocalityChart"></canvas>
                             </div>
                         </div>
-                        <div class="glass-card p-6 rounded-2xl">
-                            <h3 class="font-bold text-lg mb-4">Proveedores por Localidad</h3>
-                            <div class="chart-container">
-                                <canvas id="suppliersLocalityChart"></canvas>
-                            </div>
+                        <div class="glass-card p-6 rounded-2xl flex flex-col justify-center items-center text-center">
+                            <span class="material-symbols-outlined text-5xl text-emerald-500 mb-4">analytics</span>
+                            <h3 class="font-bold text-xl mb-2">Análisis de Rentabilidad Global</h3>
+                            <p class="text-slate-400 text-sm mb-6 max-w-sm">Consulte el informe detallado de ventas vs
+                                costos y márgenes operativos promedio.</p>
+                            <a href="reporte_rentabilidad.php"
+                                class="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-600 transition-all shadow-lg shadow-primary/20">VER
+                                INFORME DE RENTABILIDAD</a>
                         </div>
                     </div>
 
