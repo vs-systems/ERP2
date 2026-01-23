@@ -1,10 +1,11 @@
 ﻿<?php
 require_once 'auth_check.php';
-require_once __DIR__ . '/src/config/config.php';
-require_once __DIR__ . '/src/lib/Database.php';
+require_once __DIR__ . '/src/modules/billing/Billing.php';
 
-$userRole = $_SESSION['role'] ?? 'Invitado';
-$userName = $_SESSION['full_name'] ?? ($_SESSION['user_name'] ?? 'Usuario');
+use Vsys\Modules\Billing\Billing;
+
+$billing = new Billing();
+$recentInvoices = $billing->getRecentInvoices(20);
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="es">
@@ -12,139 +13,116 @@ $userName = $_SESSION['full_name'] ?? ($_SESSION['user_name'] ?? 'Usuario');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facturación Premium - VS System</title>
+    <title>Facturación - VS System</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <script src="js/theme_handler.js"></script>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#136dec",
-                        "background-dark": "#101822",
-                        "surface-dark": "#16202e",
-                        "surface-border": "#233348",
-                    },
-                },
-            },
-        }
-    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #101822;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #233348;
-            border-radius: 3px;
-        }
     </style>
 </head>
 
-<body
-    class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white antialiased overflow-hidden transition-colors duration-300">
+<body class="bg-white dark:bg-[#101822] text-slate-800 dark:text-white transition-colors duration-300">
     <div class="flex h-screen w-full">
         <?php include 'sidebar.php'; ?>
 
         <main class="flex-1 flex flex-col h-full overflow-hidden relative">
             <!-- Header -->
             <header
-                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]/95 backdrop-blur z-10 transition-colors duration-300">
+                class="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-[#233348] bg-white dark:bg-[#101822]">
                 <div class="flex items-center gap-3">
                     <button onclick="toggleVsysSidebar()" class="lg:hidden dark:text-white text-slate-800 p-1 mr-2">
                         <span class="material-symbols-outlined">menu</span>
                     </button>
-                    <div class="bg-[#136dec]/20 p-2 rounded-lg text-[#136dec]">
-                        <span class="material-symbols-outlined text-2xl">description</span>
-                    </div>
-                    <h2 class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight">Módulo de
-                        Facturación</h2>
+                    <h2 class="dark:text-white text-slate-800 font-bold text-lg uppercase">Módulo de Facturación</h2>
                 </div>
+                <button onclick="openInvoiceModal()"
+                    class="bg-[#136dec] hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm uppercase flex items-center gap-2 shadow-lg shadow-blue-500/20">
+                    <span class="material-symbols-outlined">add</span>
+                    Nueva Factura
+                </button>
             </header>
 
-            <!-- Content Area -->
-            <div class="flex-1 overflow-y-auto p-6 space-y-6">
-                <div class="max-w-4xl mx-auto space-y-6">
+            <!-- Content -->
+            <div class="flex-1 overflow-y-auto p-6">
+                <div class="max-w-7xl mx-auto space-y-6">
 
+                    <!-- Invoices List -->
                     <div
-                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-8 shadow-xl dark:shadow-none transition-colors">
-                        <div class="flex items-center gap-4 mb-6">
-                            <div class="p-3 bg-primary/10 rounded-xl text-primary">
-                                <span class="material-symbols-outlined text-3xl">receipt_long</span>
-                            </div>
-                            <div>
-                                <h1 class="text-2xl font-bold dark:text-white text-slate-800">Gestión de Facturas</h1>
-                                <p class="text-slate-400 text-sm">Administración de comprobantes y facturación
-                                    electrónica.</p>
-                            </div>
+                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden">
+                        <div class="p-6 border-b border-slate-200 dark:border-[#233348]">
+                            <h3 class="font-bold text-lg">Últimas Facturas Emitidas</h3>
                         </div>
-
-                        <div class="py-20 flex flex-col items-center justify-center text-center space-y-6">
-                            <div class="relative">
-                                <div class="absolute -inset-4 bg-primary/20 blur-2xl rounded-full"></div>
-                                <span
-                                    class="material-symbols-outlined text-7xl text-primary relative">construction</span>
-                            </div>
-                            <div class="space-y-2">
-                                <h3 class="text-xl font-bold dark:text-white text-slate-800 tracking-tight">Módulo en
-                                    Construcción</h3>
-                                <p class="text-slate-500 max-w-md mx-auto">
-                                    Estamos trabajando en la integración de <span
-                                        class="text-primary font-semibold">Factura Electrónica AFIP</span> y el
-                                    seguimiento automatizado de cobros.
-                                </p>
-                            </div>
-                            <div class="flex gap-4">
-                                <div
-                                    class="px-4 py-2 bg-slate-100 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-sm text-green-500">check_circle</span>
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Diseño
-                                        UI Listo</span>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr
+                                        class="bg-slate-50 dark:bg-[#1c2a3b] text-xs uppercase text-slate-500 font-bold border-b border-slate-200 dark:border-[#233348]">
+                                        <th class="px-6 py-4">N° Factura</th>
+                                        <th class="px-6 py-4">Fecha</th>
+                                        <th class="px-6 py-4">Cliente</th>
+                                        <th class="px-6 py-4 text-center">Tipo</th>
+                                        <th class="px-6 py-4 text-center">Estado</th>
+                                        <th class="px-6 py-4 text-right">Importe Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-[#233348]">
+                                    <?php foreach ($recentInvoices as $inv): ?>
+                                        <tr class="hover:bg-slate-50 dark:hover:bg-[#1c2a3b]/50 transition-colors">
+                                            <td class="px-6 py-3 font-mono font-bold"><?php echo $inv['invoice_number']; ?>
+                                            </td>
+                                            <td class="px-6 py-3 text-sm text-slate-500">
+                                                <?php echo date('d/m/Y', strtotime($inv['date'])); ?></td>
+                                            <td class="px-6 py-3 font-bold">
+                                                <?php echo htmlspecialchars($inv['client_name']); ?></td>
+                                            <td class="px-6 py-3 text-center">
+                                                <span
+                                                    class="w-6 h-6 inline-flex items-center justify-center rounded bg-slate-100 dark:bg-[#101822] border border-slate-200 dark:border-[#233348] font-bold text-xs">
+                                                    <?php echo $inv['invoice_type']; ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-3 text-center">
+                                                <span
+                                                    class="px-2 py-1 rounded text-[10px] font-bold uppercase 
+                                                <?php echo $inv['status'] === 'Pagado' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'; ?>">
+                                                    <?php echo $inv['status']; ?>
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-3 text-right font-bold">
+                                                $ <?php echo number_format($inv['total_amount'], 2, ',', '.'); ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                            <?php if (empty($recentInvoices)): ?>
+                                <div class="p-10 text-center text-slate-400">
+                                    <span class="material-symbols-outlined text-4xl mb-2">description</span>
+                                    <p>Aún no has emitido ninguna factura.</p>
                                 </div>
-                                <div
-                                    class="px-4 py-2 bg-slate-100 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-sm text-amber-500">pending</span>
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">API
-                                        Facturación</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Coming Soon Features Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div
-                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] p-6 rounded-2xl opacity-60">
-                            <span class="material-symbols-outlined text-primary mb-3">cloud_sync</span>
-                            <h4 class="font-bold mb-1">Sincronización AFIP</h4>
-                            <p class="text-xs text-slate-500">Emisión de CAE y validación de comprobantes en tiempo
-                                real.</p>
-                        </div>
-                        <div
-                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] p-6 rounded-2xl opacity-60">
-                            <span class="material-symbols-outlined text-primary mb-3">account_balance_wallet</span>
-                            <h4 class="font-bold mb-1">Cuentas Corrientes</h4>
-                            <p class="text-xs text-slate-500">Seguimiento detallado de saldos y vencimientos de
-                                clientes.</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
+
+    <!-- Invoice Modal (Simplified for now) -->
+    <script>
+        function openInvoiceModal() {
+            Swal.fire({
+                title: 'Nueva Factura',
+                text: 'La creación manual de facturas se habilitará en la próxima actualización. Por ahora, genera facturas confirmando cotizaciones.',
+                icon: 'info'
+            });
+        }
+    </script>
 </body>
 
 </html>
