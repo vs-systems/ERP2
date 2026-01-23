@@ -291,30 +291,50 @@ sort($brands);
                             $cost = (float) $p['unit_cost_usd'];
                             $iva = (float) $p['iva_rate'];
 
-                            // Prices including IVA for Web list (Internal Catalog rule)
-                            $priceWebArs = $priceListModule->getPriceByListName($cost, $iva, 'Web', $currentRate, true);
-                            $priceGremioArs = $priceListModule->getPriceByListName($cost, $iva, 'Gremio', $currentRate, true);
+                            // Determine which price to show
+                            // Public (default): Mostrador
+                            // Logged in (Admin/Vend/Logistica): Gremio + Web
+                        
+                            $isLoggedIn = isset($_SESSION['user_id']);
+                            $priceMostradorArs = $priceListModule->getPriceByListName($cost, $iva, 'Mostrador', $currentRate, true);
                             ?>
 
-                            <?php if (($_SESSION['role'] ?? '') === 'Admin' || ($_SESSION['role'] ?? '') === 'Vendedor'): ?>
+                            <?php if ($isLoggedIn):
+                                $priceGremioArs = $priceListModule->getPriceByListName($cost, $iva, 'Gremio', $currentRate, true);
+                                $priceWebArs = $priceListModule->getPriceByListName($cost, $iva, 'Web', $currentRate, true);
+                                ?>
                                 <div style="display: flex; flex-direction: column; gap: 4px;">
                                     <div
                                         style="font-size: 0.7rem; color: #10b981; opacity: 0.8; text-transform: uppercase; font-weight: bold;">
-                                        Gremio (+IVA)</div>
-                                    <div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">$
-                                        <?php echo number_format($priceGremioArs, 0, ',', '.'); ?></div>
+                                        Gremio (+IVA)
+                                    </div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #10b981;">
+                                        $ <?php echo number_format($priceGremioArs, 0, ',', '.'); ?>
+                                    </div>
+
                                     <div
                                         style="font-size: 0.7rem; color: #3b82f6; opacity: 0.8; text-transform: uppercase; font-weight: bold; margin-top: 4px;">
-                                        Web / Lista (+IVA)</div>
+                                        Web (+IVA)
+                                    </div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #3b82f6;">
+                                        $ <?php echo number_format($priceWebArs, 0, ',', '.'); ?>
+                                    </div>
+
                                     <div
-                                        style="font-size: 1.2rem; font-weight: 900; color: #3b82f6; text-shadow: 0 0 10px rgba(59, 130, 246, 0.2);">
-                                        $ <?php echo number_format($priceWebArs, 0, ',', '.'); ?></div>
+                                        style="font-size: 0.7rem; color: #f59e0b; opacity: 0.8; text-transform: uppercase; font-weight: bold; margin-top: 4px;">
+                                        Mostrador (+IVA)
+                                    </div>
+                                    <div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">
+                                        $ <?php echo number_format($priceMostradorArs, 0, ',', '.'); ?>
+                                    </div>
                                 </div>
                             <?php else: ?>
                                 <div class="product-price" style="display: flex; flex-direction: column;">
                                     <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">Precio
                                         Lista</span>
-                                    $ <?php echo number_format($priceWebArs, 0, ',', '.'); ?>
+                                    $ <?php echo number_format($priceMostradorArs, 0, ',', '.'); ?>
+                                    <span style="font-size: 0.6rem; color: var(--text-muted); margin-top:2px;">(Lista
+                                        Mostrador)</span>
                                 </div>
                             <?php endif; ?>
                         </div>
