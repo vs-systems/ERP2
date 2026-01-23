@@ -123,8 +123,19 @@ class OperationAnalysis
         $effectiveness = $totalQuotes > 0 ? ($acceptedQuotes / $totalQuotes) * 100 : 0;
 
         // Commercial Status Summaries (Real data from Current Accounts)
-        $pendingCollections = $this->db->query("SELECT SUM(debit) - SUM(credit) FROM client_movements")->fetchColumn() ?: 0;
-        $pendingPayments = $this->db->query("SELECT SUM(debit) - SUM(credit) FROM provider_movements")->fetchColumn() ?: 0;
+        $pendingCollections = 0;
+        $pendingPayments = 0;
+
+        // Verify tables exist before querying to avoid Fatal Errors during migration
+        $tables = $this->db->query("SHOW TABLES")->fetchAll(\PDO::FETCH_COLUMN);
+
+        if (in_array('client_movements', $tables)) {
+            $pendingCollections = $this->db->query("SELECT SUM(debit) - SUM(credit) FROM client_movements")->fetchColumn() ?: 0;
+        }
+
+        if (in_array('provider_movements', $tables)) {
+            $pendingPayments = $this->db->query("SELECT SUM(debit) - SUM(credit) FROM provider_movements")->fetchColumn() ?: 0;
+        }
 
         return [
             'total_sales' => $totalSales,
