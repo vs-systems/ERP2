@@ -225,6 +225,7 @@ if (($catConfig['maintenance_mode'] ?? 0) == 1 && !isset($_SESSION['user_id'])) 
                     $stockColorClass = 'bg-yellow-500';
 
                 $pData = [
+                    'id' => $p['id'],
                     'sku' => $p['sku'],
                     'description' => $p['description'],
                     'image_url' => $p['image_url'] ?: 'https://www.vecinoseguro.com/src/img/VSLogo_v2.jpg',
@@ -279,34 +280,57 @@ if (($catConfig['maintenance_mode'] ?? 0) == 1 && !isset($_SESSION['user_id'])) 
         </div>
     </main>
 
-    <!-- Cart Sidebar / Modal -->
-    <div id="overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] hidden" onclick="toggleCart()"></div>
-    <div id="cartModal"
-        class="fixed right-0 top-0 h-full w-full max-w-md bg-[#111827] border-l border-[#233348] z-[70] translate-x-full transition-transform duration-500 shadow-2xl flex flex-col">
-        <div
-            class="p-6 border-b border-[#233348] flex items-center justify-between bg-[#111827]/50 backdrop-blur sticky top-0">
-            <div class="flex items-center gap-3">
-                <span class="material-symbols-outlined text-blue-500">shopping_basket</span>
-                <h3 class="text-lg font-bold">Tu Pedido Web</h3>
+    <!-- Checkout Modal -->
+    <div id="checkoutModal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-[#111827] border border-[#233348] w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl">
+            <div class="p-8 border-b border-[#233348] flex justify-between items-center bg-[#16202e]/50">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Finalizar Pedido Web</h3>
+                    <p class="text-xs text-slate-500 mt-1">Ingresa tus datos para recibir la cotización oficial.</p>
+                </div>
+                <button onclick="closeCheckout()" class="text-slate-400 hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
             </div>
-            <button onclick="toggleCart()" class="text-slate-400 hover:text-white transition-colors">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
 
-        <div class="flex-1 overflow-y-auto p-6 space-y-4" id="cartContent"></div>
+            <form id="checkoutForm" class="p-8 space-y-6">
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Nombre Completo</label>
+                        <input type="text" id="clientName" required
+                            class="w-full bg-[#0d1117] border-[#233348] rounded-xl py-3 px-4 text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">WhatsApp</label>
+                            <input type="tel" id="clientPhone" required placeholder="Ej: 2235..."
+                                class="w-full bg-[#0d1117] border-[#233348] rounded-xl py-3 px-4 text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Email</label>
+                            <input type="email" id="clientEmail" required
+                                class="w-full bg-[#0d1117] border-[#233348] rounded-xl py-3 px-4 text-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+                </div>
 
-        <div class="p-6 border-t border-[#233348] bg-[#0d1117] space-y-4">
-            <div class="flex items-center justify-between">
-                <span class="text-slate-400 font-medium">Subtotal estimado</span>
-                <span class="text-2xl font-bold text-blue-400" id="cartTotal">USD 0.00</span>
-            </div>
-            <button
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-xl shadow-blue-500/20"
-                onclick="showCheckout()">
-                REALIZAR PEDIDO <span class="material-symbols-outlined">arrow_forward</span>
-            </button>
+                <div class="pt-4">
+                    <button type="submit" id="confirmBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-xl shadow-blue-500/20">
+                        CONFIRMAR Y GENERAR <span class="material-symbols-outlined">description</span>
+                    </button>
+                </div>
+            </form>
         </div>
+    </div>
+
+    <!-- Processing Overlay -->
+    <div id="processingOverlay"
+        class="fixed inset-0 bg-black/90 z-[200] hidden flex-col items-center justify-center text-center gap-6">
+        <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-xl font-bold text-white tracking-widest uppercase">Procesando Pedido...</p>
+        <p class="text-slate-500 text-sm">Estamos registrando tu interés en el CRM</p>
     </div>
 
     <script>
@@ -398,14 +422,65 @@ if (($catConfig['maintenance_mode'] ?? 0) == 1 && !isset($_SESSION['user_id'])) 
 
         function showCheckout() {
             if (cart.length === 0) return;
-            let text = "Hola! Quiero realizar un pedido Web:\n\n";
-            cart.forEach(item => {
-                text += `- ${item.sku} | ${item.description} (Cant: ${item.qty}) | USD ${item.price_final_usd}\n`;
-            });
-            const total = document.getElementById('cartTotal').innerText;
-            text += `\n*TOTAL ESTIMADO (DÓLARES): ${total}*`;
-            window.open(`https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=${encodeURIComponent(text)}`, '_blank');
+            toggleCart(); // Close sidebar
+            document.getElementById('checkoutModal').classList.remove('hidden');
         }
+
+        function closeCheckout() {
+            document.getElementById('checkoutModal').classList.add('hidden');
+        }
+
+        document.getElementById('checkoutForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const btn = document.getElementById('confirmBtn');
+            btn.disabled = true;
+            document.getElementById('processingOverlay').classList.replace('hidden', 'flex');
+
+            const payload = {
+                items: cart,
+                client: {
+                    name: document.getElementById('clientName').value,
+                    phone: document.getElementById('clientPhone').value,
+                    email: document.getElementById('clientEmail').value
+                },
+                catalog_type: 'web'
+            };
+
+            fetch('ajax_catalog_checkout.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Send WhatsApp with Quote ID
+                        let text = `Hola! Soy ${payload.client.name} (Ref: #${data.quote_number}) y quiero realizar un pedido web:\n\n`;
+                        cart.forEach(item => {
+                            text += `- ${item.sku} | ${item.description} (Cant: ${item.qty})\n`;
+                        });
+                        const total = document.getElementById('cartTotal').innerText;
+                        text += `\n*TOTAL ESTIMADO: ${total}*`;
+
+                        window.open(`https://wa.me/<?php echo COMPANY_WHATSAPP; ?>?text=${encodeURIComponent(text)}`, '_blank');
+
+                        // Success UI
+                        cart = [];
+                        updateUI();
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'No se pudo procesar el pedido'));
+                        document.getElementById('processingOverlay').classList.replace('flex', 'hidden');
+                        btn.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Ocurrió un error de red');
+                    document.getElementById('processingOverlay').classList.replace('flex', 'hidden');
+                    btn.disabled = false;
+                });
+        });
 
         document.getElementById('searchInput').addEventListener('input', filterProducts);
         document.getElementById('catFilter').addEventListener('change', filterProducts);
