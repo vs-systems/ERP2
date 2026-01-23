@@ -77,8 +77,34 @@ class CRM
     public function getLeadsStats()
     {
         try {
-            $sql = "SELECT status, COUNT(*) as total FROM crm_leads GROUP BY status";
-            return $this->db->query($sql)->fetchAll(\PDO::FETCH_KEY_PAIR);
+            // Using CASE to ensure all statuses are present even if count is 0
+            $sql = "SELECT 
+                        SUM(CASE WHEN status = 'Nuevo' THEN 1 ELSE 0 END) as 'Nuevos Leads',
+                        SUM(CASE WHEN status = 'Contactado' THEN 1 ELSE 0 END) as 'En Contacto',
+                        SUM(CASE WHEN status = 'Presupuestado' THEN 1 ELSE 0 END) as 'Cotizados',
+                        SUM(CASE WHEN status = 'Ganado' THEN 1 ELSE 0 END) as 'Ganados',
+                        SUM(CASE WHEN status = 'Perdido' THEN 1 ELSE 0 END) as 'Perdidos'
+                    FROM crm_leads";
+            return $this->db->query($sql)->fetch(\PDO::FETCH_ASSOC);
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    public function getSellerRanking()
+    {
+        try {
+            // Ranking based on quotes, leads converted (Won) and contacts (Interactions)
+            $sql = "SELECT 
+                        u.full_name as seller_name,
+                        (SELECT COUNT(*) FROM quotations WHERE seller_id = u.id) as total_quotes,
+                        (SELECT COUNT(*) FROM crm_leads WHERE name IN (SELECT name FROM entities WHERE seller_id = u.id) AND status = 'Ganado') as orders_closed,
+                        (SELECT COUNT(*) FROM crm_interactions WHERE user_id = u.id) as interactions
+                    FROM users u
+                    WHERE u.role = 'Vendedor' OR u.role = 'Admin'
+                    ORDER BY orders_closed DESC, total_quotes DESC
+                    LIMIT 10";
+            return $this->db->query($sql)->fetchAll();
         } catch (\Exception $e) {
             return [];
         }

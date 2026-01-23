@@ -34,10 +34,15 @@ class Logistics
      */
     public function updateOrderPhase($quoteNumber, $newPhase)
     {
-        $stmt = $this->db->prepare("INSERT INTO logistics_process (quote_number, current_phase) 
-                                   VALUES (?, ?) 
-                                   ON DUPLICATE KEY UPDATE current_phase = ?, updated_at = NOW()");
-        return $stmt->execute([$quoteNumber, $newPhase, $newPhase]);
+        try {
+            $stmt = $this->db->prepare("INSERT INTO logistics_process (quote_number, current_phase) 
+                                       VALUES (?, ?) 
+                                       ON DUPLICATE KEY UPDATE current_phase = ?, updated_at = NOW()");
+            return $stmt->execute([$quoteNumber, $newPhase, $newPhase]);
+        } catch (\Exception $e) {
+            error_log("Logistics Update Error: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**

@@ -10,12 +10,19 @@ $isAdmin = ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'admin');
             <span class="material-symbols-outlined text-primary">group</span> Directorio de Entidades
         </h3>
         <div class="flex gap-2">
-            <a href="config_entities.php?type=client"
-                class="bg-primary/10 text-primary px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary hover:text-white transition-all">+
-                NUEVO CLIENTE</a>
-            <a href="config_entities.php?type=supplier"
-                class="bg-amber-500/10 text-amber-500 px-4 py-2 rounded-lg text-xs font-bold hover:bg-amber-500 hover:text-white transition-all">+
-                NUEVO PROVEEDOR</a>
+            <?php if ($typeFilter === 'transport'): ?>
+                <a href="config_entities.php?type=transport"
+                    class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-lg active:scale-95 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">add</span>
+                    NUEVO TRANSPORTE</a>
+            <?php else: ?>
+                <a href="config_entities.php?type=client"
+                    class="bg-primary/10 text-primary px-4 py-2 rounded-lg text-xs font-bold hover:bg-primary hover:text-white transition-all">+
+                    NUEVO CLIENTE</a>
+                <a href="config_entities.php?type=supplier"
+                    class="bg-amber-500/10 text-amber-500 px-4 py-2 rounded-lg text-xs font-bold hover:bg-amber-500 hover:text-white transition-all">+
+                    NUEVO PROVEEDOR</a>
+            <?php endif; ?>
         </div>
     </div>
     <div class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden">
