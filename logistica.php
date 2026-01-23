@@ -220,13 +220,11 @@ $phases = [
                                             </td>
                                             <td class="px-6 py-6 text-center">
                                                 <div class="flex flex-col gap-2 max-w-[140px] mx-auto">
-                                                    <?php if (!$isPaid): ?>
-                                                        <button
-                                                            class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2"
-                                                            onclick="subirPago('<?php echo $p['quote_number']; ?>')">
-                                                            <span class="material-symbols-outlined text-sm">upload_file</span>
-                                                            Subir Pago
-                                                        </button>
+                                                    <?php if (!$isPaid && empty($p['logistics_authorized_by'])): ?>
+                                                        <div
+                                                            class="bg-amber-500/10 text-amber-500 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase border border-amber-500/20">
+                                                            PAGO PENDIENTE
+                                                        </div>
                                                     <?php elseif ($currPhase === 'En reserva'): ?>
                                                         <button
                                                             class="bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white py-2 px-4 rounded-xl text-xs font-bold transition-all border border-green-500/20 flex items-center justify-center gap-2"
@@ -310,7 +308,7 @@ $phases = [
         function subirGuia(quoteNumber) {
             const input = document.createElement('input');
             input.type = 'file';
-            input.accept = 'image/*';
+            input.accept = 'application/pdf,image/*';
             input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;

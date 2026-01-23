@@ -29,6 +29,19 @@ try {
             $id = $treasury->addMovement($data);
             $response = ['success' => true, 'movement_id' => $id];
             break;
+
+        case 'delete_movement':
+            $id = $_POST['id'] ?? null;
+            if (!$id)
+                throw new Exception("ID de movimiento requerido");
+
+            require_once LIB_PATH . '/Database.php';
+            $db = Vsys\Lib\Database::getInstance();
+
+            // Log before delete for audit (optional, skipping for simplicity)
+            $db->prepare("DELETE FROM treasury_movements WHERE id = ?")->execute([$id]);
+            $response = ['success' => true];
+            break;
     }
 
 } catch (Exception $e) {

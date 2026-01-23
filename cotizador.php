@@ -10,8 +10,30 @@ use Vsys\Lib\BCRAClient;
 
 $cot = new Cotizador();
 $currency = new BCRAClient();
-$quoteNumber = $cot->generateQuoteNumber(1);
+
+$editId = $_GET['id'] ?? null;
+$existingQuote = null;
+$existingItems = [];
+if ($editId) {
+    $existingQuote = $cot->getQuotation($editId);
+    $existingItems = $cot->getQuotationItems($editId);
+    $vData = $cot->createNewVersion($editId);
+    if ($vData) {
+        $quoteNumber = $vData['number'];
+        $version = $vData['version'];
+    } else {
+        $quoteNumber = $existingQuote['quote_number'];
+        $version = $existingQuote['version'];
+    }
+} else {
+    $quoteNumber = $cot->generateQuoteNumber(1);
+    $version = 1;
+}
+
 $currentRate = $currency->getCurrentRate('oficial') ?? 850.00; // Default if API fails
+if ($existingQuote)
+    $currentRate = $existingQuote['exchange_rate_usd'];
+
 $today = date('d/m/y');
 ?>
 <!DOCTYPE html>
@@ -137,7 +159,7 @@ $today = date('d/m/y');
                             class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight leading-none">
                             Nuevo Presupuesto</h2>
                         <span class="text-[10px] text-primary font-bold tracking-widest uppercase mt-1">Nº
-                            <?php echo $quoteNumber; ?></span>
+                            <?php echo $quoteNumber; ?> (v<?php echo $version; ?>)</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
@@ -171,8 +193,10 @@ $today = date('d/m/y');
                                     <span
                                         class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
                                     <input type="text" id="client-search" placeholder="Escriba para buscar..."
+                                        value="<?php echo htmlspecialchars($existingQuote['client_name'] ?? ''); ?>"
                                         autocomplete="off" class="form-input-vsys pl-10 h-12">
-                                    <input type="hidden" id="selected-client-id" value="1">
+                                    <input type="hidden" id="selected-client-id"
+                                        value="<?php echo $existingQuote['client_id'] ?? 1; ?>">
                                     <div id="client-results" class="search-dropdown" style="display: none;"></div>
                                 </div>
                             </div>
@@ -183,7 +207,8 @@ $today = date('d/m/y');
                                     class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Nombre
                                     / Razón Social</label>
                                 <input type="text" id="client-name-display" readonly
-                                    class="form-input-vsys h-12 bg-slate-100/50 dark:bg-[#101822]/50 font-bold">
+                                    class="form-input-vsys h-12 bg-slate-100/50 dark:bg-[#101822]/50 font-bold"
+                                    value="<?php echo htmlspecialchars($existingQuote['client_name'] ?? ''); ?>">
                             </div>
 
                             <div class="md:col-span-6 lg:col-span-4">
@@ -191,7 +216,8 @@ $today = date('d/m/y');
                                     class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">CUIT
                                     / CUIL</label>
                                 <input type="text" id="client-tax-display" readonly
-                                    class="form-input-vsys h-12 bg-slate-100/50 dark:bg-[#101822]/50 font-mono">
+                                    class="form-input-vsys h-12 bg-slate-100/50 dark:bg-[#101822]/50 font-mono"
+                                    value="<?php echo htmlspecialchars($existingQuote['tax_id'] ?? ''); ?>">
                             </div>
 
                             <div
@@ -238,7 +264,8 @@ $today = date('d/m/y');
                                         class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 ml-1">Dirección
                                         de Entrega</label>
                                     <input type="text" id="client-address-display" readonly
-                                        class="form-input-vsys h-12 bg-slate-100/50 dark:bg-[#101822]/50">
+                                        class="form-input-vsys h-12 bg-slate-100/50 dark:bg-[#101822]/50"
+                                        value="<?php echo htmlspecialchars($existingQuote['address'] ?? ''); ?>">
                                 </div>
                             </div>
                         </div>
@@ -449,7 +476,16 @@ $today = date('d/m/y');
         });
 
         let bnaRate = <?php echo $currentRate; ?>;
-        let items = [];
+        let items = <?php echo json_encode(array_map(function ($i) {
+            return [
+                'id' => $i['product_id'],
+                'sku' => $i['sku'],
+                'desc' => $i['description'],
+                'price' => (float) $i['unit_price_usd'],
+                'iva' => (float) $i['iva_rate'],
+                'qty' => (int) $i['quantity']
+            ];
+        }, $existingItems)); ?>;
         let searchTimeout;
         let selectedClientProfile = 'Mostrador'; // Default
 
@@ -733,6 +769,7 @@ $today = date('d/m/y');
 
             const data = {
                 quote_number: '<?php echo $quoteNumber; ?>',
+                version: <?php echo $version; ?>,
                 client_id: document.getElementById('selected-client-id').value,
                 payment_method: document.getElementById('is-bank').checked ? 'bank' : 'cash',
                 is_retention: document.getElementById('is-retention').checked,

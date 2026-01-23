@@ -138,4 +138,23 @@ class CurrentAccounts
 
         return $this->db->query($sql)->fetchAll();
     }
+
+    public function deleteByReference($referenceId, $type)
+    {
+        try {
+            $stmt = $this->db->prepare("SELECT id FROM client_movements WHERE reference_id = ? AND type = ?");
+            $stmt->execute([$referenceId, $type]);
+            $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            if (!empty($ids)) {
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $this->db->prepare("DELETE FROM treasury_movements WHERE reference_id IN ($placeholders) AND reference_type = 'client_payment'")->execute($ids);
+                $this->db->prepare("DELETE FROM client_movements WHERE id IN ($placeholders)")->execute($ids);
+            }
+            return true;
+        } catch (Exception $e) {
+            error_log("CurrentAccounts Delete Error: " . $e->getMessage());
+            return false;
+        }
+    }
 }

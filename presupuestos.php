@@ -25,7 +25,8 @@ $quotes = $cot->getAllQuotations(100);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Presupuestos - VS System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
     <script src="js/theme_handler.js"></script>
@@ -48,7 +49,10 @@ $quotes = $cot->getAllQuotations(100);
             font-family: 'Inter', sans-serif;
             text-transform: uppercase !important;
         }
-        .normal-case { text-transform: none !important; }
+
+        .normal-case {
+            text-transform: none !important;
+        }
 
         ::-webkit-scrollbar {
             width: 6px;
@@ -71,10 +75,11 @@ $quotes = $cot->getAllQuotations(100);
         .dark ::-webkit-scrollbar-thumb {
             background: #233348;
         }
-        
+
         .table-container {
             background: rgba(255, 255, 255, 1);
         }
+
         .dark .table-container {
             background: rgba(22, 32, 46, 0.7);
             backdrop-filter: blur(10px);
@@ -99,10 +104,12 @@ $quotes = $cot->getAllQuotations(100);
                         <span class="material-symbols-outlined text-2xl">history</span>
                     </div>
                     <div>
-                        <h2 class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight leading-none">
+                        <h2
+                            class="dark:text-white text-slate-800 font-bold text-lg uppercase tracking-tight leading-none">
                             Presupuestos y Ventas
                         </h2>
-                        <p class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1.5">Registro histórico y autorizaciones rápidas</p>
+                        <p class="text-[10px] text-slate-500 font-bold tracking-widest uppercase mt-1.5">Registro
+                            histórico y autorizaciones rápidas</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
@@ -120,14 +127,17 @@ $quotes = $cot->getAllQuotations(100);
 
                     <div class="flex justify-between items-end px-2">
                         <div>
-                            <h1 class="text-3xl font-black dark:text-white text-slate-800 tracking-tighter">GESTIÓN DE OPERACIONES</h1>
+                            <h1 class="text-3xl font-black dark:text-white text-slate-800 tracking-tighter">GESTIÓN DE
+                                OPERACIONES</h1>
                         </div>
                         <div class="flex gap-2">
                             <div
                                 class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 px-5 py-3 rounded-2xl flex items-center gap-4 shadow-sm">
                                 <span
-                                    class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Total Items</span>
-                                <span class="text-xl font-black text-primary leading-none"><?php echo count($quotes); ?></span>
+                                    class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Total
+                                    Items</span>
+                                <span
+                                    class="text-xl font-black text-primary leading-none"><?php echo count($quotes); ?></span>
                             </div>
                         </div>
                     </div>
@@ -155,7 +165,8 @@ $quotes = $cot->getAllQuotations(100);
                                                 <div class="text-[11px] font-bold dark:text-slate-300 text-slate-600">
                                                     <?php echo date('d/m/Y', strtotime($q['created_at'])); ?>
                                                 </div>
-                                                <div class="text-[9px] font-black text-slate-500 opacity-50 tracking-widest">
+                                                <div
+                                                    class="text-[9px] font-black text-slate-500 opacity-50 tracking-widest">
                                                     <?php echo date('H:i', strtotime($q['created_at'])); ?>
                                                 </div>
                                             </td>
@@ -209,11 +220,18 @@ $quotes = $cot->getAllQuotations(100);
                                                         <span class="material-symbols-outlined text-lg">print</span>
                                                     </button>
 
-                                                    <!-- Analysis -->
-                                                    <a href="analisis.php?id=<?php echo $q['id']; ?>"
+                                                    <!-- Edit (New Version) -->
+                                                    <a href="cotizador.php?id=<?php echo $q['id']; ?>"
+                                                        class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-emerald-500 transition-all font-bold"
+                                                        title="Editar / Nueva Versión">
+                                                        <span class="material-symbols-outlined text-lg">edit</span>
+                                                    </a>
+
+                                                    <!-- Analysis / Summary -->
+                                                    <a href="resumen_pedido.php?id=<?php echo $q['id']; ?>"
                                                         class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-blue-500 transition-all"
-                                                        title="Análisis de Operación">
-                                                        <span class="material-symbols-outlined text-lg">monitoring</span>
+                                                        title="Resumen e Historial de Cambios">
+                                                        <span class="material-symbols-outlined text-lg">history_edu</span>
                                                     </a>
 
                                                     <!-- Confirm Toggle -->
@@ -225,6 +243,14 @@ $quotes = $cot->getAllQuotations(100);
                                                             class="material-symbols-outlined text-lg <?php echo $q['is_confirmed'] ? 'fill-1' : ''; ?>">check_circle</span>
                                                     </button>
 
+                                                    <!-- Upload Payment -->
+                                                    <button
+                                                        onclick="openPaymentUpload(<?php echo $q['id']; ?>, '<?php echo $q['quote_number']; ?>')"
+                                                        class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-purple-500 transition-all"
+                                                        title="Subir archivo de Pago (Verificación)">
+                                                        <span class="material-symbols-outlined text-lg">upload_file</span>
+                                                    </button>
+
                                                     <!-- Authorize Logistics (Conditional) -->
                                                     <?php if ($q['payment_status'] !== 'Pagado' && empty($q['logistics_authorized_by'])): ?>
                                                         <button
@@ -234,8 +260,10 @@ $quotes = $cot->getAllQuotations(100);
                                                             <span class="material-symbols-outlined text-lg">verified_user</span>
                                                         </button>
                                                     <?php elseif (!empty($q['logistics_authorized_by'])): ?>
-                                                        <span class="p-2 text-amber-500" title="Autorizado por: <?php echo $q['logistics_authorized_by']; ?>">
-                                                            <span class="material-symbols-outlined text-lg fill-1">verified_user</span>
+                                                        <span class="p-2 text-amber-500"
+                                                            title="Autorizado por: <?php echo $q['logistics_authorized_by']; ?>">
+                                                            <span
+                                                                class="material-symbols-outlined text-lg fill-1">verified_user</span>
                                                         </span>
                                                     <?php endif; ?>
 
@@ -276,28 +304,108 @@ $quotes = $cot->getAllQuotations(100);
     </div>
 
     <!-- Authorization Modal -->
-    <div id="authModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-white/5 rounded-3xl w-full max-w-md p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
-            <h3 class="text-xl font-black mb-4 dark:text-white text-slate-800 tracking-tight uppercase">AUTORIZAR ENVÍO SIN PAGO</h3>
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 px-1">Presupuesto <span id="authQuoteNumber" class="text-primary font-black tracking-tight normal-case"></span></p>
-            
+    <div id="authModal"
+        class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div
+            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-white/5 rounded-3xl w-full max-w-md p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+            <h3 class="text-xl font-black mb-4 dark:text-white text-slate-800 tracking-tight uppercase">AUTORIZAR ENVÍO
+                SIN PAGO</h3>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 px-1">Presupuesto <span
+                    id="authQuoteNumber" class="text-primary font-black tracking-tight normal-case"></span></p>
+
             <form id="authForm" class="space-y-4">
                 <input type="hidden" name="id" id="authQuoteId">
                 <div>
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Responsable de Autorización</label>
+                    <label
+                        class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Responsable
+                        de Autorización</label>
                     <input type="text" name="authorized_by" required placeholder="EJ: AUTORIZA JAVIER"
                         class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-4 font-black text-xs focus:ring-2 focus:ring-primary outline-none transition-all placeholder:opacity-30">
                 </div>
 
                 <div class="flex gap-4 pt-4">
-                    <button type="button" onclick="closeAuthModal()" class="flex-1 py-4 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-500 font-black text-[10px] hover:bg-slate-50 dark:hover:bg-white/5 uppercase tracking-widest transition-all">CANCELAR</button>
-                    <button type="submit" class="flex-1 py-4 rounded-2xl bg-amber-500 text-white font-black text-[10px] hover:scale-[1.02] transition-transform shadow-xl shadow-amber-500/30 uppercase tracking-widest">AUTORIZAR ENVÍO</button>
+                    <button type="button" onclick="closeAuthModal()"
+                        class="flex-1 py-4 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-500 font-black text-[10px] hover:bg-slate-50 dark:hover:bg-white/5 uppercase tracking-widest transition-all">CANCELAR</button>
+                    <button type="submit"
+                        class="flex-1 py-4 rounded-2xl bg-amber-500 text-white font-black text-[10px] hover:scale-[1.02] transition-transform shadow-xl shadow-amber-500/30 uppercase tracking-widest">AUTORIZAR
+                        ENVÍO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Upload Modal -->
+    <div id="paymentModal"
+        class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+        <div
+            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-white/5 rounded-3xl w-full max-w-md p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+            <h3 class="text-xl font-black mb-1 dark:text-white text-slate-800 tracking-tight uppercase">SUBIR
+                COMPROBANTE</h3>
+            <p id="modalQuoteNumber" class="text-[10px] font-bold text-primary uppercase tracking-widest mb-6"></p>
+
+            <form id="paymentUploadForm" class="space-y-6">
+                <input type="hidden" name="quote_number" id="uploadQuoteNumber">
+                <div class="border-2 border-dashed border-slate-200 dark:border-white/5 rounded-3xl p-10 text-center hover:border-primary/50 transition-colors group cursor-pointer"
+                    onclick="document.getElementById('paymentFile').click()">
+                    <span
+                        class="material-symbols-outlined text-4xl text-slate-300 group-hover:text-primary mb-3">cloud_upload</span>
+                    <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">CLIC PARA SELECCIONAR
+                        ARCHIVO</p>
+                    <p class="text-[9px] text-slate-400 mt-1 uppercase">PDF, JPG o PNG</p>
+                    <input type="file" name="payment_file" id="paymentFile" class="hidden" accept=".pdf,image/*"
+                        onchange="updateFileName(this)">
+                    <div id="fileNameDisplay" class="mt-4 text-[10px] font-mono text-primary font-bold break-all"></div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="button" onclick="closePaymentModal()"
+                        class="flex-1 py-4 rounded-2xl border border-slate-200 dark:border-white/5 text-slate-500 font-black text-[10px] hover:bg-slate-50 dark:hover:bg-white/5 uppercase tracking-widest transition-all">CANCELAR</button>
+                    <button type="submit"
+                        class="flex-1 py-4 rounded-2xl bg-primary text-white font-black text-[10px] hover:scale-[1.02] transition-transform shadow-xl shadow-primary/30 uppercase tracking-widest">SUBIR
+                        COMPROBANTE</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+        function openPaymentUpload(id, quoteNo) {
+            document.getElementById('modalQuoteNumber').innerText = 'Presupuesto: ' + quoteNo;
+            document.getElementById('uploadQuoteNumber').value = quoteNo;
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+            document.getElementById('paymentUploadForm').reset();
+            document.getElementById('fileNameDisplay').innerText = '';
+        }
+
+        function updateFileName(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('fileNameDisplay').innerText = input.files[0].name.toUpperCase();
+            }
+        }
+
+        document.getElementById('paymentUploadForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            Swal.fire({ title: 'Subiendo...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+            try {
+                const res = await fetch('ajax_upload_payment.php', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    Swal.fire({ icon: 'success', title: 'SUBIDO', text: 'El comprobante se guardó correctamente.', timer: 1500, showConfirmButton: false });
+                    closePaymentModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    Swal.fire('Error', data.error, 'error');
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Error de conexión', 'error');
+            }
+        };
+
         async function sendEmail(id) {
             Swal.fire({
                 title: '¿ENVIAR POR EMAIL?',
@@ -393,9 +501,9 @@ $quotes = $cot->getAllQuotations(100);
                 const res = await fetch('ajax_authorize_logistics.php', { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
-                    Swal.fire({ 
-                        icon: 'success', 
-                        title: 'ENVÍO AUTORIZADO', 
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ENVÍO AUTORIZADO',
                         text: 'El pedido ahora es visible en logística.',
                         background: document.documentElement.classList.contains('dark') ? '#16202e' : '#fff',
                         color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
