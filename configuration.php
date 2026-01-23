@@ -189,6 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $cat = $data[5] ?? '';
                     $subcat = $data[6] ?? '';
                     $supplierName = trim($data[7] ?? '');
+                    $stock = isset($data[8]) ? intval($data[8]) : 0;
 
                     // Find or create supplier if name provided
                     $supplierId = null;
@@ -217,7 +218,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'iva_rate' => $iva,
                             'category' => $cat,
                             'subcategory' => $subcat,
-                            'supplier_id' => $supplierId
+                            'supplier_id' => $supplierId,
+                            'stock_current' => $stock
                         ]);
                         $imported++;
                     } else {
@@ -236,9 +238,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                    ->execute([$productId, $supplierId, $cost]);
                             }
                             
+                            // Update stock for existing product
+                            $db->prepare("UPDATE products SET stock_current = ? WHERE id = ?")
+                               ->execute([$stock, $productId]);
+
                             // Always recalculate minimum cost on main product
                             $db->prepare("UPDATE products SET unit_cost_usd = (SELECT MIN(cost_usd) FROM supplier_prices WHERE product_id = ?) WHERE id = ?")
                                ->execute([$productId, $productId]);
+                        } else {
+                            // If no supplier provided, still update stock if available
+                            $db->prepare("UPDATE products SET stock_current = ? WHERE id = ?")
+                               ->execute([$stock, $productId]);
                         }
                         $updated++;
                     }
@@ -745,7 +755,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                             <div class="text-slate-500">
                                                 <span class="material-symbols-outlined text-4xl mb-2">cloud_upload</span>
                                                 <p class="text-sm">Haz clic para seleccionar el archivo CSV</p>
-                                                <p class="text-[10px] uppercase font-bold mt-1">Formato: SKU;Descripción;Marca;Costo;IVA;Cat;Subcat;Proveedor</p>
+                                                <p class="text-[10px] uppercase font-bold mt-1">Formato: SKU;Descripción;Marca;Costo;IVA;Cat;Subcat;Proveedor;Stock</p>
                                             </div>
                                         </label>
                                     </div>

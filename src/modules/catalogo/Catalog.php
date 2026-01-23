@@ -79,7 +79,8 @@ class Catalog
                 subcategory = VALUES(subcategory),
                 brand = VALUES(brand),
                 iva_rate = VALUES(iva_rate),
-                has_serial_number = VALUES(has_serial_number)";
+                has_serial_number = VALUES(has_serial_number),
+                stock_current = VALUES(stock_current)";
 
         $stmt = $this->db->prepare($sql);
         $res = $stmt->execute([
@@ -164,6 +165,7 @@ class Catalog
             $catName = $data[5] ?? '';
             $subcatName = $data[6] ?? '';
             $providerName = trim($data[7] ?? '');
+            $stock = isset($data[8]) ? intval($data[8]) : 0;
 
             $supplierId = $defaultProviderId;
             if ($providerName) {
@@ -188,7 +190,8 @@ class Catalog
                 'iva_rate' => $iva,
                 'category' => $catName,
                 'subcategory' => $subcatName,
-                'supplier_id' => $supplierId
+                'supplier_id' => $supplierId,
+                'stock_current' => $stock
             ]);
 
             $imported++;

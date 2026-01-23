@@ -18,8 +18,8 @@ $allProducts = $catalog->getAllProducts();
 
 // Sort: In stock first
 usort($allProducts, function ($a, $b) {
-    $sA = $a['stock_qty'] ?? 0;
-    $sB = $b['stock_qty'] ?? 0;
+    $sA = $a['stock_current'] ?? 0;
+    $sB = $a['stock_current'] ?? 0;
     if ($sA > 0 && $sB <= 0)
         return -1;
     if ($sA <= 0 && $sB > 0)
@@ -37,25 +37,52 @@ $currentRate = $stmt->fetchColumn() ?: 1455.00;
 // Fetch unique brands for filtering
 $brands = array_unique(array_filter(array_column($allProducts, 'brand')));
 sort($brands);
-?>
+
 // Check Maintenance Mode
 $catConfig = json_decode(file_get_contents(__DIR__ . '/config_catalogs.json') ?: '{"maintenance_mode": 0}', true);
 if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
     ?>
     <!DOCTYPE html>
     <html lang="es">
+
     <head>
         <meta charset="UTF-8">
         <title>Sito en Mantenimiento - Vecino Seguro</title>
         <link rel="stylesheet" href="css/style_premium.css">
         <style>
-            body { background: #020617; color: white; display: flex; align-items: center; justify-content: center; height: 100vh; font-family: 'Inter', sans-serif; text-align: center; }
-            .maint-container { max-width: 500px; padding: 2rem; }
-            .maint-logo { width: 300px; margin-bottom: 2rem; }
-            h1 { font-size: 2rem; margin-bottom: 1rem; color: #3b82f6; }
-            p { color: #94a3b8; }
+            body {
+                background: #020617;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                font-family: 'Inter', sans-serif;
+                text-align: center;
+            }
+
+            .maint-container {
+                max-width: 500px;
+                padding: 2rem;
+            }
+
+            .maint-logo {
+                width: 300px;
+                margin-bottom: 2rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 1rem;
+                color: #3b82f6;
+            }
+
+            p {
+                color: #94a3b8;
+            }
         </style>
     </head>
+
     <body>
         <div class="maint-container">
             <img src="src/img/VSLogo_v2.jpg" alt="Vecino Seguro" class="maint-logo">
@@ -63,6 +90,7 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
             <p>Por favor regrese en unos minutos. Gracias.</p>
         </div>
     </body>
+
     </html>
     <?php
     exit;
@@ -135,7 +163,7 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(5px);
-            <?php if (($p['stock_qty'] ?? 0) <= 0)
+            <?php if (($p['stock_current'] ?? 0) <= 0)
                 echo 'opacity: 0.7; filter: grayscale(0.5); background: rgba(15, 23, 42, 0.6);'; ?>
         }
 
@@ -276,14 +304,17 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
                         ?>
                         <option value="<?php echo htmlspecialchars($cat); ?>"
                             class="font-bold bg-slate-200 text-black disabled" disabled>
-                            — <?php echo htmlspecialchars($cat); ?> —
+                            —
+                            <?php echo htmlspecialchars($cat); ?> —
                         </option>
                         <option value="<?php echo htmlspecialchars($cat); ?>">
-                            Todo en <?php echo htmlspecialchars($cat); ?>
+                            Todo en
+                            <?php echo htmlspecialchars($cat); ?>
                         </option>
                         <?php foreach ($subs as $sub): ?>
                             <option value="<?php echo htmlspecialchars($cat . '|' . $sub); ?>">
-                                &nbsp;&nbsp;&nbsp;<?php echo htmlspecialchars($sub); ?>
+                                &nbsp;&nbsp;&nbsp;
+                                <?php echo htmlspecialchars($sub); ?>
                             </option>
                         <?php endforeach; ?>
                     <?php endforeach; ?>
@@ -336,7 +367,7 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
 
                     <!-- Semáforo de Stock -->
                     <?php
-                    $stock = (int) ($p['stock_qty'] ?? 0);
+                    $stock = (int) ($p['stock_current'] ?? 0);
                     $stockColor = 'bg-red-500';
                     $statusText = 'Sin Stock';
                     if ($stock > 0) {

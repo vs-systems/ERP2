@@ -16,8 +16,8 @@ $products = $catalog->getAllProducts();
 
 // Sort: In stock first
 usort($products, function ($a, $b) {
-    $sA = $a['stock_qty'] ?? 0;
-    $sB = $b['stock_qty'] ?? 0;
+    $sA = $a['stock_current'] ?? 0;
+    $sB = $b['stock_current'] ?? 0;
     if ($sA > 0 && $sB <= 0)
         return -1;
     if ($sA <= 0 && $sB > 0)
@@ -180,7 +180,7 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
                                         </td>
                                         <td class="px-6 py-3 text-center">
                                             <?php
-                                            $stockVal = $p['stock_qty'] ?? 0;
+                                            $stockVal = $p['stock_current'] ?? 0;
                                             $stockColorClass = ($stockVal > 0) ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500';
                                             $stockDisplay = ($stockVal > 0) ? $stockVal : 'Sin Stock';
                                             ?>

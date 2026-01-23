@@ -19,9 +19,9 @@ $allProducts = $catalog->getAllProducts();
 
 // Sort products: In stock first, then by SKU
 usort($allProducts, function ($a, $b) {
-    if (($a['stock_qty'] ?? 0) > 0 && ($b['stock_qty'] ?? 0) <= 0)
+    if (($a['stock_current'] ?? 0) > 0 && ($b['stock_current'] ?? 0) <= 0)
         return -1;
-    if (($a['stock_qty'] ?? 0) <= 0 && ($b['stock_qty'] ?? 0) > 0)
+    if (($a['stock_current'] ?? 0) <= 0 && ($b['stock_current'] ?? 0) > 0)
         return 1;
     return strcmp($a['sku'], $b['sku']);
 });
@@ -162,7 +162,7 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(5px);
-            <?php if (($p['stock_qty'] ?? 0) <= 0)
+            <?php if (($p['stock_current'] ?? 0) <= 0)
                 echo 'opacity: 0.7; filter: grayscale(0.5); background: rgba(15, 23, 42, 0.6);'; ?>
         }
 
@@ -372,7 +372,7 @@ if (($catConfig['maintenance_mode'] ?? 0) && !isset($_SESSION['user_id'])) {
 
                     <!-- Semáforo de Stock -->
                     <?php
-                    $stock = (int) ($p['stock_qty'] ?? 0);
+                    $stock = (int) ($p['stock_current'] ?? 0);
                     $stockColor = 'bg-red-500';
                     $statusText = 'Sin Stock';
                     if ($stock > 0) {
