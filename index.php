@@ -99,7 +99,7 @@ require_once __DIR__ . '/src/config/config.php';
                     ['name' => 'RRHH', 'status' => 'Próximamente', 'icon' => 'groups'],
                     ['name' => 'Marketing', 'status' => 'Próximamente', 'icon' => 'campaign'],
                     ['name' => 'Gestión Calidad', 'status' => 'Próximamente', 'icon' => 'verified'],
-                    ['name' => 'BuroSE', 'status' => 'Próximamente', 'icon' => 'credit_score'],
+                    ['name' => 'BuroSE', 'status' => 'Actual', 'icon' => 'credit_score', 'url' => 'https://www.burose.com.ar'],
                     ['name' => 'RMA & Garantías', 'status' => 'Próximamente', 'icon' => 'build'],
                     ['name' => 'Proyectos', 'status' => 'Próximamente', 'icon' => 'account_tree'],
                     ['name' => 'Análisis Pliegos', 'status' => 'Próximamente', 'icon' => 'description'],
@@ -109,9 +109,11 @@ require_once __DIR__ . '/src/config/config.php';
 
                 foreach ($modules as $m):
                     $isFuture = $m['status'] === 'Próximamente';
+                    $hasUrl = isset($m['url']) && !empty($m['url']);
                     ?>
-                    <div
-                        class="glass p-6 rounded-2xl module-card <?php echo $isFuture ? 'opacity-40 grayscale' : 'border-blue-500/30'; ?>">
+                    <<?php echo $hasUrl ? 'a href="' . $m['url'] . '" target="_blank"' : 'div'; ?>
+                        class="glass p-6 rounded-2xl module-card
+                        <?php echo $isFuture ? 'opacity-40 grayscale' : 'border-blue-500/30'; ?>">
                         <div class="flex flex-col items-center gap-3">
                             <span
                                 class="material-symbols-outlined text-3xl <?php echo $isFuture ? 'text-slate-500' : 'text-blue-500'; ?> transition-colors"><?php echo $m['icon']; ?></span>
@@ -121,7 +123,7 @@ require_once __DIR__ . '/src/config/config.php';
                                 <?php echo $m['status']; ?>
                             </span>
                         </div>
-                    </div>
+                    </<?php echo $hasUrl ? 'a' : 'div'; ?>>
                 <?php endforeach; ?>
             </div>
 
