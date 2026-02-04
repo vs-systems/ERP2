@@ -25,8 +25,8 @@ define('CURRENCY_DEFAULT', 'USD');
 define('CURRENCY_SECONDARY', 'ARS');
 
 // Contact Info
-define('COMPANY_PHONE', '+5492235772165');
-define('COMPANY_WHATSAPP', '5492235772165');
+define('COMPANY_PHONE', '+54 9 11 3889 1414');
+define('COMPANY_WHATSAPP', '5491138891414');
 
 // Paths
 define('BASE_PATH', dirname(__DIR__, 2));

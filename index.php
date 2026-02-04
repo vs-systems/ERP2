@@ -144,9 +144,9 @@ require_once __DIR__ . '/src/config/config.php';
     <footer class="py-12 px-6 border-t border-white/5 text-center space-y-4 bg-[#020617]">
         <p class="text-slate-500 font-bold tracking-widest text-xs uppercase">VS Sistemas by Javier Gozzi</p>
         <div class="flex flex-col md:flex-row items-center justify-center gap-6">
-            <a href="https://wa.me/5492235772165" target="_blank"
+            <a href="https://wa.me/5491138891414" target="_blank"
                 class="flex items-center gap-2 text-slate-400 hover:text-green-500 transition-colors">
-                <span class="material-symbols-outlined text-sm">chat</span> +54 9 223 577-2165
+                <span class="material-symbols-outlined text-sm">chat</span> +54 9 11 3889 1414
             </a>
             <a href="mailto:vecinoseguro0@gmail.com"
                 class="flex items-center gap-2 text-slate-400 hover:text-blue-500 transition-colors">

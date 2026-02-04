@@ -166,6 +166,7 @@ function u($str)
                 <strong>DE:</strong><br>
                 VECINO SEGURO<br>
                 CUIT: 20-25562186-7<br>
+                TEL: <?php echo COMPANY_PHONE; ?><br>
                 EMAIL: VECINOSEGURO0@GMAIL.COM
             </td>
             <td width="2%"></td>
