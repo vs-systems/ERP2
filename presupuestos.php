@@ -195,6 +195,12 @@ $quotes = $cot->getAllQuotations(100);
                                                         <span class="material-symbols-outlined text-[14px] fill-1">cancel</span>
                                                         Perdido
                                                     </span>
+                                                <?php elseif ($q['status'] === 'En espera'): ?>
+                                                    <span
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 text-amber-500 text-[9px] font-black uppercase tracking-widest border border-amber-500/20">
+                                                        <span class="material-symbols-outlined text-[14px]">pause_circle</span>
+                                                        En Espera
+                                                    </span>
                                                 <?php elseif ($q['is_confirmed']): ?>
                                                     <span
                                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/10 text-green-500 text-[9px] font-black uppercase tracking-widest border border-green-500/20">
@@ -254,6 +260,22 @@ $quotes = $cot->getAllQuotations(100);
                                                         title="<?php echo $q['is_confirmed'] ? 'Desmarcar' : 'Confirmar'; ?>">
                                                         <span
                                                             class="material-symbols-outlined text-lg <?php echo $q['is_confirmed'] ? 'fill-1' : ''; ?>">check_circle</span>
+                                                    </button>
+
+                                                    <!-- Mark as Lost -->
+                                                    <button
+                                                        onclick="toggleStatus(<?php echo $q['id']; ?>, 'quotation', 'status', 'Perdido')"
+                                                        class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-red-500 transition-all"
+                                                        title="Marcar como Perdido">
+                                                        <span class="material-symbols-outlined text-lg">cancel</span>
+                                                    </button>
+
+                                                    <!-- Mark as On Wait -->
+                                                    <button
+                                                        onclick="toggleStatus(<?php echo $q['id']; ?>, 'quotation', 'status', 'En espera')"
+                                                        class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-amber-500 transition-all"
+                                                        title="Poner en Espera">
+                                                        <span class="material-symbols-outlined text-lg">pause_circle</span>
                                                     </button>
 
                                                     <!-- Upload Payment -->

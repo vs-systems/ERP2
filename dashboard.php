@@ -36,6 +36,14 @@ if ($userRole === 'Vendedor') {
     $crmLeadStats = $crm->getLeadsStats();
     $sellerRanking = $crm->getSellerRanking();
     $monthlyStats = $analysis->getMonthlyProfitability(6);
+
+    // Fetch budget stats for ring chart
+    $budgetStats = [
+        'Aprobados' => $db->query("SELECT COUNT(*) FROM quotations WHERE is_confirmed = 1")->fetchColumn(),
+        'Pendientes' => $db->query("SELECT COUNT(*) FROM quotations WHERE is_confirmed = 0 AND status NOT IN ('Perdido', 'Cancelado', 'Rechazado')")->fetchColumn(),
+        'Perdidos' => $db->query("SELECT COUNT(*) FROM quotations WHERE status IN ('Perdido', 'Cancelado', 'Rechazado')")->fetchColumn(),
+    ];
+    $totalBudgets = array_sum($budgetStats);
 }
 
 $effectivenessStats = $analysis->getDashboardSummary();
@@ -335,13 +343,55 @@ $logisticsPhases = [
 
                     <!-- Charts & Ranking -->
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <!-- Operations Chart -->
+                        <!-- Budget Summary Chart -->
                         <div
                             class="lg:col-span-2 bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-sm">
-                            <h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-6">Rentabilidad
-                                Operativa (Mensual)</h3>
-                            <div class="h-[300px]">
-                                <canvas id="opsChart"></canvas>
+                            <h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-6">Resumen de
+                                Presupuestos</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                                <div class="h-[300px] relative">
+                                    <canvas id="budgetRingChart"></canvas>
+                                    <div
+                                        class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                        <span
+                                            class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total</span>
+                                        <span
+                                            class="text-2xl font-black text-slate-800 dark:text-white"><?php echo $totalBudgets; ?></span>
+                                    </div>
+                                </div>
+                                <div class="space-y-4">
+                                    <div
+                                        class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                                            <span
+                                                class="text-xs font-bold text-slate-500 uppercase tracking-wider">Aprobados</span>
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-slate-700 dark:text-white"><?php echo $budgetStats['Aprobados']; ?></span>
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                                            <span
+                                                class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pendientes</span>
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-slate-700 dark:text-white"><?php echo $budgetStats['Pendientes']; ?></span>
+                                    </div>
+                                    <div
+                                        class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-2 h-2 rounded-full bg-red-500"></div>
+                                            <span
+                                                class="text-xs font-bold text-slate-500 uppercase tracking-wider">Perdidos
+                                                / Cancelados</span>
+                                        </div>
+                                        <span
+                                            class="text-sm font-black text-slate-700 dark:text-white"><?php echo $budgetStats['Perdidos']; ?></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -561,40 +611,37 @@ $logisticsPhases = [
                 });
             }
 
-            // Main Bar Chart
-            const ctxOps = document.getElementById('opsChart');
-            if (ctxOps) {
-                new Chart(ctxOps, {
-                    type: 'bar',
+            // Budget Ring Chart
+            const ctxBudget = document.getElementById('budgetRingChart');
+            if (ctxBudget) {
+                new Chart(ctxBudget, {
+                    type: 'doughnut',
                     data: {
-                        labels: [<?php echo "'" . implode("','", array_column($monthlyStats, 'month')) . "'"; ?>],
-                        datasets: [
-                            {
-                                label: 'Ventas',
-                                data: [<?php echo implode(",", array_column($monthlyStats, 'sales')); ?>],
-                                backgroundColor: 'rgba(19, 109, 236, 0.7)',
-                                borderColor: '#136dec',
-                                borderWidth: 1,
-                                borderRadius: 8,
-                            },
-                            {
-                                label: 'Compras',
-                                data: [<?php echo implode(",", array_column($monthlyStats, 'purchases')); ?>],
-                                backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                                borderColor: '#ef4444',
-                                borderWidth: 1,
-                                borderRadius: 8,
-                            }
-                        ]
+                        labels: ['Aprobados', 'Pendientes', 'Perdidos'],
+                        datasets: [{
+                            data: [<?php echo $budgetStats['Aprobados']; ?>, <?php echo $budgetStats['Pendientes']; ?>, <?php echo $budgetStats['Perdidos']; ?>],
+                            backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        scales: {
-                            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.03)' }, border: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
-                            x: { grid: { display: false }, border: { display: false }, ticks: { color: '#64748b', font: { size: 10, weight: 'bold' } } }
-                        },
-                        plugins: { legend: { display: true, labels: { color: '#64748b', font: { size: 10, weight: 'bold' } } } }
+                        cutout: '80%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        let label = context.label || '';
+                                        if (label) label += ': ';
+                                        if (context.parsed !== null) label += context.parsed;
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
                     }
                 });
             }
