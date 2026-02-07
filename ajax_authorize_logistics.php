@@ -10,11 +10,13 @@ try {
     session_start();
     $db = Vsys\Lib\Database::getInstance();
 
-    $quotationId = $_POST['id'] ?? null;
-    $authorizedBy = $_POST['authorized_by'] ?? '';
+    // Support JSON input
+    $input = json_decode(file_get_contents('php://input'), true);
+    $quotationId = $input['id'] ?? ($_POST['id'] ?? null);
+    $authorizedBy = $_SESSION['full_name'] ?? ($_SESSION['username'] ?? 'Admin');
 
-    if (!$quotationId || !$authorizedBy) {
-        throw new Exception("ID de cotización y nombre de autorizante son requeridos.");
+    if (!$quotationId) {
+        throw new Exception("ID de cotización es requerido.");
     }
 
     $stmt = $db->prepare("UPDATE quotations SET logistics_authorized_by = ?, logistics_authorized_at = NOW() WHERE id = ?");

@@ -25,17 +25,26 @@ $search = $_GET['search'] ?? '';
 $status_filter = $_GET['status_filter'] ?? '';
 $show_archived = isset($_GET['show_archived']) && $_GET['show_archived'] == '1';
 $only_unpaid = isset($_GET['only_unpaid']) && $_GET['only_unpaid'] == '1';
+$view = $_GET['view'] ?? 'history';
 
 // Base Query building (Simplified since we don't have a complex filter method in Cotizador yet)
 // We will fetch all and filter in PHP for now to move fast, or ideally extend Cotizador
-$quotes = $cot->getAllQuotations(200);
+$quotes = $cot->getAllQuotations(500);
 
 // Filter logic
-$quotes = array_filter($quotes, function ($q) use ($search, $status_filter, $show_archived, $only_unpaid) {
-    if (!$show_archived && $q['archived_at'] !== null)
-        return false;
-    if ($show_archived && $q['archived_at'] === null)
-        return false;
+$quotes = array_filter($quotes, function ($q) use ($search, $status_filter, $show_archived, $only_unpaid, $view) {
+    if ($view === 'perdidos') {
+        if ($q['status'] !== 'Perdido')
+            return false;
+    } else {
+        // En historial normal, quitamos perdidos y canalizados
+        if ($q['status'] === 'Perdido')
+            return false;
+        if (!$show_archived && $q['archived_at'] !== null)
+            return false;
+        if ($show_archived && $q['archived_at'] === null)
+            return false;
+    }
 
     if ($only_unpaid && $q['payment_status'] === 'Pagado')
         return false;
@@ -69,7 +78,8 @@ usort($quotes, function ($a, $b) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historial de Presupuestos - VS System</title>
+    <title><?php echo $view === 'perdidos' ? 'Presupuestos Perdidos' : 'Historial de Presupuestos'; ?> - VS System
+    </title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -217,7 +227,7 @@ usort($quotes, function ($a, $b) {
                                 <span class="material-symbols-outlined text-sm">filter_alt</span>
                             </button>
 
-                            <?php if ($search || $status_filter || $show_archived || $only_unpaid): ?>
+                            <?php if ($search || $status_filter || $show_archived || $only_unpaid || $view !== 'history'): ?>
                                 <a href="presupuestos.php" class="text-slate-400 hover:text-red-500 p-2 transition-all"
                                     title="Limpiar Filtros">
                                     <span class="material-symbols-outlined text-sm">filter_alt_off</span>
@@ -280,9 +290,10 @@ usort($quotes, function ($a, $b) {
                                             <td class="px-8 py-6 text-right font-mono text-[11px] text-slate-500 font-bold">
                                                 $ <?php echo number_format($q['total_ars'], 2, ',', '.'); ?>
                                             </td>
-                                             <td class="px-8 py-6 text-center">
+                                            <td class="px-8 py-6 text-center">
                                                 <?php if ($q['archived_at']): ?>
-                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-500/10 text-slate-500 text-[9px] font-black uppercase tracking-widest border border-slate-500/20">
+                                                    <span
+                                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-500/10 text-slate-500 text-[9px] font-black uppercase tracking-widest border border-slate-500/20">
                                                         <span class="material-symbols-outlined text-[14px]">inventory_2</span>
                                                         Canalizado (<?php echo $q['archive_reason']; ?>)
                                                     </span>
@@ -375,21 +386,21 @@ usort($quotes, function ($a, $b) {
                                                         <span class="material-symbols-outlined text-lg">pause_circle</span>
                                                     </button>
 
-                                                     <!-- Upload Payment -->
-                                                     <button
-                                                         onclick="openPaymentUpload(<?php echo $q['id']; ?>, '<?php echo $q['quote_number']; ?>')"
-                                                         class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-purple-500 transition-all"
-                                                         title="Subir archivo de Pago (Verificación)">
-                                                         <span class="material-symbols-outlined text-lg">upload_file</span>
-                                                     </button>
+                                                    <!-- Upload Payment -->
+                                                    <button
+                                                        onclick="openPaymentUpload(<?php echo $q['id']; ?>, '<?php echo $q['quote_number']; ?>')"
+                                                        class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-purple-500 transition-all"
+                                                        title="Subir archivo de Pago (Verificación)">
+                                                        <span class="material-symbols-outlined text-lg">upload_file</span>
+                                                    </button>
 
-                                                     <!-- Archive (Modal) -->
-                                                     <button
-                                                         onclick="openArchiveModal(<?php echo $q['id']; ?>, '<?php echo $q['quote_number']; ?>')"
-                                                         class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-orange-500 transition-all"
-                                                         title="Archivar Operación (Canalizar)">
-                                                         <span class="material-symbols-outlined text-lg">archive</span>
-                                                     </button>
+                                                    <!-- Archive (Modal) -->
+                                                    <button
+                                                        onclick="openArchiveModal(<?php echo $q['id']; ?>, '<?php echo $q['quote_number']; ?>')"
+                                                        class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-orange-500 transition-all"
+                                                        title="Archivar Operación (Canalizar)">
+                                                        <span class="material-symbols-outlined text-lg">archive</span>
+                                                    </button>
 
                                                     <!-- Authorize Logistics (Conditional) -->
                                                     <?php if ($q['payment_status'] !== 'Pagado' && empty($q['logistics_authorized_by'])): ?>
@@ -662,15 +673,15 @@ usort($quotes, function ($a, $b) {
                         const res = await fetch('ajax_update_status.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ 
-                                id: id, 
-                                type: 'quotation', 
+                            body: JSON.stringify({
+                                id: id,
+                                type: 'quotation',
                                 fields: {
                                     archived_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
                                     archive_reason: result.value.reason,
                                     archive_description: result.value.desc,
                                     status: result.value.reason === 'Vendido' ? 'accepted' : 'rejected'
-                                } 
+                                }
                             })
                         });
                         const data = await res.json();

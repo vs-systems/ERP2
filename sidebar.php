@@ -22,13 +22,23 @@ $menuStructure = [
         'icon' => 'attach_money',
         'items' => [
             ['label' => 'Historial', 'href' => 'presupuestos.php', 'icon' => 'history'],
+            ['label' => 'Perdidos', 'href' => 'presupuestos.php?view=perdidos', 'icon' => 'cancel'],
             ['label' => 'Cotizar', 'href' => 'cotizador.php', 'icon' => 'add_shopping_cart'],
             ['label' => 'Listas de Precios', 'href' => 'listas_precios.php', 'icon' => 'price_check'],
             ['label' => 'CRM', 'href' => 'crm.php', 'icon' => 'group'],
             ['label' => 'Análisis Rentabilidad', 'href' => 'analisis.php', 'icon' => 'analytics'],
             ['label' => 'Análisis Competencia', 'href' => 'analisis_competencia.php', 'icon' => 'compare_arrows'],
-            ['label' => 'Logística', 'href' => 'logistica.php', 'icon' => 'local_shipping'],
             ['label' => 'Calendario', 'href' => 'https://calendar.google.com/calendar/u/0/r?cid=dmVjaW5vc2VndXJvMEBnbWFpbC5jb20', 'icon' => 'calendar_month', 'target' => '_blank'],
+        ]
+    ],
+    [
+        'label' => 'LOGÍSTICA',
+        'id' => 'logistica_new',
+        'icon' => 'local_shipping',
+        'items' => [
+            ['label' => 'En Armado', 'href' => 'logistica.php?view=armado', 'icon' => 'engineering'],
+            ['label' => 'Pendientes', 'href' => 'logistica.php?view=pendientes', 'icon' => 'schedule'],
+            ['label' => 'Archivados', 'href' => 'logistica.php?view=archivados', 'icon' => 'inventory_2'],
         ]
     ],
     [

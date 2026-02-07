@@ -5,8 +5,33 @@ require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/logistica/Logistics.php';
 use Vsys\Modules\Logistica\Logistics;
 $logistics = new Logistics();
-$pending = $logistics->getOrdersForPreparation();
+$view = $_GET['view'] ?? 'armado';
+$allOrders = $logistics->getOrdersForPreparation();
 $transports = $logistics->getTransports();
+
+// Logic for categorization:
+// Pendientes: Confirmed but NOT paid/authorized.
+// En Armado: Paid or Authorized.
+// Archivados: Archived.
+
+$orders = array_filter($allOrders, function ($q) use ($view) {
+    $isArchived = ($q['archived_at'] !== null);
+    $isPaidOrAuth = ($q['payment_status'] === 'Pagado' || $q['logistics_authorized_by'] !== null);
+
+    if ($view === 'archivados') {
+        return $isArchived;
+    }
+
+    if ($isArchived)
+        return false; // Hide archived from other views
+
+    if ($view === 'pendientes') {
+        return !$isPaidOrAuth;
+    }
+
+    // Default view: armado
+    return $isPaidOrAuth;
+});
 
 // Map phases to colors and icons (Material Symbols)
 $phases = [
@@ -139,18 +164,34 @@ $phases = [
                         <div class="overflow-x-auto">
                             <table class="w-full text-left">
                                 <thead class="bg-slate-50 dark:bg-[#101822]/50 transition-colors">
-                                    <tr class="text-slate-500 text-[10px] font-bold uppercase">
-                                        <th class="px-6 py-4">Ref. Pedido</th>
-                                        <th class="px-6 py-4 text-center">Fase Actual</th>
-                                        <th class="px-6 py-4">Estado Pago</th>
-                                        <th class="px-6 py-4">Detalles Despacho</th>
-                                        <th class="px-6 py-4 text-center">Acciones</th>
+                                    <tr class="text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                                        <th class="px-6 py-6">Pedido</th>
+                                        <th class="px-6 py-6 text-center">Estado Pago</th>
+                                        <th class="px-6 py-6 text-center">
+                                            <?php echo $view === 'archivados' ? 'Fecha Archivo' : 'Fase Logística'; ?>
+                                        </th>
+                                        <th class="px-6 py-6 text-center">Transporte Sugerido</th>
+                                        <th class="px-6 py-6 text-right">Costos Logísticos</th>
+                                        <th class="px-6 py-6 text-right">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-[#233348] transition-colors">
-                                    <?php foreach ($pending as $p):
-                                        $currPhase = $p['current_phase'] ?? 'En reserva';
-                                        $phaseData = $phases[$currPhase] ?? $phases['En reserva'];
+                                    <?php if (empty($orders)): ?>
+                                        <tr>
+                                            <td colspan="6" class="px-6 py-20 text-center">
+                                                <div class="flex flex-col items-center gap-2 opacity-30">
+                                                    <span class="material-symbols-outlined text-6xl">inventory_2</span>
+                                                    <p class="font-black uppercase tracking-widest text-[10px]">No hay
+                                                        pedidos en esta sección</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+
+                                    <?php foreach ($orders as $p): ?>
+                                        <?php
+                                        $currentPhase = $p['current_phase'] ?? 'En reserva';
+                                        $phaseInfo = $phases[$currentPhase] ?? $phases['En reserva'];
                                         $isPaid = ($p['payment_status'] === 'Pagado');
                                         ?>
                                         <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
@@ -167,36 +208,13 @@ $phases = [
                                                 </div>
                                             </td>
                                             <td class="px-6 py-6 text-center">
-                                                <span class="phase-badge bg-opacity-10"
-                                                    style="background-color: <?php echo $phaseData['color']; ?>20; color: <?php echo $phaseData['color']; ?>">
-                                                    <span
-                                                        class="material-symbols-outlined text-sm"><?php echo $phaseData['icon']; ?></span>
-                                                    <?php echo $phaseData['label']; ?>
-                                                </span>
-                                                <!-- Visual Progress Tracker -->
-                                                <div
-                                                    class="flex gap-1 justify-center mt-3 h-1 w-24 mx-auto bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
-                                                    <?php
-                                                    $found = false;
-                                                    foreach ($phases as $k => $v):
-                                                        $active = ($k === $currPhase);
-                                                        $complete = !$found && !$active;
-                                                        if ($active)
-                                                            $found = true;
-                                                        $bgColor = ($active || $complete) ? $v['color'] : 'transparent';
-                                                        ?>
-                                                        <div class="flex-1" style="background-color: <?php echo $bgColor; ?>;">
-                                                        </div>
-                                                    <?php endforeach; ?>
-                                                </div>
-                                            </td>
-                                            <td class="px-6 py-6">
                                                 <?php if ($isPaid): ?>
-                                                    <div class="flex items-center gap-2 text-green-500 font-bold text-xs">
+                                                    <div
+                                                        class="flex items-center gap-2 text-green-500 font-bold text-xs justify-center">
                                                         <span class="material-symbols-outlined text-sm">verified</span> PAGADO
                                                     </div>
                                                 <?php else: ?>
-                                                    <div class="flex flex-col gap-1">
+                                                    <div class="flex flex-col gap-1 items-center">
                                                         <div class="flex items-center gap-2 text-amber-500 font-bold text-xs">
                                                             <span class="material-symbols-outlined text-sm">warning</span>
                                                             PENDIENTE
@@ -206,44 +224,99 @@ $phases = [
                                                     </div>
                                                 <?php endif; ?>
                                             </td>
-                                            <td class="px-6 py-6">
+                                            <td class="px-6 py-6 text-center">
+                                                <?php if ($view === 'archivados'): ?>
+                                                    <div class="text-[10px] font-black dark:text-slate-400 text-slate-600">
+                                                        <?php echo date('d/m/Y', strtotime($p['archived_at'])); ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <div class="phase-badge flex-col"
+                                                        style="background: <?php echo $phaseInfo['color']; ?>20; color: <?php echo $phaseInfo['color']; ?>; border: 1px solid <?php echo $phaseInfo['color']; ?>30">
+                                                        <div class="flex items-center gap-1">
+                                                            <span class="material-symbols-outlined text-[14px]">
+                                                                <?php echo $phaseInfo['icon']; ?>
+                                                            </span>
+                                                            <?php echo $phaseInfo['label']; ?>
+                                                        </div>
+                                                        <!-- Visual Progress Tracker -->
+                                                        <div
+                                                            class="flex gap-1 justify-center mt-3 h-1 w-24 mx-auto bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
+                                                            <?php
+                                                            $found = false;
+                                                            foreach ($phases as $k => $v):
+                                                                $active = ($k === $currentPhase);
+                                                                $complete = !$found && !$active;
+                                                                if ($active)
+                                                                    $found = true;
+                                                                $bgColor = ($active || $complete) ? $v['color'] : 'transparent';
+                                                                ?>
+                                                                <div class="flex-1"
+                                                                    style="background-color: <?php echo $bgColor; ?>;">
+                                                                </div>
+                                                            <?php endforeach; ?>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="px-6 py-6 text-center">
+                                                <?php if (!empty($p['transport_name'])): ?>
+                                                    <div class="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                                                        <?php echo $p['transport_name']; ?>
+                                                    </div>
+                                                    <div class="text-[10px] text-slate-500 italic">
+                                                        <?php echo $p['transport_address']; ?>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <span class="text-[10px] text-slate-400 italic">No asignado</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td class="px-6 py-6 text-right">
                                                 <div class="space-y-2">
-                                                    <div class="flex items-center justify-between gap-4">
+                                                    <div class="flex items-center justify-end gap-4">
                                                         <span
                                                             class="text-[10px] font-bold text-slate-500 uppercase">Bultos</span>
                                                         <input type="number" class="cost-input"
-                                                            id="qty-<?php echo $p['quote_number']; ?>" value="1">
+                                                            id="qty-<?php echo $p['quote_number']; ?>"
+                                                            value="<?php echo $p['packages_qty'] ?? 1; ?>">
                                                     </div>
-                                                    <div class="flex items-center justify-between gap-4">
+                                                    <div class="flex items-center justify-end gap-4">
                                                         <span class="text-[10px] font-bold text-slate-500 uppercase">Flete
                                                             ARS</span>
                                                         <input type="number" class="cost-input"
-                                                            id="cost-<?php echo $p['quote_number']; ?>" value="0" step="1">
+                                                            id="cost-<?php echo $p['quote_number']; ?>"
+                                                            value="<?php echo $p['freight_cost'] ?? 0; ?>" step="1">
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="px-6 py-6 text-center">
+                                            <td class="px-6 py-6 text-right">
                                                 <div class="flex flex-col gap-2 max-w-[140px] mx-auto">
-                                                    <?php if (!$isPaid && empty($p['logistics_authorized_by'])): ?>
+                                                    <?php if ($view === 'archivados'): ?>
                                                         <div
-                                                            class="bg-amber-500/10 text-amber-500 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase border border-amber-500/20">
-                                                            PAGO PENDIENTE
+                                                            class="bg-slate-500/10 text-slate-500 py-1.5 px-3 rounded-lg text-[10px] font-bold uppercase border border-slate-500/20">
+                                                            ARCHIVADO
                                                         </div>
-                                                    <?php elseif ($currPhase === 'En reserva'): ?>
+                                                    <?php elseif ($view === 'pendientes'): ?>
+                                                        <button
+                                                            class="bg-[#136dec]/10 hover:bg-[#136dec] text-[#136dec] hover:text-white py-2 px-4 rounded-xl text-xs font-bold transition-all border border-[#136dec]/20 flex items-center justify-center gap-2"
+                                                            onclick="autorizarPedido(<?php echo $p['id']; ?>, '<?php echo $p['quote_number']; ?>')">
+                                                            <span class="material-symbols-outlined text-sm">verified_user</span>
+                                                            AUTORIZAR
+                                                        </button>
+                                                    <?php elseif ($currentPhase === 'En reserva'): ?>
                                                         <button
                                                             class="bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white py-2 px-4 rounded-xl text-xs font-bold transition-all border border-green-500/20 flex items-center justify-center gap-2"
                                                             onclick="avanzarFase('<?php echo $p['quote_number']; ?>', 'En preparación')">
                                                             <span class="material-symbols-outlined text-sm">play_arrow</span>
                                                             INICIAR PREP.
                                                         </button>
-                                                    <?php elseif ($currPhase === 'En preparación'): ?>
+                                                    <?php elseif ($currentPhase === 'En preparación'): ?>
                                                         <button
                                                             class="bg-[#136dec]/10 hover:bg-[#136dec] text-[#136dec] hover:text-white py-2 px-4 rounded-xl text-xs font-bold transition-all border border-[#136dec]/20 flex items-center justify-center gap-2"
                                                             onclick="avanzarFase('<?php echo $p['quote_number']; ?>', 'Disponible')">
                                                             <span class="material-symbols-outlined text-sm">package_2</span>
                                                             MARCAR LISTO
                                                         </button>
-                                                    <?php elseif ($currPhase === 'Disponible'): ?>
+                                                    <?php elseif ($currentPhase === 'Disponible'): ?>
                                                         <button
                                                             class="bg-primary text-white py-2 px-4 rounded-xl text-xs font-extra-bold shadow-lg shadow-primary/20 hover:bg-blue-600 transition-all flex items-center justify-center gap-2 mb-2"
                                                             onclick="despachar('<?php echo $p['quote_number']; ?>')">
@@ -257,12 +330,21 @@ $phases = [
                                                             <span class="material-symbols-outlined text-sm">file_present</span>
                                                             SUBIR GUÍA/REMITO
                                                         </button>
-                                                    <?php elseif ($currPhase === 'En su transporte'): ?>
+                                                    <?php elseif ($currentPhase === 'En su transporte'): ?>
                                                         <button
                                                             class="bg-purple-500/10 hover:bg-purple-500 text-purple-500 hover:text-white py-1.5 px-3 rounded-lg text-xs font-bold transition-all border border-purple-500/20 flex items-center justify-center gap-2"
                                                             onclick="subirGuia('<?php echo $p['quote_number']; ?>')">
                                                             <span class="material-symbols-outlined text-sm">file_present</span>
                                                             SUBIR GUÍA
+                                                        </button>
+                                                    <?php endif; ?>
+
+                                                    <?php if ($view === 'armado'): ?>
+                                                        <button
+                                                            class="mt-2 text-slate-400 hover:text-red-500 text-[9px] font-bold uppercase flex items-center justify-center gap-1 transition-colors"
+                                                            onclick="archivarPedido(<?php echo $p['id']; ?>, '<?php echo $p['quote_number']; ?>')">
+                                                            <span class="material-symbols-outlined text-xs">archive</span>
+                                                            Archivar Pedido
                                                         </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -414,6 +496,60 @@ $phases = [
             setTimeout(() => {
                 modal.classList.add('hidden');
             }, 300);
+        }
+
+        async function autorizarPedido(id, quoteNumber) {
+            if (!confirm(`¿Autorizar despacho del pedido ${quoteNumber} sin pago?`)) return;
+            const res = await fetch('ajax_authorize_logistics.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id })
+            });
+            const data = await res.json();
+            if (data.success) {
+                Swal.fire('Éxito', 'Pedido autorizado correctamente', 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Error', data.error || 'No se pudo autorizar', 'error');
+            }
+        }
+
+        async function archivarPedido(id, quoteNumber) {
+            const { value: reason } = await Swal.fire({
+                title: 'Archivar Pedido',
+                text: `¿Por qué motivo deseas archivar el pedido ${quoteNumber}?`,
+                input: 'select',
+                inputOptions: {
+                    'Vendido': 'Entregado / Cerrado',
+                    'Suspendido': 'Suspendido',
+                    'Rechazado': 'Cancelado'
+                },
+                inputPlaceholder: 'Selecciona un motivo',
+                showCancelButton: true,
+                confirmButtonText: 'Archivar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (reason) {
+                const res = await fetch('ajax_update_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: id,
+                        type: 'quotation',
+                        fields: {
+                            archived_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                            archive_reason: reason,
+                            status: reason === 'Vendido' ? 'accepted' : 'rejected'
+                        }
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    Swal.fire('Archivado', 'El pedido se ha movido al archivo.', 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Error', 'No se pudo archivar el pedido.', 'error');
+                }
+            }
         }
     </script>
 </body>
