@@ -34,11 +34,11 @@ $quotes = $cot->getAllQuotations(500);
 // Filter logic
 $quotes = array_filter($quotes, function ($q) use ($search, $status_filter, $show_archived, $only_unpaid, $view) {
     if ($view === 'perdidos') {
-        if ($q['status'] !== 'Perdido')
+        if ($q['status'] !== 'Perdido' && $q['status'] !== 'rejected')
             return false;
     } else {
         // En historial normal, quitamos perdidos y canalizados
-        if ($q['status'] === 'Perdido')
+        if ($q['status'] === 'Perdido' || $q['status'] === 'rejected')
             return false;
         if (!$show_archived && $q['archived_at'] !== null)
             return false;
@@ -494,9 +494,22 @@ usort($quotes, function ($a, $b) {
                 COMPROBANTE</h3>
             <p id="modalQuoteNumber" class="text-[10px] font-bold text-primary uppercase tracking-widest mb-6"></p>
 
-            <form id="paymentUploadForm" class="space-y-6">
+            <form id="paymentUploadForm" class="space-y-4">
                 <input type="hidden" name="quote_number" id="uploadQuoteNumber">
-                <div class="border-2 border-dashed border-slate-200 dark:border-white/5 rounded-3xl p-10 text-center hover:border-primary/50 transition-colors group cursor-pointer"
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Medio
+                        de Pago</label>
+                    <select name="payment_method" required
+                        class="w-full bg-slate-50 dark:bg-[#020617] border border-slate-200 dark:border-white/5 rounded-2xl px-5 py-3 font-black text-xs focus:ring-2 focus:ring-primary outline-none transition-all">
+                        <option value="Transferencia">Transferencia Bancaria</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Mercado Pago">Mercado Pago</option>
+                        <option value="Retenciones">Retenciones</option>
+                    </select>
+                </div>
+
+                <div class="border-2 border-dashed border-slate-200 dark:border-white/5 rounded-3xl p-6 text-center hover:border-primary/50 transition-colors group cursor-pointer"
                     onclick="document.getElementById('paymentFile').click()">
                     <span
                         class="material-symbols-outlined text-4xl text-slate-300 group-hover:text-primary mb-3">cloud_upload</span>

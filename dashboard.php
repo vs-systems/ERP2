@@ -23,7 +23,7 @@ $monthlyStats = [];
 
 // Get current exchange rate for display
 $db = \Vsys\Lib\Database::getInstance();
-$exchangeRate = $db->query("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1")->fetchColumn() ?: 1455.00;
+$exchangeRate = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'ARS' ORDER BY fetched_at DESC LIMIT 1")->fetchColumn() ?: 1455.00;
 
 if ($userRole === 'Vendedor') {
     $sellerDash = new \Vsys\Modules\Dashboard\SellerDashboard($userId);
@@ -579,31 +579,6 @@ $logisticsPhases = [
                 });
             }
 
-            const budgetCtx = document.getElementById('budgetRingChart');
-            if (budgetCtx) {
-                new Chart(budgetCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Aprobados', 'Pendientes', 'Perdidos'],
-                        datasets: [{
-                            data: [<?php echo $budgetStats['aprobados']; ?>, <?php echo $budgetStats['pendientes']; ?>, <?php echo $budgetStats['perdidos']; ?>],
-                            backgroundColor: ['#10b981', '#64748b', '#ef4444'],
-                            borderWidth: 0,
-                            hoverOffset: 20
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '80%',
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            }
 
             const purchaseCtx = document.getElementById('purchaseStatusChart');
             if (purchaseCtx) {

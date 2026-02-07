@@ -133,11 +133,18 @@ class Billing
      */
     public function getRecentInvoices($limit = 10)
     {
-        $sql = "SELECT i.*, e.name as client_name 
+        $sql = "SELECT i.*, e.name as client_name, q.quote_number 
                 FROM invoices i 
                 LEFT JOIN entities e ON i.client_id = e.id 
+                LEFT JOIN quotations q ON i.quote_id = q.id
                 ORDER BY i.date DESC, i.id DESC 
                 LIMIT " . (int) $limit;
         return $this->db->query($sql)->fetchAll();
+    }
+
+    public function updateStatus($invoiceId, $status)
+    {
+        $stmt = $this->db->prepare("UPDATE invoices SET status = ? WHERE id = ?");
+        return $stmt->execute([$status, $invoiceId]);
     }
 }

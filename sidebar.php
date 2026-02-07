@@ -51,7 +51,15 @@ $menuStructure = [
             ['label' => 'Ctas. Corrientes', 'href' => 'cuentas_corrientes.php', 'icon' => 'account_balance_wallet'],
             ['label' => 'Ctas. Corrientes Prov.', 'href' => 'cuentas_corrientes_proveedores.php', 'icon' => 'payments'],
             ['label' => 'Tesorería', 'href' => 'tesoreria.php', 'icon' => 'account_balance_wallet'],
-            ['label' => 'Informes', 'href' => 'informes.php', 'icon' => 'bar_chart'],
+        ]
+    ],
+    [
+        'label' => 'INFORMES',
+        'id' => 'informes_folder',
+        'icon' => 'bar_chart',
+        'items' => [
+            ['label' => 'Clientes / Proveedores', 'href' => 'informes.php', 'icon' => 'groups'],
+            ['label' => 'Rentabilidad', 'href' => 'analisis.php', 'icon' => 'trending_up'],
         ]
     ],
     [

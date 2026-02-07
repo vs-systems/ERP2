@@ -64,17 +64,22 @@ $recentInvoices = $billing->getRecentInvoices(20);
                                     <tr
                                         class="bg-slate-50 dark:bg-[#1c2a3b] text-xs uppercase text-slate-500 font-bold border-b border-slate-200 dark:border-[#233348]">
                                         <th class="px-6 py-4">N° Factura</th>
+                                        <th class="px-6 py-4">N° Orden</th>
                                         <th class="px-6 py-4">Fecha</th>
                                         <th class="px-6 py-4">Cliente</th>
                                         <th class="px-6 py-4 text-center">Tipo</th>
                                         <th class="px-6 py-4 text-center">Estado</th>
                                         <th class="px-6 py-4 text-right">Importe Total</th>
+                                        <th class="px-6 py-4 text-center">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100 dark:divide-[#233348]">
                                     <?php foreach ($recentInvoices as $inv): ?>
                                         <tr class="hover:bg-slate-50 dark:hover:bg-[#1c2a3b]/50 transition-colors">
                                             <td class="px-6 py-3 font-mono font-bold"><?php echo $inv['invoice_number']; ?>
+                                            </td>
+                                            <td class="px-6 py-3 text-xs font-bold text-[#136dec]">
+                                                <?php echo $inv['quote_number'] ?: '-'; ?>
                                             </td>
                                             <td class="px-6 py-3 text-sm text-slate-500">
                                                 <?php echo date('d/m/Y', strtotime($inv['date'])); ?>
@@ -91,12 +96,23 @@ $recentInvoices = $billing->getRecentInvoices(20);
                                             <td class="px-6 py-3 text-center">
                                                 <span
                                                     class="px-2 py-1 rounded text-[10px] font-bold uppercase 
-                                                <?php echo $inv['status'] === 'Pagado' ? 'bg-green-100 text-green-600' : 'bg-amber-100 text-amber-600'; ?>">
+                                                <?php echo $inv['status'] === 'Finalizada' ? 'bg-green-100 text-green-600' : ($inv['status'] === 'Pagado' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'); ?>">
                                                     <?php echo $inv['status']; ?>
                                                 </span>
                                             </td>
                                             <td class="px-6 py-3 text-right font-bold">
                                                 $ <?php echo number_format($inv['total_amount'], 2, ',', '.'); ?>
+                                            </td>
+                                            <td class="px-6 py-3 text-center">
+                                                <?php if ($inv['status'] !== 'Finalizada'): ?>
+                                                    <button onclick="finalizeInvoice(<?php echo $inv['id']; ?>)"
+                                                        class="text-[10px] font-bold text-[#136dec] hover:underline uppercase">
+                                                        Finalizar
+                                                    </button>
+                                                <?php else: ?>
+                                                    <span
+                                                        class="text-[10px] text-slate-400 uppercase font-medium">Cerrada</span>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -109,6 +125,41 @@ $recentInvoices = $billing->getRecentInvoices(20);
                                 </div>
                             <?php endif; ?>
                         </div>
+
+                        <script>
+                            function finalizeInvoice(id) {
+                                Swal.fire({
+                                    title: '¿Finalizar factura?',
+                                    text: "Esta acción marcará la factura como completada.",
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#136dec',
+                                    cancelButtonColor: '#d33',
+                                    confirmButtonText: 'Sí, finalizar',
+                                    cancelButtonText: 'Cancelar'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        const formData = new FormData();
+                                        formData.append('id', id);
+                                        formData.append('status', 'Finalizada');
+
+                                        fetch('ajax_update_invoice_status.php', {
+                                            method: 'POST',
+                                            body: formData
+                                        })
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.success) {
+                                                    Swal.fire('¡Éxito!', 'Factura finalizada correctamente.', 'success')
+                                                        .then(() => location.reload());
+                                                } else {
+                                                    Swal.fire('Error', data.error || 'No se pudo actualizar la factura.', 'error');
+                                                }
+                                            });
+                                    }
+                                })
+                            }
+                        </script>
                     </div>
                 </div>
             </div>

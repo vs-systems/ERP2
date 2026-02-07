@@ -23,7 +23,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if ($userAuth->login($username, $password)) {
-        header('Location: dashboard.php');
+        $db = Vsys\Lib\Database::getInstance();
+        $userId = $_SESSION['user_id'];
+
+        // Si el usuario tiene una entidad asociada, buscamos su perfil para redirigir al catálogo correcto
+        $stmt = $db->prepare("SELECT e.client_profile FROM entities e JOIN users u ON u.entity_id = e.id WHERE u.id = ?");
+        $stmt->execute([$userId]);
+        $profile = $stmt->fetchColumn();
+
+        if ($profile === 'GREMIO') {
+            header('Location: catalogo.php');
+        } elseif ($profile === 'WEB') {
+            header('Location: catalogo_web.php');
+        } elseif ($profile === 'PUBLICO') {
+            header('Location: catalogo_publico.php');
+        } else {
+            header('Location: dashboard.php');
+        }
         exit;
     } else {
         $error = "Usuario o contraseña incorrectos.";

@@ -60,30 +60,33 @@ $balances = $treasury->getBalanceSummary();
                 </div>
             </header>
 
-            <div class="flex-1 overflow-y_auto p-6">
+            <div class="flex-1 overflow-y-auto p-6">
                 <div class="max-w-7xl mx-auto space-y-6">
 
                     <!-- Top Summary -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div
                             class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-sm">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total
-                                Ingresos</p>
+                            <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1">Total Ingresos</p>
                             <h3 class="text-2xl font-black text-emerald-500 font-mono">
                                 $<?php echo number_format($totals['total_in'], 2, ',', '.'); ?></h3>
                         </div>
                         <div
                             class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-sm">
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Egresos
-                            </p>
+                            <p class="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">Total Egresos</p>
                             <h3 class="text-2xl font-black text-red-500 font-mono">
                                 $<?php echo number_format($totals['total_out'], 2, ',', '.'); ?></h3>
                         </div>
                         <div
+                            class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl p-6 shadow-sm">
+                            <p class="text-[10px] font-bold text-amber-500 uppercase tracking-widest mb-1">Total Retenciones</p>
+                            <h3 class="text-2xl font-black text-amber-500 font-mono">
+                                $<?php echo number_format($totals['total_withholdings'], 2, ',', '.'); ?></h3>
+                        </div>
+                        <div
                             class="bg-white dark:bg-[#16202e] border-2 border-primary/30 rounded-2xl p-6 shadow-xl shadow-primary/5 bg-gradient-to-br from-primary/5 to-transparent">
-                            <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Saldo Neto en
-                                Caja</p>
-                            <h3 class="text-3xl font-black text-primary font-mono">
+                            <p class="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Saldo Neto Caja</p>
+                            <h3 class="text-2xl font-black text-primary font-mono">
                                 $<?php echo number_format($totals['net_cash'], 2, ',', '.'); ?></h3>
                         </div>
                     </div>
@@ -219,6 +222,7 @@ $balances = $treasury->getBalanceSummary();
                             <option value="Impuestos">Impuestos</option>
                             <option value="Sueldos">Sueldos</option>
                             <option value="Retiro Socios">Retiro Socios</option>
+                            <option value="Retenciones">Retenciones</option>
                             <option value="Otros">Otros</option>
                         </select>
                     </div>
@@ -232,6 +236,7 @@ $balances = $treasury->getBalanceSummary();
                             <option value="Banco">Banco / Transferencia</option>
                             <option value="Cheque">Cheque</option>
                             <option value="Mercado Pago">Mercado Pago</option>
+                            <option value="Retenciones">Retenciones</option>
                             <option value="Dólares">Caja Dólares</option>
                         </select>
                     </div>

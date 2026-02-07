@@ -368,10 +368,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <div>
                                         <label class="form-label-vsys">Perfil Cliente</label>
                                         <select name="client_profile" class="form-input-vsys">
-                                            <option value="Otro" <?php echo $editData['client_profile'] == 'Otro' ? 'selected' : ''; ?>>Otro</option>
-                                            <option value="Gremio" <?php echo $editData['client_profile'] == 'Gremio' ? 'selected' : ''; ?>>Gremio</option>
-                                            <option value="Web" <?php echo $editData['client_profile'] == 'Web' ? 'selected' : ''; ?>>Web</option>
-                                            <option value="ML" <?php echo $editData['client_profile'] == 'ML' ? 'selected' : ''; ?>>Mercado Libre</option>
+                                            <option value="OTRO" <?php echo $editData['client_profile'] == 'OTRO' ? 'selected' : ''; ?>>Otro</option>
+                                            <option value="GREMIO" <?php echo $editData['client_profile'] == 'GREMIO' ? 'selected' : ''; ?>>Gremio</option>
+                                            <option value="WEB" <?php echo $editData['client_profile'] == 'WEB' ? 'selected' : ''; ?>>Web</option>
+                                            <option value="PUBLICO" <?php echo $editData['client_profile'] == 'PUBLICO' ? 'selected' : ''; ?>>Público</option>
                                         </select>
                                     </div>
                                 <?php endif; ?>

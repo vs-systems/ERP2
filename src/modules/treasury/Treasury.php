@@ -77,9 +77,12 @@ class Treasury
     {
         $totalIn = $this->db->query("SELECT SUM(amount) FROM treasury_movements WHERE type = 'Ingreso'")->fetchColumn() ?: 0;
         $totalOut = $this->db->query("SELECT SUM(amount) FROM treasury_movements WHERE type = 'Egreso'")->fetchColumn() ?: 0;
+        $totalWithholdings = $this->db->query("SELECT SUM(amount) FROM treasury_movements WHERE category = 'Retenciones' OR payment_method = 'Retenciones'")->fetchColumn() ?: 0;
+
         return [
             'total_in' => (float) $totalIn,
             'total_out' => (float) $totalOut,
+            'total_withholdings' => (float) $totalWithholdings,
             'net_cash' => (float) ($totalIn - $totalOut)
         ];
     }

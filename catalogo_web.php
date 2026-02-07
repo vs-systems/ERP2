@@ -42,7 +42,7 @@ sort($brands);
 // Check Maintenance Mode
 $configPath = __DIR__ . '/config_catalogs.json';
 $catConfig = file_exists($configPath) ? json_decode(file_get_contents($configPath), true) : ['maintenance_mode' => 0];
-if (($catConfig['maintenance_mode'] ?? 0) == 1 && !isset($_SESSION['user_id'])) {
+if (($catConfig['maintenance_mode'] ?? 0) == 1 && ($_SESSION['role'] ?? '') !== 'admin') {
     header("Location: maintenance.php");
     exit;
 }

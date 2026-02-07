@@ -70,15 +70,19 @@ $providers = $providerAccounts->getProvidersWithBalances();
                     </div>
 
                     <div
-                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden">
+                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-2xl overflow-hidden shadow-sm">
                         <div
-                            class="p-6 border-b border-slate-200 dark:border-[#233348] flex justify-between items-center">
-                            <h3 class="font-bold text-lg">Deuda con Proveedores</h3>
-                            <input type="text" placeholder="Buscar proveedor..."
-                                class="bg-slate-50 dark:bg-[#101822] border-none rounded-lg px-4 py-2 text-xs focus:ring-2 focus:ring-primary normal-case">
+                            class="px-6 py-4 border-b border-slate-200 dark:border-[#233348] flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h3 class="font-bold text-sm tracking-tight">Listado de Proveedores</h3>
+                            <div class="relative w-full md:w-64">
+                                <span
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                                <input type="text" id="providerSearch" placeholder="BUSCAR PROVEEDOR..."
+                                    class="w-full bg-slate-50 dark:bg-[#101822] border border-slate-200 dark:border-[#233348] rounded-xl pl-9 pr-4 py-2 text-[10px] font-bold outline-none focus:ring-2 focus:ring-primary transition-all">
+                            </div>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left">
+                            <table id="providersTable" class="w-full text-left">
                                 <thead>
                                     <tr
                                         class="text-[10px] uppercase text-slate-500 border-b border-slate-200 dark:border-[#233348]">
@@ -128,6 +132,21 @@ $providers = $providerAccounts->getProvidersWithBalances();
             </div>
         </main>
     </div>
+    <script>
+        document.getElementById('providerSearch').addEventListener('keyup', function () {
+            const term = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#providersTable tbody tr');
+
+            rows.forEach(row => {
+                const name = row.querySelector('td:first-child').innerText.toLowerCase();
+                if (name.includes(term)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

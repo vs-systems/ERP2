@@ -310,6 +310,7 @@ $suppliersList = $db->query("SELECT id, name, fantasy_name FROM entities WHERE t
                                             <th class="px-6 py-4">Proveedor</th>
                                             <th class="px-6 py-4 whitespace-nowrap">Fecha</th>
                                             <th class="px-6 py-4 text-right">Total USD</th>
+                                            <th class="px-6 py-4 text-right">Total ARS</th>
                                             <th class="px-6 py-4 text-center">Estado</th>
                                             <th class="px-6 py-4 text-center">Acciones</th>
                                         </tr>
@@ -338,6 +339,9 @@ $suppliersList = $db->query("SELECT id, name, fantasy_name FROM entities WHERE t
                                                 </td>
                                                 <td class="px-6 py-5 text-right font-mono font-bold text-primary">
                                                     $<?php echo number_format($p['total_usd'], 2); ?>
+                                                </td>
+                                                <td class="px-6 py-5 text-right font-mono font-bold text-green-500">
+                                                    $<?php echo number_format($p['total_ars'] ?? ($p['total_usd'] * ($p['exchange_rate_usd'] ?? $exchangeRate)), 2); ?>
                                                 </td>
                                                 <td class="px-6 py-5">
                                                     <div class="flex items-center justify-center gap-3">

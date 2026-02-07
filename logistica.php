@@ -153,9 +153,7 @@ $phases = [
                             Operaciones Logísticas</h1>
                         <div
                             class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] px-6 py-3 rounded-xl flex flex-col items-center shadow-sm dark:shadow-none transition-colors">
-                            <span
-                                class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Pendientes</span>
-                            <span class="text-xl font-bold text-[#f59e0b]"><?php echo count($pending); ?></span>
+                            <span class="text-xl font-bold text-[#f59e0b]"><?php echo count($orders); ?></span>
                         </div>
                     </div>
 

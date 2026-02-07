@@ -110,7 +110,6 @@ class ProviderAccounts
                 LEFT JOIN provider_movements pm ON e.id = pm.provider_id
                 WHERE e.type = 'provider'
                 GROUP BY e.id
-                HAVING balance != 0 OR last_movement IS NOT NULL
                 ORDER BY balance DESC";
 
         return $this->db->query($sql)->fetchAll();

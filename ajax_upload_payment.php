@@ -36,13 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dest = $uploadDir . $fileName;
 
         if (move_uploaded_file($file['tmp_name'], $dest)) {
-            $db = Vsys\Lib\Database::getInstance();
+            $method = $_POST['payment_method'] ?? 'No especificado';
             $stmt = $db->prepare("INSERT INTO operation_documents (entity_id, entity_type, doc_type, file_path, notes) 
                                  VALUES (?, 'quotation', 'Pago', ?, ?)");
             $stmt->execute([
                 $quoteNumber,
                 'uploads/payments/' . $fileName,
-                'Comprobante de pago subido desde Ventas/Facturación.'
+                "Comprobante de pago ($method) subido desde Ventas/Facturación."
             ]);
 
             echo json_encode(['success' => true]);
