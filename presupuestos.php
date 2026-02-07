@@ -9,6 +9,9 @@ try {
     $db = Vsys\Lib\Database::getInstance();
     $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS logistics_authorized_by VARCHAR(100) DEFAULT NULL");
     $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS logistics_authorized_at DATETIME DEFAULT NULL");
+    $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS archived_at DATETIME DEFAULT NULL");
+    $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS archive_reason ENUM('Vendido', 'Suspendido', 'Rechazado') DEFAULT NULL");
+    $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS archive_description TEXT DEFAULT NULL");
 } catch (Exception $e) {
     // Ignore if already exists or other non-critical errors
 }
@@ -16,7 +19,49 @@ try {
 use Vsys\Modules\Cotizador\Cotizador;
 
 $cot = new Cotizador();
-$quotes = $cot->getAllQuotations(100);
+
+// Handle Filters
+$search = $_GET['search'] ?? '';
+$status_filter = $_GET['status_filter'] ?? '';
+$show_archived = isset($_GET['show_archived']) && $_GET['show_archived'] == '1';
+$only_unpaid = isset($_GET['only_unpaid']) && $_GET['only_unpaid'] == '1';
+
+// Base Query building (Simplified since we don't have a complex filter method in Cotizador yet)
+// We will fetch all and filter in PHP for now to move fast, or ideally extend Cotizador
+$quotes = $cot->getAllQuotations(200);
+
+// Filter logic
+$quotes = array_filter($quotes, function ($q) use ($search, $status_filter, $show_archived, $only_unpaid) {
+    if (!$show_archived && $q['archived_at'] !== null)
+        return false;
+    if ($show_archived && $q['archived_at'] === null)
+        return false;
+
+    if ($only_unpaid && $q['payment_status'] === 'Pagado')
+        return false;
+
+    if ($search) {
+        $search = strtolower($search);
+        $match = strpos(strtolower($q['client_name']), $search) !== false ||
+            strpos(strtolower($q['quote_number']), $search) !== false;
+        if (!$match)
+            return false;
+    }
+
+    if ($status_filter && $q['status'] !== $status_filter)
+        return false;
+
+    return true;
+});
+
+// Sort: Unpaid first, then by date desc
+usort($quotes, function ($a, $b) {
+    if ($a['payment_status'] !== 'Pagado' && $b['payment_status'] === 'Pagado')
+        return -1;
+    if ($a['payment_status'] === 'Pagado' && $b['payment_status'] !== 'Pagado')
+        return 1;
+    return strtotime($b['created_at']) - strtotime($a['created_at']);
+});
 ?>
 <!DOCTYPE html>
 <html class="dark" lang="es">
@@ -125,27 +170,74 @@ $quotes = $cot->getAllQuotations(100);
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
                 <div class="max-w-[1500px] mx-auto space-y-8">
 
-                    <div class="flex justify-between items-end px-2">
-                        <div>
-                            <h1 class="text-3xl font-black dark:text-white text-slate-800 tracking-tighter">GESTIÓN DE
-                                OPERACIONES</h1>
-                        </div>
-                        <div class="flex gap-2">
-                            <div
-                                class="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/5 px-5 py-3 rounded-2xl flex items-center gap-4 shadow-sm">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h1 class="text-2xl font-black dark:text-white text-slate-800 tracking-tighter uppercase">
+                            Gestión de Operaciones</h1>
+
+                        <!-- Wildcard Filters -->
+                        <form method="GET"
+                            class="flex flex-wrap items-center gap-3 bg-white dark:bg-white/5 p-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
+                            <div class="relative">
                                 <span
-                                    class="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">Total
-                                    Items</span>
-                                <span
-                                    class="text-xl font-black text-primary leading-none"><?php echo count($quotes); ?></span>
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+                                <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>"
+                                    placeholder="CLIENTE / REFERENCIA"
+                                    class="pl-9 pr-4 py-2 bg-slate-100 dark:bg-white/5 border-none rounded-xl text-[10px] font-bold w-48 focus:ring-2 focus:ring-primary transition-all normal-case">
                             </div>
-                        </div>
+
+                            <select name="status_filter"
+                                class="bg-slate-100 dark:bg-white/5 border-none rounded-xl text-[10px] font-bold px-4 py-2 focus:ring-2 focus:ring-primary transition-all">
+                                <option value="">TODOS LOS ESTADOS</option>
+                                <option value="Pendiente" <?php echo $status_filter === 'Pendiente' ? 'selected' : ''; ?>>
+                                    PENDIENTES</option>
+                                <option value="Aceptado" <?php echo $status_filter === 'Aceptado' ? 'selected' : ''; ?>>
+                                    ACEPTADOS</option>
+                                <option value="Perdido" <?php echo $status_filter === 'Perdido' ? 'selected' : ''; ?>>
+                                    PERDIDOS</option>
+                                <option value="En espera" <?php echo $status_filter === 'En espera' ? 'selected' : ''; ?>>
+                                    EN ESPERA</option>
+                            </select>
+
+                            <label
+                                class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all">
+                                <input type="checkbox" name="only_unpaid" value="1" <?php echo $only_unpaid ? 'checked' : ''; ?>
+                                    class="rounded border-slate-300 dark:border-white/10 text-primary focus:ring-primary bg-transparent">
+                                <span class="text-[10px] font-bold text-slate-500">SOLO IMPAGOS</span>
+                            </label>
+
+                            <label
+                                class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all">
+                                <input type="checkbox" name="show_archived" value="1" <?php echo $show_archived ? 'checked' : ''; ?>
+                                    class="rounded border-slate-300 dark:border-white/10 text-slate-500 focus:ring-slate-500 bg-transparent">
+                                <span class="text-[10px] font-bold text-slate-500">CANALIZADOS</span>
+                            </label>
+
+                            <button type="submit"
+                                class="bg-primary text-white p-2 rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-primary/20">
+                                <span class="material-symbols-outlined text-sm">filter_alt</span>
+                            </button>
+
+                            <?php if ($search || $status_filter || $show_archived || $only_unpaid): ?>
+                                <a href="presupuestos.php" class="text-slate-400 hover:text-red-500 p-2 transition-all"
+                                    title="Limpiar Filtros">
+                                    <span class="material-symbols-outlined text-sm">filter_alt_off</span>
+                                </a>
+                            <?php endif; ?>
+
+                            <div class="h-4 w-px bg-slate-200 dark:bg-white/10 mx-1"></div>
+
+                            <div class="px-2">
+                                <span class="text-[14px] font-black text-primary"><?php echo count($quotes); ?></span>
+                                <span
+                                    class="text-[8px] font-black text-slate-400 uppercase tracking-widest ml-1">Items</span>
+                            </div>
+                        </form>
                     </div>
 
                     <div
-                        class="table-container border border-slate-200 dark:border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl transition-colors">
+                        class="bg-white dark:bg-[#16202e] border border-slate-200 dark:border-[#233348] rounded-3xl overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none transition-all">
                         <div class="overflow-x-auto">
-                            <table class="w-full text-left">
+                            <table class="w-full text-left border-collapse">
                                 <thead
                                     class="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5">
                                     <tr class="text-slate-500 text-[10px] font-black uppercase tracking-widest">
@@ -188,8 +280,13 @@ $quotes = $cot->getAllQuotations(100);
                                             <td class="px-8 py-6 text-right font-mono text-[11px] text-slate-500 font-bold">
                                                 $ <?php echo number_format($q['total_ars'], 2, ',', '.'); ?>
                                             </td>
-                                            <td class="px-8 py-6 text-center">
-                                                <?php if ($q['status'] === 'Perdido'): ?>
+                                             <td class="px-8 py-6 text-center">
+                                                <?php if ($q['archived_at']): ?>
+                                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-500/10 text-slate-500 text-[9px] font-black uppercase tracking-widest border border-slate-500/20">
+                                                        <span class="material-symbols-outlined text-[14px]">inventory_2</span>
+                                                        Canalizado (<?php echo $q['archive_reason']; ?>)
+                                                    </span>
+                                                <?php elseif ($q['status'] === 'Perdido'): ?>
                                                     <span
                                                         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/10 text-red-500 text-[9px] font-black uppercase tracking-widest border border-red-500/20">
                                                         <span class="material-symbols-outlined text-[14px] fill-1">cancel</span>
@@ -278,13 +375,21 @@ $quotes = $cot->getAllQuotations(100);
                                                         <span class="material-symbols-outlined text-lg">pause_circle</span>
                                                     </button>
 
-                                                    <!-- Upload Payment -->
-                                                    <button
-                                                        onclick="openPaymentUpload(<?php echo $q['id']; ?>, '<?php echo $q['quote_number']; ?>')"
-                                                        class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-purple-500 transition-all"
-                                                        title="Subir archivo de Pago (Verificación)">
-                                                        <span class="material-symbols-outlined text-lg">upload_file</span>
-                                                    </button>
+                                                     <!-- Upload Payment -->
+                                                     <button
+                                                         onclick="openPaymentUpload(<?php echo $q['id']; ?>, '<?php echo $q['quote_number']; ?>')"
+                                                         class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-purple-500 transition-all"
+                                                         title="Subir archivo de Pago (Verificación)">
+                                                         <span class="material-symbols-outlined text-lg">upload_file</span>
+                                                     </button>
+
+                                                     <!-- Archive (Modal) -->
+                                                     <button
+                                                         onclick="openArchiveModal(<?php echo $q['id']; ?>, '<?php echo $q['quote_number']; ?>')"
+                                                         class="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-orange-500 transition-all"
+                                                         title="Archivar Operación (Canalizar)">
+                                                         <span class="material-symbols-outlined text-lg">archive</span>
+                                                     </button>
 
                                                     <!-- Authorize Logistics (Conditional) -->
                                                     <?php if ($q['payment_status'] !== 'Pagado' && empty($q['logistics_authorized_by'])): ?>
@@ -517,6 +622,69 @@ $quotes = $cot->getAllQuotations(100);
             const data = await res.json();
             if (data.success) location.reload();
             else alert('Error: ' + data.error);
+        }
+
+        function openArchiveModal(id, number) {
+            Swal.fire({
+                title: 'ARCHIVAR OPERACIÓN',
+                html: `
+                    <div class="text-left space-y-4 pt-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase mb-2 block">Motivo del Archivado</label>
+                            <select id="archiveReason" class="w-full bg-slate-100 dark:bg-white/10 border-none rounded-xl text-sm font-bold p-3 focus:ring-2 focus:ring-primary transition-all">
+                                <option value="Vendido">VENDIDO</option>
+                                <option value="Suspendido">SUSPENDIDO</option>
+                                <option value="Rechazado">RECHAZADO</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase mb-2 block">Observaciones adicionales</label>
+                            <textarea id="archiveDesc" placeholder="Escribe aquí..." class="w-full bg-slate-100 dark:bg-white/10 border-none rounded-xl text-sm font-medium p-3 h-24 focus:ring-2 focus:ring-primary transition-all normal-case"></textarea>
+                        </div>
+                    </div>
+                `,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#136dec',
+                confirmButtonText: 'CONFIRMAR ARCHIVADO',
+                cancelButtonText: 'CANCELAR',
+                background: document.documentElement.classList.contains('dark') ? '#16202e' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#fff' : '#000',
+                preConfirm: () => {
+                    const reason = document.getElementById('archiveReason').value;
+                    const desc = document.getElementById('archiveDesc').value;
+                    return { reason, desc };
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Archivando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+                    try {
+                        const res = await fetch('ajax_update_status.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                id: id, 
+                                type: 'quotation', 
+                                fields: {
+                                    archived_at: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                                    archive_reason: result.value.reason,
+                                    archive_description: result.value.desc,
+                                    status: result.value.reason === 'Vendido' ? 'accepted' : 'rejected'
+                                } 
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            Swal.fire({ icon: 'success', title: 'ARCHIVADO', timer: 1500, showConfirmButton: false });
+                            setTimeout(() => location.reload(), 1500);
+                        } else {
+                            Swal.fire('Error', data.error, 'error');
+                        }
+                    } catch (e) {
+                        Swal.fire('Error', 'Error de conexión', 'error');
+                    }
+                }
+            });
         }
 
         function openAuthModal(id, number) {

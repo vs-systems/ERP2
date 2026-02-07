@@ -349,7 +349,7 @@ $logisticsPhases = [
                             <h3 class="text-sm font-bold uppercase tracking-widest text-slate-500 mb-6">Resumen de
                                 Presupuestos</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                                <div class="h-[300px] relative">
+                                <div class="h-[380px] relative">
                                     <canvas id="budgetRingChart"></canvas>
                                     <div
                                         class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -579,19 +579,29 @@ $logisticsPhases = [
                 });
             }
 
-            const crmCtx = document.getElementById('crmLeadChart');
-            if (crmCtx) {
-                new Chart(crmCtx, {
+            const budgetCtx = document.getElementById('budgetRingChart');
+            if (budgetCtx) {
+                new Chart(budgetCtx, {
                     type: 'doughnut',
                     data: {
-                        labels: <?php echo json_encode(array_keys($crmLeadStats)); ?>,
+                        labels: ['Aprobados', 'Pendientes', 'Perdidos'],
                         datasets: [{
-                            data: <?php echo json_encode(array_values($crmLeadStats)); ?>,
-                            backgroundColor: ['#3b82f6', '#1e40af', '#136dec', '#10b981', '#64748b'],
-                            borderWidth: 0
+                            data: [<?php echo $budgetStats['aprobados']; ?>, <?php echo $budgetStats['pendientes']; ?>, <?php echo $budgetStats['perdidos']; ?>],
+                            backgroundColor: ['#10b981', '#64748b', '#ef4444'],
+                            borderWidth: 0,
+                            hoverOffset: 20
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '75%' }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '80%',
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
                 });
             }
 

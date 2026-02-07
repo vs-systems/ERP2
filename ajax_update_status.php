@@ -20,7 +20,7 @@ $type = $input['type'] ?? '';
 $field = $input['field'] ?? '';
 $value = $input['value'] ?? null;
 
-if (!$id || !$type || !$field) {
+if (!$id || !$type) {
     echo json_encode(['success' => false, 'error' => 'Parámetros incompletos']);
     exit;
 }
@@ -32,10 +32,22 @@ try {
 
     $table = ($type === 'quotation') ? 'quotations' : 'purchases';
 
-    // 1. Update the Main Record
-    $sql = "UPDATE $table SET $field = :val WHERE id = :id";
-    $stmt = $db->prepare($sql);
-    $res = $stmt->execute(['val' => $value, 'id' => $id]);
+    // 1. Update the Main Record (Support multiple fields or single)
+    if (isset($input['fields']) && is_array($input['fields'])) {
+        $sets = [];
+        $params = [':id' => $id];
+        foreach ($input['fields'] as $f => $v) {
+            $sets[] = "$f = :$f";
+            $params[":$f"] = $v;
+        }
+        $sql = "UPDATE $table SET " . implode(', ', $sets) . " WHERE id = :id";
+        $stmt = $db->prepare($sql);
+        $res = $stmt->execute($params);
+    } else {
+        $sql = "UPDATE $table SET $field = :val WHERE id = :id";
+        $stmt = $db->prepare($sql);
+        $res = $stmt->execute(['val' => $value, 'id' => $id]);
+    }
 
     // 2. Logic for QUOTATIONS (Clients)
     if ($type === 'quotation') {

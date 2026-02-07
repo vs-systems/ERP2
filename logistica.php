@@ -155,11 +155,15 @@ $phases = [
                                         ?>
                                         <tr class="hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors group">
                                             <td class="px-6 py-6 min-w-[180px]">
-                                                <div
-                                                    class="font-bold dark:text-white text-slate-800 group-hover:text-[#136dec] transition-colors">
+                                                <button onclick="verDetallesPedido('<?php echo $p['quote_number']; ?>')"
+                                                    class="font-extrabold dark:text-white text-slate-800 hover:text-[#136dec] transition-colors flex items-center gap-1 group/link">
                                                     <?php echo $p['quote_number']; ?>
-                                                </div>
-                                                <div class="text-xs text-slate-500 mt-1"><?php echo $p['client_name']; ?>
+                                                    <span
+                                                        class="material-symbols-outlined text-xs opacity-0 group-hover/link:opacity-100 transition-all">open_in_new</span>
+                                                </button>
+                                                <div
+                                                    class="text-[11px] font-bold text-slate-500 mt-1 uppercase tracking-tight">
+                                                    <?php echo $p['client_name']; ?>
                                                 </div>
                                             </td>
                                             <td class="px-6 py-6 text-center">
@@ -274,6 +278,48 @@ $phases = [
         </main>
     </div>
 
+    <!-- Product Detail Modal -->
+    <div id="modalDetalles"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-[#16202e] w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/5 transition-all transform scale-95 opacity-0 duration-300"
+            id="modalDetallesContent">
+            <div
+                class="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/[0.02]">
+                <div>
+                    <h3 class="text-lg font-black dark:text-white text-slate-800 uppercase tracking-tighter"
+                        id="modalTitle">Detalle de Pedido</h3>
+                    <p class="text-[10px] font-bold text-primary uppercase tracking-widest" id="modalSubtitle"></p>
+                </div>
+                <button onclick="cerrarDetalles()"
+                    class="p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 transition-all">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr
+                            class="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-white/5">
+                            <th class="pb-3 px-2">SKU</th>
+                            <th class="pb-3 px-2">Descripción</th>
+                            <th class="pb-3 px-2 text-center">Cant.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody" class="divide-y divide-slate-100 dark:divide-white/5">
+                        <!-- Items populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div
+                class="p-6 bg-slate-50/50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 flex justify-end">
+                <button onclick="cerrarDetalles()"
+                    class="px-6 py-2 bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-black uppercase transition-all">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         async function avanzarFase(quoteNumber, phase) {
             if (!confirm(`¿Mover pedido ${quoteNumber} a fase ${phase}?`)) return;
@@ -325,6 +371,49 @@ $phases = [
                 } else { alert("Error: " + data.error); }
             };
             input.click();
+        }
+
+        async function verDetallesPedido(quoteNumber) {
+            const modal = document.getElementById('modalDetalles');
+            const content = document.getElementById('modalDetallesContent');
+            const tbody = document.getElementById('modalTableBody');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+
+            document.getElementById('modalSubtitle').innerText = 'Cargando información...';
+            tbody.innerHTML = '<tr><td colspan="3" class="py-8 text-center text-slate-400 font-bold uppercase text-[10px]">Consultando base de datos...</td></tr>';
+
+            try {
+                const res = await fetch(`ajax_order_details.php?quote_number=${quoteNumber}`);
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('modalSubtitle').innerText = quoteNumber + ' - ' + data.quote.client_name;
+                    tbody.innerHTML = data.items.map(item => `
+                        <tr class="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                            <td class="py-4 px-2 font-mono text-primary">${item.sku}</td>
+                            <td class="py-4 px-2">${item.description}</td>
+                            <td class="py-4 px-2 text-center text-lg">${item.quantity}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-red-500 font-bold uppercase text-[10px]">${data.error}</td></tr>`;
+                }
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="3" class="py-8 text-center text-red-500 font-bold uppercase text-[10px]">Error de conexión</td></tr>';
+            }
+        }
+
+        function cerrarDetalles() {
+            const modal = document.getElementById('modalDetalles');
+            const content = document.getElementById('modalDetallesContent');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
         }
     </script>
 </body>
