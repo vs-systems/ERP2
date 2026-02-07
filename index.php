@@ -150,9 +150,9 @@ require_once __DIR__ . '/src/config/config.php';
                 class="flex items-center gap-2 text-slate-400 hover:text-green-500 transition-colors">
                 <span class="material-symbols-outlined text-sm">chat</span> +54 9 11 3889 1414
             </a>
-            <a href="mailto:vecinoseguro0@gmail.com"
+            <a href="mailto:sistemas@vecinoseguro.com"
                 class="flex items-center gap-2 text-slate-400 hover:text-blue-500 transition-colors">
-                <span class="material-symbols-outlined text-sm">mail</span> vecinoseguro0@gmail.com
+                <span class="material-symbols-outlined text-sm">mail</span> sistemas@vecinoseguro.com
             </a>
         </div>
         <p class="text-[10px] text-slate-600 font-medium">Soft exclusivo para Gremio de la Seguridad Electronica y
