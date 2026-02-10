@@ -55,6 +55,14 @@ try {
         $stmtQ->execute([$id]);
         $q = $stmtQ->fetch();
 
+        if ($field === 'status') {
+            if ($value === 'Perdido' || $value === 'En espera') {
+                $db->prepare("UPDATE quotations SET is_confirmed = 0 WHERE id = ?")->execute([$id]);
+            } elseif ($value === 'Aceptado') {
+                $db->prepare("UPDATE quotations SET is_confirmed = 1 WHERE id = ?")->execute([$id]);
+            }
+        }
+
         if ($field === 'is_confirmed') {
             if ($value == 1) {
                 // Ensure status is consistent

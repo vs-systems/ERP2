@@ -9,9 +9,12 @@ try {
     $db = Vsys\Lib\Database::getInstance();
     $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS logistics_authorized_by VARCHAR(100) DEFAULT NULL");
     $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS logistics_authorized_at DATETIME DEFAULT NULL");
-    $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS archived_at DATETIME DEFAULT NULL");
+    $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS status ENUM('Pendiente', 'Aceptado', 'Perdido', 'En espera', 'rejected', 'ordered', 'draft', 'sent', 'accepted', 'expired') DEFAULT 'Pendiente' AFTER quote_number");
     $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS archive_reason ENUM('Vendido', 'Suspendido', 'Rechazado') DEFAULT NULL");
-    $db->exec("ALTER TABLE quotations ADD COLUMN IF NOT EXISTS archive_description TEXT DEFAULT NULL");
+
+    // Legacy mapping (only if status is Pendiente/null and is_confirmed is 1)
+    $db->exec("UPDATE quotations SET status = 'Aceptado' WHERE (status = 'Pendiente' OR status IS NULL) AND is_confirmed = 1");
+    $db->exec("UPDATE quotations SET status = 'Perdido' WHERE status = 'rejected'");
 } catch (Exception $e) {
     // Ignore if already exists or other non-critical errors
 }
@@ -187,6 +190,7 @@ usort($quotes, function ($a, $b) {
                         <!-- Wildcard Filters -->
                         <form method="GET"
                             class="flex flex-wrap items-center gap-3 bg-white dark:bg-white/5 p-2 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
+                            <input type="hidden" name="view" value="<?php echo htmlspecialchars($view); ?>">
                             <div class="relative">
                                 <span
                                     class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>

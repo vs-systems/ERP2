@@ -81,7 +81,7 @@ $providers = $catalog->getProviders();
     <header
         style="background: #020617; border-bottom: 2px solid var(--accent-violet); display: flex; justify-content: space-between; align-items: center; padding: 0 20px;">
         <div style="display: flex; align-items: center; gap: 20px;">
-            <img src="logo_display.php?v=2" alt="VS System" class="logo-large"class="logo-large">
+            <img src="logo_display.php?v=2" alt="VS System" class="logo-large" class="logo-large">
             <div
                 style="color: #fff; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.4rem; letter-spacing: 1px; text-shadow: 0 0 10px rgba(139, 92, 246, 0.4);">
                 Vecino Seguro <span
@@ -140,13 +140,38 @@ $providers = $catalog->getProviders();
                     </button>
                 </form>
 
-                <div id="product-hint" class="format-hint">
-                    <strong>Formato Productos:</strong> SKU; DESCRIPCION; MARCA; COSTO; IVA %; CATEGORIA; SUBCATEGORIA;
-                    PROVEEDOR
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <a href="data/demos/demo_productos.csv" class="btn-secondary"
+                        style="font-size: 0.8rem; padding: 10px;" download>
+                        <i class="fas fa-download"></i> Demo Productos
+                    </a>
+                    <a href="data/demos/demo_entidades.csv" class="btn-secondary"
+                        style="font-size: 0.8rem; padding: 10px;" download>
+                        <i class="fas fa-download"></i> Demo Clientes/Prov.
+                    </a>
                 </div>
-                <div id="entity-hint" class="format-hint" style="display: none;">
-                    <strong>Formato Clientes/Proveedores:</strong> RAZON SOCIAL; NOMBRE FANTASIA; CUIT; DNI; EMAIL;
-                    TELEFONO; CELULAR; CONTACTO; DIRECCION; ENTREGA
+
+                <div id="product-hint" class="format-hint" style="margin-top: 20px;">
+                    <strong><i class="fas fa-info-circle"></i> Formato de Productos:</strong><br>
+                    <code
+                        style="display:block; margin: 10px 0; color: #818cf8;">SKU; DESCRIPCION; MARCA; COSTO; IVA %; CATEGORIA; SUBCATEGORIA; PROVEEDOR</code>
+                    <ul style="list-style: disc; margin-left: 20px; font-size: 0.8rem; color: #94a3b8;">
+                        <li><strong>SKU:</strong> Código único del producto (necesario para actualizaciones).</li>
+                        <li><strong>COSTO:</strong> Usar punto como separador decimal (ej: 1500.50).</li>
+                        <li><strong>IVA %:</strong> Solo el número (ej: 21 o 10.5).</li>
+                        <li><strong>PROVEEDOR:</strong> Nombre o CUIT del proveedor (si no existe, se creará solo con
+                            nombre).</li>
+                    </ul>
+                </div>
+                <div id="entity-hint" class="format-hint" style="display: none; margin-top: 20px;">
+                    <strong><i class="fas fa-info-circle"></i> Formato de Clientes/Proveedores:</strong><br>
+                    <code
+                        style="display:block; margin: 10px 0; color: #818cf8;">RAZON SOCIAL; NOMBRE FANTASIA; CUIT; DNI; EMAIL; TELEFONO; CELULAR; CONTACTO; DIRECCION; ENTREGA</code>
+                    <ul style="list-style: disc; margin-left: 20px; font-size: 0.8rem; color: #94a3b8;">
+                        <li><strong>CUIT:</strong> Formato con guiones preferentemente (ej: 20-12345678-9).</li>
+                        <li><strong>EMAIL:</strong> Se usará para envío automático de presupuestos.</li>
+                        <li><strong>ENTREGA:</strong> Dirección de despacho (si es distinta a la fiscal).</li>
+                    </ul>
                 </div>
             </div>
         </main>
@@ -168,7 +193,3 @@ $providers = $catalog->getProviders();
 </body>
 
 </html>
-
-
-
-

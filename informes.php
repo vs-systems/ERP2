@@ -286,12 +286,12 @@ $db = \Vsys\Lib\Database::getInstance();
                 markerLayer.clearLayers();
                 entities.forEach(e => {
                     let color = 'blue';
-                    if (e.type === 'client') {
+                    if (e.is_transport == 1) {
+                        tCount++;
+                        color = '#10b981'; // Green for Transports
+                    } else if (e.type === 'client') {
                         cCount++;
                         color = 'blue';
-                    } else if (e.type === 'transport' || e.type === 'transportista') {
-                        tCount++;
-                        color = '#10b981'; // Green
                     } else {
                         sCount++;
                         color = 'red';

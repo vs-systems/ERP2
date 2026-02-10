@@ -41,7 +41,8 @@ $editData = [
     'city' => '',
     'lat' => '',
     'lng' => '',
-    'transport' => ''
+    'transport' => '',
+    'is_transport' => 0
 ];
 
 if ($id) {
@@ -78,7 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'city' => $_POST['city'] ?? null,
         'lat' => $_POST['lat'] ?? null,
         'lng' => $_POST['lng'] ?? null,
-        'transport' => $_POST['transport'] ?? null
+        'transport' => $_POST['transport'] ?? null,
+        'is_transport' => isset($_POST['is_transport']) ? 1 : 0
     ];
 
     if ($clientModule->saveClient($data)) {
@@ -382,6 +384,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input type="checkbox" name="is_enabled" <?php echo $editData['is_enabled'] ? 'checked' : ''; ?>
                                         class="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary shadow-sm transition-all bg-white dark:bg-[#101822]">
                                     <span class="text-sm font-bold dark:text-white text-slate-800">Habilitado</span>
+                                </label>
+
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" name="is_transport" <?php echo $editData['is_transport'] ? 'checked' : ''; ?>
+                                        class="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500 shadow-sm transition-all bg-white dark:bg-[#101822]">
+                                    <span class="text-sm font-bold dark:text-white text-slate-800">¿Es
+                                        Transporte?</span>
                                 </label>
 
                                 <?php if ($type == 'client'): ?>

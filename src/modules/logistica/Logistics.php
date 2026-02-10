@@ -109,10 +109,14 @@ class Logistics
      */
     public function getTransports($onlyActive = true)
     {
-        $sql = "SELECT * FROM transports";
-        if ($onlyActive)
-            $sql .= " WHERE is_active = TRUE";
-        $sql .= " ORDER BY name";
+        $activeFilter = $onlyActive ? " WHERE is_active = TRUE" : "";
+        $sql = "SELECT id, name, contact_person, phone, email, address, cuit, 'legacy' as source 
+                FROM transports $activeFilter
+                UNION
+                SELECT id, name, contact_person as contact_person, phone, email, address, tax_id as cuit, 'unified' as source
+                FROM entities 
+                WHERE is_transport = 1" . ($onlyActive ? " AND is_enabled = 1" : "") . "
+                ORDER BY name";
         return $this->db->query($sql)->fetchAll();
     }
 

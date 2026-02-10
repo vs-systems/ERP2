@@ -8,6 +8,11 @@ $logistics = new Logistics();
 $view = $_GET['view'] ?? 'armado';
 $allOrders = $logistics->getOrdersForPreparation();
 $transports = $logistics->getTransports();
+$pendingCount = count(array_filter($allOrders, function ($q) {
+    return ($q['payment_status'] !== 'Pagado' && $q['logistics_authorized_by'] === null && $q['archived_at'] === null);
+}));
+$pending = $pendingCount; // Legacy support for the variable name in some versions
+
 
 // Logic for categorization:
 // Pendientes: Confirmed but NOT paid/authorized.

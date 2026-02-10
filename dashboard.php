@@ -24,6 +24,10 @@ $monthlyStats = [];
 // Get current exchange rate for display
 $db = \Vsys\Lib\Database::getInstance();
 $exchangeRate = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'ARS' ORDER BY fetched_at DESC LIMIT 1")->fetchColumn() ?: 1455.00;
+// Fallback to source BNA if no ARS entry found with strict filter (legacy support)
+if (!$exchangeRate || $exchangeRate == 1455.00) {
+    $exchangeRate = $db->query("SELECT rate FROM exchange_rates ORDER BY fetched_at DESC LIMIT 1")->fetchColumn() ?: 1455.00;
+}
 
 if ($userRole === 'Vendedor') {
     $sellerDash = new \Vsys\Modules\Dashboard\SellerDashboard($userId);

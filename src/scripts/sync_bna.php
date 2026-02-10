@@ -21,7 +21,7 @@ if ($rate) {
     $lastRate = $db->query("SELECT rate FROM exchange_rates ORDER BY created_at DESC LIMIT 1")->fetchColumn();
 
     if ($lastRate != $rate) {
-        $stmt = $db->prepare("INSERT INTO exchange_rates (rate, source) VALUES (?, 'BNA')");
+        $stmt = $db->prepare("INSERT INTO exchange_rates (rate, source, currency_to, fetched_at) VALUES (?, 'BNA', 'ARS', NOW())");
         $stmt->execute([$rate]);
         echo "Successfully updated BNA rate: ARS " . $rate . "\n";
     } else {

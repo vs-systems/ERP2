@@ -13,20 +13,20 @@ try {
     switch ($action) {
         case 'locality_stats':
             // Clients by Locality
-            $clients = $db->query("SELECT city as locality, COUNT(*) as count FROM entities WHERE type = 'client' AND city IS NOT NULL AND city != '' GROUP BY city ORDER BY count DESC LIMIT 10")->fetchAll();
+            $clients = $db->query("SELECT city as locality, COUNT(*) as count FROM entities WHERE type = 'client' AND is_transport = 0 AND city IS NOT NULL AND city != '' GROUP BY city ORDER BY count DESC LIMIT 10")->fetchAll();
 
-            // Suppliers by Locality
-            $suppliers = $db->query("SELECT city as locality, COUNT(*) as count FROM entities WHERE type IN ('supplier', 'provider') AND city IS NOT NULL AND city != '' GROUP BY city ORDER BY count DESC LIMIT 10")->fetchAll();
+            // Suppliers by Locality (excluding transports)
+            $suppliers = $db->query("SELECT city as locality, COUNT(*) as count FROM entities WHERE type IN ('supplier', 'provider') AND is_transport = 0 AND city IS NOT NULL AND city != '' GROUP BY city ORDER BY count DESC LIMIT 10")->fetchAll();
 
-            // Transports by Locality
-            $transports = $db->query("SELECT city as locality, COUNT(*) as count FROM entities WHERE type = 'transport' AND city IS NOT NULL AND city != '' GROUP BY city ORDER BY count DESC LIMIT 10")->fetchAll();
+            // Transports by Locality (new unified logic)
+            $transports = $db->query("SELECT city as locality, COUNT(*) as count FROM entities WHERE is_transport = 1 AND city IS NOT NULL AND city != '' GROUP BY city ORDER BY count DESC LIMIT 10")->fetchAll();
 
             echo json_encode(['clients' => $clients, 'suppliers' => $suppliers, 'transports' => $transports]);
             break;
 
         case 'map_entities':
-            // Geolocation markers
-            $entities = $db->query("SELECT id, name, type, lat, lng, address, city FROM entities WHERE lat IS NOT NULL AND lng IS NOT NULL")->fetchAll();
+            // Geolocation markers - include is_transport
+            $entities = $db->query("SELECT id, name, type, lat, lng, address, city, is_transport FROM entities WHERE lat IS NOT NULL AND lng IS NOT NULL")->fetchAll();
             echo json_encode($entities);
             break;
 

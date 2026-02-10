@@ -219,4 +219,64 @@ class Catalog
         fclose($handle);
         return $imported;
     }
+
+    public function importEntitiesFromCsv($filePath, $type = 'client')
+    {
+        $handle = fopen($filePath, "r");
+        if (!$handle)
+            return false;
+
+        $firstLine = fgets($handle);
+        $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
+        rewind($handle);
+
+        // Skip header
+        fgetcsv($handle, 1000, $delimiter);
+
+        $imported = 0;
+        $clientModule = new \Vsys\Modules\Clientes\Client();
+
+        while (($data = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+            if (count($data) < 1)
+                continue;
+
+            $name = trim($data[0] ?? '');
+            if (!$name)
+                continue;
+
+            $fantasyName = trim($data[1] ?? '');
+            $taxId = trim($data[2] ?? '');
+            $docNum = trim($data[3] ?? '');
+            $email = trim($data[4] ?? '');
+            $phone = trim($data[5] ?? '');
+            $mobile = trim($data[6] ?? '');
+            $contact = trim($data[7] ?? '');
+            $address = trim($data[8] ?? '');
+            $delivery = trim($data[9] ?? '');
+
+            $clientModule->saveClient([
+                'type' => $type,
+                'name' => $name,
+                'fantasy_name' => $fantasyName,
+                'tax_id' => $taxId,
+                'document_number' => $docNum,
+                'email' => $email,
+                'phone' => $phone,
+                'mobile' => $mobile,
+                'contact' => $contact,
+                'address' => $address,
+                'delivery_address' => $delivery,
+                'is_enabled' => 1,
+                'tax_category' => ($type === 'client' ? 'Consumidor Final' : 'No Aplica'),
+                'default_voucher' => 'Factura',
+                'payment_condition' => 'Contado',
+                'payment_method' => 'Transferencia',
+                'is_transport' => 0 // Default for imports, can be changed later or detected by keyword
+            ]);
+
+            $imported++;
+        }
+        fclose($handle);
+        return $imported;
+    }
 }
