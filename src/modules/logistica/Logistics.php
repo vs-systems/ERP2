@@ -12,6 +12,13 @@ class Logistics
     public function __construct()
     {
         $this->db = Database::getInstance();
+
+        // Auto-migration for is_transport field
+        try {
+            $this->db->exec("ALTER TABLE entities ADD COLUMN IF NOT EXISTS is_transport TINYINT(1) DEFAULT 0 AFTER is_retention_agent");
+        } catch (\Exception $e) {
+            // Ignore if already exists
+        }
     }
 
     /**
