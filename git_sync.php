@@ -63,12 +63,76 @@ if (isset($_GET['action'])) {
     if ($_GET['action'] == 'fix') {
         run_git('fetch --all');
         run_git('reset --hard origin/main');
-        run_git('clean -fd'); // Esto borra archivos locales que no estén en Git para evitar conflictos
+        run_git('clean -fd');
+    }
+
+    if ($_GET['action'] == 'clean_inodes') {
+        echo "<h3>Iniciando Limpieza de Inodos...</h3>";
+        $patterns = [
+            'debug_*.php',
+            'test_*.php',
+            'check_*.php',
+            'diag_*.php',
+            'db_migrate_*.php',
+            'db_update_*.php',
+            'migrate_*.php',
+            '*.sql',
+            '*.log',
+            '*.tmp',
+            'run_migration_v5.php',
+            'db_check_quotations.php',
+            'db_debug.php',
+            'db_definitive_fix.php',
+            'db_final_polish.php',
+            'db_fix_schema.php',
+            'db_fix_subtotals.php',
+            'db_fix_usernames.php',
+            'db_force_import.php',
+            'db_mega_fix.php',
+            'diff.txt',
+            'dump_db.php',
+            'files.txt',
+            'fix_users_db.php',
+            'full_financial_migration.php',
+            'full_schema_check.php',
+            'git_diff.txt',
+            'inspect_db.php',
+            'last_commit.txt',
+            'logo_display.php',
+            'repair.php',
+            'reparar_db.php',
+            'save_schema.php',
+            'strip_bom.php',
+            'Claves.txt',
+            'vecino_user.txt',
+            'config_entities_partial.php',
+            'diag.php'
+        ];
+
+        $count = 0;
+        foreach ($patterns as $pattern) {
+            $files = glob($pattern);
+            if ($files) {
+                foreach ($files as $file) {
+                    if (is_file($file)) {
+                        echo "Eliminando: $file ... ";
+                        if (unlink($file)) {
+                            echo "<span style='color:green;'>[OK]</span><br>";
+                            $count++;
+                        } else {
+                            echo "<span style='color:red;'>[FALLÃ“]</span><br>";
+                        }
+                    }
+                }
+            }
+        }
+        echo "<h4>Total archivos eliminados: $count</h4>";
     }
 }
 
 echo "<ul>
-    <li><a href='?action=fix'>INTENTAR REPARACIó“N (Reset & Pull)</a></li>
+    <li><a href='?action=fix' style='color: #136dec; font-weight: bold;'>1. REPARAR GIT (Reset & Pull)</a></li>
+    <li><a href='?action=clean_inodes' style='color: #ef4444; font-weight: bold;'>2. LIMPIEZA PROFUNDA (Borrar archivos residuales e INODOS)</a></li>
 </ul>";
 
 
