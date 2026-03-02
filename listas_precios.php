@@ -69,10 +69,17 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
                 </h2>
 
                 <div class="flex items-center gap-4">
-                    <span class="text-xs font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full">
-                        Dólar: $
-                        <?php echo number_format($dolar, 2); ?>
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span id="dolar-display"
+                            class="text-xs font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                            Dólar: $<?php echo number_format($dolar, 2); ?>
+                        </span>
+                        <button onclick="updateDolar()"
+                            class="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 transition-all"
+                            title="Actualizar Cotización">
+                            <span id="dolar-sync-icon" class="material-symbols-outlined text-sm">sync</span>
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -265,6 +272,26 @@ $dolar = $currRateStmt->fetchColumn() ?: 1455.00;
 
         searchInput.addEventListener('input', debounceFilter);
         subcategorySelect.addEventListener('change', filterItems);
+
+        function updateDolar() {
+            const icon = document.getElementById('dolar-sync-icon');
+            const display = document.getElementById('dolar-display');
+            icon.classList.add('animate-spin');
+
+            fetch('fix_dolar_bna.php?ajax=1')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        display.innerText = `Dólar: $${parseFloat(data.rate).toFixed(2)}`;
+                        // Recargar la página para actualizar todos los precios de la tabla
+                        window.location.reload();
+                    } else {
+                        alert('Error al actualizar: ' + data.error);
+                    }
+                })
+                .catch(err => alert('Error de conexión'))
+                .finally(() => icon.classList.remove('animate-spin'));
+        }
     </script>
 
 </html>

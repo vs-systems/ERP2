@@ -69,6 +69,7 @@ $menuStructure = [
         'items' => [
             ['label' => 'Clientes', 'href' => 'clientes.php', 'icon' => 'groups'],
             ['label' => 'Proveedores', 'href' => 'proveedores.php', 'icon' => 'factory'],
+            ['label' => 'Eliminación de datos', 'href' => 'abm_delete_data.php', 'icon' => 'delete_sweep', 'role' => 'admin'],
         ]
     ],
     [
@@ -76,9 +77,7 @@ $menuStructure = [
         'id' => 'catalogos',
         'icon' => 'menu_book',
         'items' => [
-            ['label' => 'Público', 'href' => 'catalogo_publico.php', 'icon' => 'public', 'target' => '_blank'],
             ['label' => 'Gremio', 'href' => 'catalogo.php', 'icon' => 'engineering', 'target' => '_blank'],
-            ['label' => 'Web', 'href' => 'catalogo_web.php', 'icon' => 'language', 'target' => '_blank'],
         ]
     ]
 ];
