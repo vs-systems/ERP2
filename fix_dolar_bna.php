@@ -21,8 +21,12 @@ try {
         throw new Exception("No se pudo obtener la cotización de la API.");
     }
 
-    $stmt = $db->prepare("INSERT INTO exchange_rates (rate, source) VALUES (?, 'BNA')");
+    // Insertar en la tabla exchange_rates con currency_to = 'ARS' para compatibilidad con dashboard y listas
+    $stmt = $db->prepare("INSERT INTO exchange_rates (rate, source, currency_to) VALUES (?, 'BNA', 'ARS')");
     $stmt->execute([$rate]);
+    
+    // También actualizar cualquier entrada anterior que no tenga currency_to si es necesario, 
+    // pero el insert con 'ARS' es lo que buscan dashboard.php y listas_precios.php
     
     if (isset($_GET['ajax'])) {
         header('Content-Type: application/json');

@@ -4,6 +4,7 @@ require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
 require_once __DIR__ . '/src/modules/catalogo/Catalog.php';
 require_once __DIR__ . '/src/modules/config/PriceList.php';
+require_once __DIR__ . '/src/lib/BCRAClient.php';
 
 use Vsys\Lib\Database;
 use Vsys\Modules\Catalogo\Catalog;
@@ -33,8 +34,8 @@ if (!in_array(strtolower($currentList), $validLists)) {
 }
 
 // Exchange Rate
-$currRateStmt = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'ARS' ORDER BY fetched_at DESC LIMIT 1");
-$dolar = $currRateStmt->fetchColumn() ?: 1455.00;
+$currency = new \Vsys\Lib\BCRAClient();
+$dolar = $currency->getCurrentRate('oficial') ?? 1425.00;
 
 ?>
 <!DOCTYPE html>

@@ -2,15 +2,18 @@
 require_once 'auth_check.php';
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
+require_once __DIR__ . '/src/lib/BCRAClient.php';
 require_once __DIR__ . '/src/modules/purchases/Purchases.php';
 
 use Vsys\Modules\Purchases\Purchases;
 
 $purchasesModule = new Purchases();
 $purchaseNumber = $purchasesModule->generatePurchaseNumber();
-// Get current exchange rate from DB
-$db = Vsys\Lib\Database::getInstance();
-$exchangeRate = $db->query("SELECT rate FROM exchange_rates ORDER BY id DESC LIMIT 1")->fetchColumn() ?: 1455.00;
+// Get current exchange rate
+$currency = new \Vsys\Lib\BCRAClient();
+$exchangeRate = $currency->getCurrentRate('oficial') ?? 1425.00;
+
+$db = \Vsys\Lib\Database::getInstance();
 
 // Listado de proveedores para el selector opcional
 $suppliersList = $db->query("SELECT id, name, fantasy_name FROM entities WHERE type IN ('supplier', 'provider') ORDER BY name ASC")->fetchAll();

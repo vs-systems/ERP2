@@ -4,6 +4,7 @@ ini_set('display_errors', 1);
 require_once 'auth_check.php';
 require_once __DIR__ . '/src/config/config.php';
 
+require_once __DIR__ . '/src/lib/BCRAClient.php';
 require_once __DIR__ . '/src/modules/analysis/OperationAnalysis.php';
 require_once __DIR__ . '/src/modules/logistica/Logistics.php';
 require_once __DIR__ . '/src/modules/crm/CRM.php';
@@ -22,12 +23,10 @@ $shipStats = [];
 $monthlyStats = [];
 
 // Get current exchange rate for display
+$currency = new \Vsys\Lib\BCRAClient();
+$exchangeRate = $currency->getCurrentRate('oficial') ?? 1425.00;
+
 $db = \Vsys\Lib\Database::getInstance();
-$exchangeRate = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'ARS' ORDER BY fetched_at DESC LIMIT 1")->fetchColumn() ?: 1455.00;
-// Fallback to source BNA if no ARS entry found with strict filter (legacy support)
-if (!$exchangeRate || $exchangeRate == 1455.00) {
-    $exchangeRate = $db->query("SELECT rate FROM exchange_rates ORDER BY fetched_at DESC LIMIT 1")->fetchColumn() ?: 1455.00;
-}
 
 if ($userRole === 'Vendedor') {
     $sellerDash = new \Vsys\Modules\Dashboard\SellerDashboard($userId);

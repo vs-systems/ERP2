@@ -549,6 +549,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <p class="text-xs text-slate-500 dark:text-slate-400">Activar/Desactivar catálogo online.
                                 </p>
                             </a>
+
+                            <!-- Eliminación de Datos (NUEVO) -->
+                            <?php if ($isAdmin): ?>
+                                <a href="abm_delete_data.php"
+                                    class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-red-200 dark:border-red-900/30 hover:border-red-500/50 transition-all hover:shadow-lg hover:shadow-red-500/10">
+                                    <div
+                                        class="w-12 h-12 rounded-xl bg-red-500/10 text-red-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                        <span class="material-symbols-outlined text-3xl">delete_sweep</span>
+                                    </div>
+                                    <h3 class="font-bold text-lg mb-1">Borrado de Datos</h3>
+                                    <p class="text-xs text-red-500/70">Limpieza controlada de bases de datos.</p>
+                                </a>
+                            <?php endif; ?>
                         </div>
 
                     <?php elseif ($currentSection === 'company'):

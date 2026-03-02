@@ -69,7 +69,6 @@ $menuStructure = [
         'items' => [
             ['label' => 'Clientes', 'href' => 'clientes.php', 'icon' => 'groups'],
             ['label' => 'Proveedores', 'href' => 'proveedores.php', 'icon' => 'factory'],
-            ['label' => 'Eliminación de datos', 'href' => 'abm_delete_data.php', 'icon' => 'delete_sweep', 'role' => 'admin'],
         ]
     ],
     [

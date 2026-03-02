@@ -6,6 +6,7 @@
 session_start();
 require_once __DIR__ . '/src/config/config.php';
 require_once __DIR__ . '/src/lib/Database.php';
+require_once __DIR__ . '/src/lib/BCRAClient.php';
 require_once __DIR__ . '/src/modules/config/PriceList.php';
 require_once __DIR__ . '/src/modules/catalogo/Catalog.php';
 
@@ -29,9 +30,8 @@ usort($allProducts, function ($a, $b) {
 });
 
 // Fetch exchange rate
-$db = Vsys\Lib\Database::getInstance();
-$stmt = $db->query("SELECT rate FROM exchange_rates WHERE currency_to = 'ARS' ORDER BY fetched_at DESC LIMIT 1");
-$exchangeRate = $stmt->fetchColumn() ?: 1455.00;
+$currency = new \Vsys\Lib\BCRAClient();
+$exchangeRate = $currency->getCurrentRate('oficial') ?? 1425.00;
 
 // Categorías y Marcas para filtros
 $categories = array_unique(array_filter(array_column($allProducts, 'category')));
