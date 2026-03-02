@@ -562,6 +562,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <p class="text-xs text-red-500/70">Limpieza controlada de bases de datos.</p>
                                 </a>
                             <?php endif; ?>
+
+                            <!-- Diagnóstico de Despliegue (NUEVO) -->
+                            <a href="debug_deploy.php"
+                                class="group bg-white dark:bg-[#16202e] p-6 rounded-2xl border border-slate-200 dark:border-[#233348] hover:border-amber-500/50 transition-all hover:shadow-lg hover:shadow-amber-500/10">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <span class="material-symbols-outlined text-3xl">terminal</span>
+                                </div>
+                                <h3 class="font-bold text-lg mb-1">Diagnóstico de Despliegue</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Verificar rutas y estados del
+                                    servidor.</p>
+                            </a>
                         </div>
 
                     <?php elseif ($currentSection === 'company'):
