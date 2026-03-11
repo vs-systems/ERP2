@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Send internal notification (Optional for now)
             try {
                 $mailer = new Mailer();
-                $mailer->send('web@vecinoseguro.com.ar', "Nuevo Registro: $name", "Se ha registrado un nuevo cliente ($name) pendiente de verificación.");
+                $mailer->send('vecinoseguro0@gmail.com', "Nuevo Registro: $name", "Se ha registrado un nuevo cliente ($name) pendiente de verificación.");
             } catch (Exception $e) {
                 // Ignore mail errors for now
             }

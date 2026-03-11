@@ -160,7 +160,7 @@ if (!$purchase)
                 <strong>De:</strong><br>
                 Vecino Seguro<br>
                 CUIT: 20-25562186-7<br>
-                Email: compras@vecinoseguro.com
+                Email: vecinoseguro0@gmail.com
             </td>
             <td width="10%"></td>
             <td class="entity-box">
